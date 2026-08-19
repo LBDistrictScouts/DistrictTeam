@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use Cake\Datasource\EntityInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -92,6 +93,19 @@ class RolesTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['team_id'], 'Teams'), ['errorField' => 'team_id']);
+        $rules->add($rules->isUnique(['slug']), [
+            'errorField' => 'slug',
+            'message' => __('This slug is already in use by a team or role'),
+        ]);
+        $rules->add(
+            fn(EntityInterface $entity): bool => !$this->Teams->exists([
+                'slug' => $entity->get('slug'),
+            ]),
+            [
+                'errorField' => 'slug',
+                'message' => __('This slug is already in use by a team or role'),
+            ],
+        );
 
         return $rules;
     }

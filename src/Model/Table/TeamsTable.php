@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use Cake\Datasource\EntityInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -13,6 +14,7 @@ use Cake\Validation\Validator;
  * @property \Cake\ORM\Behavior\TreeBehavior $Tree
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $ParentTeam
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\HasMany $SubTeams
+ * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\HasMany $Roles
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Team> newEntities(array $data, array $options = [])
@@ -61,6 +63,10 @@ class TeamsTable extends Table
             'className' => 'Teams',
             'strategy' => 'select',
         ]);
+
+        $this->hasMany('Roles', [
+            'foreignKey' => 'team_id',
+        ]);
     }
 
     /**
@@ -94,6 +100,18 @@ class TeamsTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['team_parent_id'], 'ParentTeam'), ['errorField' => 'team_parent_id']);
+        $rules->add($rules->isUnique(['slug']), [
+            'errorField' => 'slug',
+            'message' => __('This slug is already in use by a team or role'),
+        ]);
+        $rules->add(
+            fn(EntityInterface $entity): bool => $entity->get('slug') === null
+                || !$this->Roles->exists(['slug' => $entity->get('slug')]),
+            [
+                'errorField' => 'slug',
+                'message' => __('This slug is already in use by a team or role'),
+            ],
+        );
 
         return $rules;
     }

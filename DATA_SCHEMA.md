@@ -60,7 +60,7 @@ Constraints and behavior:
 - Primary key: `id`.
 - Foreign key: `team_id → teams.id`, with `ON UPDATE CASCADE` and `ON DELETE CASCADE`.
 - After an appointment is saved or deleted through the ORM, `currently_filled` is recalculated. It is true when at least one appointment is active, has started, and has no end date or an end date on or after today.
-- Neither `name` nor `slug` has a database uniqueness constraint.
+- A model rule requires `slug` to be unique across both roles and teams. This is application-enforced and is not backed by a database uniqueness constraint.
 
 ## `members`
 

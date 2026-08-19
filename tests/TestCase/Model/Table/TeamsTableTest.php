@@ -25,6 +25,7 @@ class TeamsTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Teams',
+        'app.Roles',
     ];
 
     /**
@@ -88,6 +89,25 @@ class TeamsTableTest extends TestCase
         $this->assertArrayHasKey('team_parent_id', $team->getErrors());
     }
 
+    public function testSlugMustBeUniqueAcrossTeamsAndRoles(): void
+    {
+        $duplicateTeam = $this->Teams->newEntity(['team_name' => 'District Team']);
+        $this->assertFalse($this->Teams->save($duplicateTeam));
+        $this->assertArrayHasKey('slug', $duplicateTeam->getErrors());
+
+        $duplicateRole = $this->Teams->newEntity(['team_name' => 'Digital Lead']);
+        $this->assertFalse($this->Teams->save($duplicateRole));
+        $this->assertArrayHasKey('slug', $duplicateRole->getErrors());
+    }
+
+    public function testExistingTeamCanBeSavedWithItsOwnSlug(): void
+    {
+        $team = $this->Teams->get('11111111-1111-4111-8111-111111111111');
+        $team->team_name = 'District Team';
+
+        $this->assertNotFalse($this->Teams->save($team));
+    }
+
     public function testTreeConfigurationAndAssociations(): void
     {
         $tree = $this->Teams->getBehavior('Tree');
@@ -98,5 +118,6 @@ class TeamsTableTest extends TestCase
         $this->assertSame('tree_level', $tree->getConfig('level'));
         $this->assertTrue($this->Teams->hasAssociation('ParentTeam'));
         $this->assertTrue($this->Teams->hasAssociation('SubTeams'));
+        $this->assertTrue($this->Teams->hasAssociation('Roles'));
     }
 }

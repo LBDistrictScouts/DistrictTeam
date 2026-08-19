@@ -93,4 +93,31 @@ class RolesTableTest extends TestCase
         $this->assertFalse($this->Roles->save($role));
         $this->assertArrayHasKey('team_id', $role->getErrors());
     }
+
+    public function testSlugMustBeUniqueAcrossRolesAndTeams(): void
+    {
+        $duplicateRole = $this->Roles->newEntity([
+            'team_id' => '11111111-1111-4111-8111-111111111111',
+            'name' => 'Digital Lead',
+            'currently_filled' => false,
+        ]);
+        $this->assertFalse($this->Roles->save($duplicateRole));
+        $this->assertArrayHasKey('slug', $duplicateRole->getErrors());
+
+        $duplicateTeam = $this->Roles->newEntity([
+            'team_id' => '11111111-1111-4111-8111-111111111111',
+            'name' => 'District Team',
+            'currently_filled' => false,
+        ]);
+        $this->assertFalse($this->Roles->save($duplicateTeam));
+        $this->assertArrayHasKey('slug', $duplicateTeam->getErrors());
+    }
+
+    public function testExistingRoleCanBeSavedWithItsOwnSlug(): void
+    {
+        $role = $this->Roles->get('22222222-2222-4222-8222-222222222221');
+        $role->name = 'Digital Lead';
+
+        $this->assertNotFalse($this->Roles->save($role));
+    }
 }
