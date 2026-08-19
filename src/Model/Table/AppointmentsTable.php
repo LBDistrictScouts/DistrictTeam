@@ -15,9 +15,9 @@ use Cake\Validation\Validator;
 /**
  * Appointments Model
  *
- * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- * @property \App\Model\Table\MembersTable&\Cake\ORM\Association\BelongsTo $Members
- * @property \App\Model\Table\MemberContactMethodsTable&\Cake\ORM\Association\BelongsTo $MemberContactMethods
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MembersTable> $Members
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MemberContactMethodsTable> $MemberContactMethods
  * @method \App\Model\Entity\Appointment newEmptyEntity()
  * @method \App\Model\Entity\Appointment newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Appointment> newEntities(array $data, array $options = [])

@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 /**
  * MemberContactMethods Model
  *
- * @property \App\Model\Table\MembersTable&\Cake\ORM\Association\BelongsTo $Members
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MembersTable> $Members
  * @method \App\Model\Entity\MemberContactMethod newEmptyEntity()
  * @method \App\Model\Entity\MemberContactMethod newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\MemberContactMethod> newEntities(array $data, array $options = [])
