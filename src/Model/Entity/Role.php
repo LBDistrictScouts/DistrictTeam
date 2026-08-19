@@ -14,6 +14,7 @@ use Cake\ORM\Entity;
  * @property string $slug
  * @property string|null $description
  * @property bool $currently_filled
+ * @property bool $is_lead
  *
  * @property \App\Model\Entity\Team $team
  */
@@ -34,6 +35,7 @@ class Role extends Entity
         'slug' => false,
         'description' => true,
         'currently_filled' => true,
+        'is_lead' => true,
         'team' => true,
     ];
 

@@ -15,6 +15,7 @@
                     <th><?= $this->Paginator->sort('name') ?></th>
                     <th><?= $this->Paginator->sort('slug') ?></th>
                     <th><?= $this->Paginator->sort('currently_filled') ?></th>
+                    <th><?= $this->Paginator->sort('is_lead') ?></th>
                     <th class="actions"><?= __('Actions') ?></th>
                 </tr>
             </thead>
@@ -25,6 +26,7 @@
                     <td><?= h($role->name) ?></td>
                     <td><?= h($role->slug) ?></td>
                     <td><?= $role->currently_filled ? 'Y' : '-' ?></td>
+                    <td><?= $role->is_lead ? __('Lead') : '-' ?></td>
                     <td class="actions">
                         <?= $this->Html->link(__('View'), ['action' => 'view', $role->id]) ?>
                         <?= $this->Html->link(__('Edit'), ['action' => 'edit', $role->id]) ?>

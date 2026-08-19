@@ -65,11 +65,13 @@ class RolesControllerTest extends TestCase
             'name' => 'Programme Lead',
             'description' => 'Runs programmes',
             'currently_filled' => false,
+            'is_lead' => true,
         ]);
 
         $this->assertRedirect('/roles');
         $this->assertTrue($this->getTableLocator()->get('Roles')->exists([
             'slug' => 'programme-lead',
+            'is_lead' => true,
         ]));
     }
 

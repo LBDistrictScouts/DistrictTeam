@@ -22,6 +22,7 @@ class TeamsControllerTest extends TestCase
      */
     protected array $fixtures = [
         'app.Teams',
+        'app.Roles',
     ];
 
     /**
@@ -49,6 +50,7 @@ class TeamsControllerTest extends TestCase
         $this->get('/teams/view/11111111-1111-4111-8111-111111111111');
         $this->assertResponseOk();
         $this->assertResponseContains('Digital Team');
+        $this->assertResponseContains('Digital Lead');
     }
 
     /**

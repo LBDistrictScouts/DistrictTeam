@@ -119,5 +119,13 @@ class TeamsTableTest extends TestCase
         $this->assertTrue($this->Teams->hasAssociation('ParentTeam'));
         $this->assertTrue($this->Teams->hasAssociation('SubTeams'));
         $this->assertTrue($this->Teams->hasAssociation('Roles'));
+        $this->assertTrue($this->Teams->hasAssociation('TeamLead'));
+
+        $teamLead = $this->Teams->get(
+            '11111111-1111-4111-8111-111111111112',
+            contain: ['TeamLead'],
+        )->team_lead;
+        $this->assertNotNull($teamLead);
+        $this->assertSame('Digital Lead', $teamLead->name);
     }
 }

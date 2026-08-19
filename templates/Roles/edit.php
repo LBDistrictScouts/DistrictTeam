@@ -27,7 +27,7 @@
                     echo $this->Form->control('name');
                     echo $this->Form->control('slug');
                     echo $this->Form->control('description');
-                    echo $this->Form->control('currently_filled');
+                    echo $this->Form->control('is_lead');
                 ?>
             </fieldset>
             <?= $this->Form->button(__('Submit')) ?>

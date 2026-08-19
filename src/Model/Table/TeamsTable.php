@@ -15,6 +15,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $ParentTeam
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\HasMany $SubTeams
  * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\HasMany $Roles
+ * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\HasOne $TeamLead
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Team> newEntities(array $data, array $options = [])
@@ -66,6 +67,12 @@ class TeamsTable extends Table
 
         $this->hasMany('Roles', [
             'foreignKey' => 'team_id',
+        ]);
+
+        $this->hasOne('TeamLead', [
+            'className' => 'Roles',
+            'foreignKey' => 'team_id',
+            'conditions' => ['TeamLead.is_lead' => true],
         ]);
     }
 

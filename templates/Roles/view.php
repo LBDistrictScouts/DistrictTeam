@@ -42,6 +42,10 @@
                     <th><?= __('Currently Filled') ?></th>
                     <td><?= $role->currently_filled ? __('Yes') : __('No'); ?></td>
                 </tr>
+                <tr>
+                    <th><?= __('Team Lead Role') ?></th>
+                    <td><?= $role->is_lead ? __('Yes') : __('No'); ?></td>
+                </tr>
             </table>
         </div>
     </div>

@@ -18,7 +18,8 @@ use Cake\ORM\Entity;
  * @property int|null $tree_level
  *
  * @property \App\Model\Entity\Team $parent_team
- * @property \App\Model\Entity\Team $sub_teams
+ * @property array<\App\Model\Entity\Team> $sub_teams
+ * @property \App\Model\Entity\Role|null $team_lead
  */
 class Team extends Entity
 {

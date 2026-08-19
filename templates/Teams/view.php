@@ -31,6 +31,10 @@
                     <td><?= $team->hasValue('parent_team') ? $this->Html->link($team->parent_team->team_name, ['controller' => 'Teams', 'action' => 'view', $team->parent_team->id]) : '' ?></td>
                 </tr>
                 <tr>
+                    <th><?= __('Team Lead Role') ?></th>
+                    <td><?= $team->hasValue('team_lead') ? $this->Html->link($team->team_lead->name, ['controller' => 'Roles', 'action' => 'view', $team->team_lead->id]) : '' ?></td>
+                </tr>
+                <tr>
                     <th><?= __('Tree Left') ?></th>
                     <td><?= $team->tree_left === null ? '' : $this->Number->format($team->tree_left) ?></td>
                 </tr>
@@ -51,6 +55,7 @@
                         <tr>
                             <th><?= __('Id') ?></th>
                             <th><?= __('Team Name') ?></th>
+                            <th><?= __('Team Lead Role') ?></th>
                             <th><?= __('Tree Left') ?></th>
                             <th><?= __('Tree Right') ?></th>
                             <th><?= __('Tree Level') ?></th>
@@ -60,6 +65,7 @@
                         <tr>
                             <td><?= h($subTeam->id) ?></td>
                             <td><?= h($subTeam->team_name) ?></td>
+                            <td><?= $subTeam->hasValue('team_lead') ? $this->Html->link($subTeam->team_lead->name, ['controller' => 'Roles', 'action' => 'view', $subTeam->team_lead->id]) : '' ?></td>
                             <td><?= h($subTeam->tree_left) ?></td>
                             <td><?= h($subTeam->tree_right) ?></td>
                             <td><?= h($subTeam->tree_level) ?></td>

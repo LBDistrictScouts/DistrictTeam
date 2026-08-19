@@ -80,6 +80,10 @@ class RolesTable extends Table
             ->boolean('currently_filled')
             ->notEmptyString('currently_filled');
 
+        $validator
+            ->boolean('is_lead')
+            ->notEmptyString('is_lead');
+
         return $validator;
     }
 
@@ -104,6 +108,27 @@ class RolesTable extends Table
             [
                 'errorField' => 'slug',
                 'message' => __('This slug is already in use by a team or role'),
+            ],
+        );
+        $rules->add(
+            function (EntityInterface $entity): bool {
+                if (!$entity->get('is_lead')) {
+                    return true;
+                }
+
+                $conditions = [
+                    'team_id' => $entity->get('team_id'),
+                    'is_lead' => true,
+                ];
+                if (!$entity->isNew()) {
+                    $conditions['id !='] = $entity->get('id');
+                }
+
+                return !$this->exists($conditions);
+            },
+            [
+                'errorField' => 'is_lead',
+                'message' => __('This team already has a lead role'),
             ],
         );
 

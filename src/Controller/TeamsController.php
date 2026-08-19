@@ -37,7 +37,11 @@ class TeamsController extends AppController
      */
     public function view(?string $id = null)
     {
-        $team = $this->Teams->get($id, contain: ['ParentTeam', 'SubTeams']);
+        $team = $this->Teams->get($id, contain: [
+            'ParentTeam',
+            'TeamLead',
+            'SubTeams.TeamLead',
+        ]);
         $this->set(compact('team'));
     }
 

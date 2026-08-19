@@ -64,6 +64,7 @@ class RolesTableTest extends TestCase
             'team_id' => '11111111-1111-4111-8111-111111111111',
             'name' => 'Programme Lead',
             'currently_filled' => false,
+            'is_lead' => false,
         ]);
         $this->assertEmpty($role->getErrors());
         $this->assertSame('programme-lead', $role->slug);
@@ -119,5 +120,18 @@ class RolesTableTest extends TestCase
         $role->name = 'Digital Lead';
 
         $this->assertNotFalse($this->Roles->save($role));
+    }
+
+    public function testTeamCanHaveOnlyOneLeadRole(): void
+    {
+        $role = $this->Roles->newEntity([
+            'team_id' => '11111111-1111-4111-8111-111111111112',
+            'name' => 'Second Digital Lead',
+            'currently_filled' => false,
+            'is_lead' => true,
+        ]);
+
+        $this->assertFalse($this->Roles->save($role));
+        $this->assertArrayHasKey('is_lead', $role->getErrors());
     }
 }

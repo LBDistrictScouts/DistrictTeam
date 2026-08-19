@@ -25,6 +25,7 @@ class RolesFixture extends TestFixture
                 'slug' => 'digital-lead',
                 'description' => 'Leads digital services',
                 'currently_filled' => 1,
+                'is_lead' => 1,
             ],
             [
                 'id' => '22222222-2222-4222-8222-222222222222',
@@ -33,6 +34,7 @@ class RolesFixture extends TestFixture
                 'slug' => 'vacant-role',
                 'description' => null,
                 'currently_filled' => 0,
+                'is_lead' => 0,
             ],
         ];
         parent::init();
