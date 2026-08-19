@@ -49,6 +49,14 @@ return function (RouteBuilder $routes): void {
      */
     $routes->setRouteClass(DashedRoute::class);
 
+    $routes->prefix('Api', function (RouteBuilder $builder): void {
+        $builder->setExtensions(['json']);
+
+        foreach (['Teams', 'Roles', 'Members', 'MemberContactMethods', 'Appointments'] as $resource) {
+            $builder->resources($resource, ['only' => ['index', 'view']]);
+        }
+    });
+
     $routes->scope('/', function (RouteBuilder $builder): void {
         /*
          * Here, we are connecting '/' (base path) to a controller called 'Pages',
