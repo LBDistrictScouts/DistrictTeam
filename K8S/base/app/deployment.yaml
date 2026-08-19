@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: district-team
+  namespace: district-team
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: district-team
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: app
+      labels:
+        app: district-team
+    spec:
+      serviceAccountName: district-team-runtime
+      initContainers:
+        - name: copy-app-code
+          image: ghcr.io/lbdistrictscouts/districtteam:latest
+          imagePullPolicy: Always
+          command: [sh, -c, "cp -a /var/www/html/webroot/. /workdir"]
+          volumeMounts:
+            - name: webroot
+              mountPath: /workdir
+      containers:
+        - name: app
+          image: ghcr.io/lbdistrictscouts/districtteam:latest
+          imagePullPolicy: Always
+          command: [php-fpm, -F]
+          envFrom:
+            - configMapRef:
+                name: district-team-config
+            - secretRef:
+                name: district-team-secrets
+          ports:
+            - containerPort: 9000
+              name: fpm
+          readinessProbe:
+            tcpSocket:
+              port: fpm
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: fpm
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 1
+              memory: 512Mi
+        - name: web
+          image: nginx:1.27-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+            - containerPort: 443
+              name: https
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: webroot
+              mountPath: /var/www/html/webroot
+              readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            - name: district-team-tls
+              mountPath: /etc/nginx/tls
+              readOnly: true
+      volumes:
+        - name: webroot
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: district-team-nginx
+        - name: district-team-tls
+          secret:
+            secretName: district-team-tls

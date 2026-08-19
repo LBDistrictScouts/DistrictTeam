@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: district-team-tls
+  namespace: district-team
+spec:
+  dnsNames:
+    - district-team-test.lbdscouts.org.uk

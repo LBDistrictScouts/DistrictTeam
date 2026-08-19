@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: district-team-config
+  namespace: district-team
+data:
+  APP_FULL_BASE_URL: https://district-team-test.lbdscouts.org.uk
+  DEBUG: "false"

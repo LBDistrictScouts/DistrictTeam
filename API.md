@@ -40,6 +40,6 @@ Individual responses contain the record in `data`:
 }
 ```
 
-Use `?page=2&limit=10` to paginate a collection. CakePHP caps `limit` at 100 by default. Related records are embedded where useful: teams include their parent and children, roles include their team, members include contact methods, contact methods include their member, and appointments include their role, member, and contact method.
+Use `?page=2&limit=10` to paginate a collection. CakePHP caps `limit` at 100 by default. Related records are embedded where useful: teams include their parent and children; roles include their team and current active appointment; members include contact methods; contact methods include their member; and appointments include their role, member, and contact method. A role's `current_appointment` also embeds its member and contact method, and is `null` when no appointment is active and effective today.
 
 Unknown UUIDs and unregistered write routes return `404 Not Found`.

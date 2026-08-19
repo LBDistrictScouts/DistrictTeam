@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: district-team-migrate
+  namespace: district-team
+spec:
+  template:
+    spec:
+      serviceAccountName: test-district-team-runtime
+      containers:
+        - name: migrate
+          envFrom:
+            - configMapRef:
+                name: test-district-team-config
+            - secretRef:
+                name: test-district-team-secrets

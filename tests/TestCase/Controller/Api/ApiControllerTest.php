@@ -43,6 +43,23 @@ class ApiControllerTest extends TestCase
         $this->assertArrayHasKey('member_contact_method', $payload['data']);
     }
 
+    public function testRoleViewReturnsCurrentAppointment(): void
+    {
+        $this->get('/api/roles/22222222-2222-4222-8222-222222222221.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame(
+            '55555555-5555-4555-8555-555555555551',
+            $payload['data']['current_appointment']['id'],
+        );
+        $this->assertSame('Ada', $payload['data']['current_appointment']['member']['first_name']);
+        $this->assertArrayHasKey(
+            'member_contact_method',
+            $payload['data']['current_appointment'],
+        );
+    }
+
     public function testApiRoutesAreReadOnly(): void
     {
         $this->enableCsrfToken();

@@ -7,6 +7,7 @@ use ArrayObject;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\Date;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -62,6 +63,26 @@ class AppointmentsTable extends Table
     }
 
     /**
+     * Find appointments that are active and effective today.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Appointment> $query Query to filter.
+     * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Appointment>
+     */
+    public function findCurrent(SelectQuery $query): SelectQuery
+    {
+        $today = Date::today();
+
+        return $query->where([
+            $this->aliasField('active') => true,
+            $this->aliasField('effective_start_date') . ' <=' => $today,
+            'OR' => [
+                $this->aliasField('effective_end_date') . ' IS' => null,
+                $this->aliasField('effective_end_date') . ' >=' => $today,
+            ],
+        ]);
+    }
+
+    /**
      * Synchronize role occupancy after an appointment is saved.
      *
      * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event After save event.
@@ -108,16 +129,9 @@ class AppointmentsTable extends Table
      */
     private function synchronizeRoleOccupancy(string $roleId): void
     {
-        $today = Date::today();
-        $currentlyFilled = $this->exists([
-            'role_id' => $roleId,
-            'active' => true,
-            'effective_start_date <=' => $today,
-            'OR' => [
-                'effective_end_date IS' => null,
-                'effective_end_date >=' => $today,
-            ],
-        ]);
+        $currentlyFilled = $this->find('current')
+            ->where(['role_id' => $roleId])
+            ->count() > 0;
 
         $this->Roles->updateAll(
             ['currently_filled' => $currentlyFilled],

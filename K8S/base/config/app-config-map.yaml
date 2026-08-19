@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: district-team-config
+  namespace: district-team
+data:
+  APP_NAME: district-team
+  APP_ENCODING: UTF-8
+  APP_DEFAULT_LOCALE: en_GB
+  APP_DEFAULT_TIMEZONE: Europe/London
+  APP_FULL_BASE_URL: https://district-team.example.com
+  DEBUG: "false"
+  LOG_DEBUG_URL: php://stdout
+  LOG_ERROR_URL: php://stderr

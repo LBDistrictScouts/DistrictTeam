@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
  * Roles Model
  *
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams
+ * @property \App\Model\Table\AppointmentsTable&\Cake\ORM\Association\HasOne $CurrentAppointment
  * @method \App\Model\Entity\Role newEmptyEntity()
  * @method \App\Model\Entity\Role newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Role> newEntities(array $data, array $options = [])
@@ -45,6 +46,12 @@ class RolesTable extends Table
         $this->belongsTo('Teams', [
             'foreignKey' => 'team_id',
             'joinType' => 'INNER',
+        ]);
+        $this->hasOne('CurrentAppointment', [
+            'className' => 'Appointments',
+            'foreignKey' => 'role_id',
+            'finder' => 'current',
+            'sort' => ['CurrentAppointment.effective_start_date' => 'DESC'],
         ]);
     }
 

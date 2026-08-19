@@ -2,80 +2,278 @@ name: CI
 
 on:
   push:
-    branches:
-      - '5.x'
-      - '5.next'
-      - '6.x'
+    branches: [main]
+    tags: ['v*']
   pull_request:
-    branches:
-      - '*'
+    branches: ['*']
   workflow_dispatch:
+    inputs:
+      release_environment:
+        description: GitHub Environment used to gate manual releases
+        required: false
+        default: production
+        type: string
 
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  REGISTRY: ghcr.io
+  IMAGE_NAME: lbdistrictscouts/districtteam
+  IMAGE_DESCRIPTION: CakePHP application for managing the Letchworth, Baldock and Ashwell Scouts district team.
+
 jobs:
-  testsuite:
+  php-tests:
+    name: CakePHP Tests (PostgreSQL)
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: district_team_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d district_team_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, intl, pdo_pgsql
+          coverage: none
+          tools: cs2pr, phpstan:2.1
+      - name: Cache Composer downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Composer post install
+        run: composer run-script post-install-cmd --no-interaction
+      - name: Coding standards
+        run: vendor/bin/phpcs --report=checkstyle | cs2pr
+      - name: Static analysis
+        if: always()
+        run: phpstan
+        env:
+          SECURITY_SALT: ci-static-analysis-salt
+      - name: Run tests
+        if: always()
+        run: composer test
+        env:
+          DATABASE_TEST_URL: postgres://postgres:postgres@127.0.0.1:5432/district_team_test?encoding=utf8&timezone=UTC
+          SECURITY_SALT: ci-test-salt
+
+  manifests:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+      - name: Render Kustomize environments
+        run: |
+          kubectl kustomize K8S/overlays/test > /tmp/district-team-test.yaml
+          kubectl kustomize K8S/overlays/prod > /tmp/district-team-prod.yaml
+          kubectl kustomize K8S/overlays/test/operations > /tmp/district-team-test-operations.yaml
+          kubectl kustomize K8S/overlays/prod/operations > /tmp/district-team-prod-operations.yaml
+          test -s /tmp/district-team-test.yaml
+          test -s /tmp/district-team-prod.yaml
+          test -s /tmp/district-team-test-operations.yaml
+          test -s /tmp/district-team-prod-operations.yaml
+
+  docker-smoke-test:
+    name: Smoke Test Docker Image
+    needs: [php-tests, manifests]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build smoke-test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: district-team:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Verify runtime image
+        run: |
+          docker run --rm district-team:smoke test -f /var/www/html/vendor/autoload.php
+          docker run --rm district-team:smoke test -f /var/www/html/bin/cake.php
+          docker run --rm district-team:smoke test ! -f /var/www/html/config/app_local.php
+          docker run --rm district-team:smoke php -r 'require "/var/www/html/vendor/autoload.php";'
+          docker run --rm -e SECURITY_SALT=docker-smoke district-team:smoke php bin/cake.php version
+
+  docker-build:
+    name: Build Docker Image (${{ matrix.platform }})
+    if: github.event_name == 'pull_request'
+    needs: docker-smoke-test
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - php-version: '8.2'
-            dependencies: 'lowest'
-          - php-version: '8.5'
-            dependencies: 'highest'
-          - php-version: '8.5'
-            dependencies: 'highest'
-
+        platform: [linux/amd64, linux/arm64]
     steps:
-    - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=pr
+            type=sha
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: ${{ matrix.php-version }}
-        extensions: mbstring, intl, pdo_sqlite
-        ini-values: zend.assertions=1
-        coverage: none
+  docker-publish:
+    name: Publish Docker Image (${{ matrix.platform }})
+    if: github.event_name != 'pull_request'
+    needs: docker-smoke-test
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Prepare platform name
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
-    - name: Composer install
-      uses: ramsey/composer-install@v4
-      with:
-        dependency-versions: ${{ matrix.dependencies }}
-        composer-options: ${{ matrix.composer-options }}
-
-    - name: Composer post install
-      run: composer run-script post-install-cmd --no-interaction
-
-    - name: Run PHPUnit
-      run: vendor/bin/phpunit
-      env:
-        DATABASE_TEST_URL: sqlite://./testdb.sqlite
-
-  coding-standard:
-    name: Coding Standard & Static Analysis
+  docker-manifest:
+    name: Publish Docker Manifest
+    if: github.event_name != 'pull_request'
+    needs: docker-publish
     runs-on: ubuntu-24.04
-
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.release_environment || 'production' }}
+    permissions:
+      contents: write
+      packages: write
     steps:
-    - uses: actions/checkout@v7
-
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, intl
-        coverage: none
-        tools: cs2pr, phpstan:2.1
-
-    - name: Composer install
-      uses: ramsey/composer-install@v4
-
-    - name: Run PHP CodeSniffer
-      run: vendor/bin/phpcs --report=checkstyle | cs2pr
-
-    - name: Run phpstan
-      if: always()
-      run: phpstan
-      env:
-        SECURITY_SALT: f76f1c8475585c46c6acd3ddcb8f5e0f15de524637bb4080a08c4afe7cfc9144
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            --annotation "index:org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}" \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+      - name: Create GitHub release for tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          digest="$(docker buildx imagetools inspect "$IMAGE:$TAG" --format '{{json .Manifest.Digest}}' | jq -r '.')"
+          {
+            echo "## Container Image"
+            echo
+            echo '```text'
+            echo "$IMAGE:$TAG"
+            echo "$IMAGE@$digest"
+            echo '```'
+          } > /tmp/image-notes.md
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes-file /tmp/image-notes.md
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file /tmp/image-notes.md
+          fi
+      - name: Publish deployment guidance
+        run: |
+          {
+            echo "## Published image"
+            echo
+            echo '`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}`'
+            echo
+            echo "Secrets are injected at runtime by the 1Password Kubernetes Operator."
+          } >> "$GITHUB_STEP_SUMMARY"

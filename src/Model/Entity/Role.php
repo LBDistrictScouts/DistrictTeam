@@ -17,6 +17,7 @@ use Cake\ORM\Entity;
  * @property bool $is_lead
  *
  * @property \App\Model\Entity\Team $team
+ * @property \App\Model\Entity\Appointment|null $current_appointment
  */
 class Role extends Entity
 {

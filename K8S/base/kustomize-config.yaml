@@ -1,0 +1,20 @@
+nameReference:
+  - group: onepassword.com
+    version: v1
+    kind: OnePasswordItem
+    fieldSpecs:
+      - group: apps
+        version: v1
+        kind: Deployment
+        path: spec/template/spec/containers/envFrom/secretRef/name
+      - group: batch
+        version: v1
+        kind: Job
+        path: spec/template/spec/containers/envFrom/secretRef/name
+      - group: apps
+        version: v1
+        kind: StatefulSet
+        path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
+      - version: v1
+        kind: ServiceAccount
+        path: imagePullSecrets/name

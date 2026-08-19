@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: district-team
+
+resources:
+  - core/namespace.yaml
+  - core/service-account.yaml
+  - secrets/one-password-item.yaml
+  - secrets/ghcr-one-password-item.yaml
+  - config/app-config-map.yaml
+  - config/nginx-config-map.yaml
+  - db/service.yaml
+  - db/stateful-set.yaml
+  - app/deployment.yaml
+  - app/service.yaml
+  - tls/certificate.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: district-team
+      app.kubernetes.io/part-of: district-team
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: true
+    includeTemplates: true
+
+images:
+  - name: ghcr.io/lbdistrictscouts/districtteam
+    newTag: latest
+
+commonAnnotations:
+  author: "District Team"
+  description: "CakePHP district team deployment"
+
+configurations:
+  - kustomize-config.yaml

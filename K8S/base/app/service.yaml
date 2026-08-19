@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: district-team-web
+  namespace: district-team
+spec:
+  type: LoadBalancer
+  selector:
+    app: district-team
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: district-team-migrate
+  namespace: district-team
+  labels:
+    app: district-team-migrate
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: district-team-migrate
+    spec:
+      serviceAccountName: district-team-runtime
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/lbdistrictscouts/districtteam:latest
+          imagePullPolicy: Always
+          command: [php, bin/cake.php, migrations, migrate]
+          envFrom:
+            - configMapRef:
+                name: district-team-config
+            - secretRef:
+                name: district-team-secrets

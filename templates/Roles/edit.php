@@ -27,7 +27,10 @@
                     echo $this->Form->control('name');
                     echo $this->Form->control('slug');
                     echo $this->Form->control('description');
-                    echo $this->Form->control('is_lead');
+                    echo $this->Form->control('is_lead', [
+                        'type' => 'checkbox',
+                        'label' => __('Team lead role'),
+                    ]);
                 ?>
             </fieldset>
             <?= $this->Form->button(__('Submit')) ?>

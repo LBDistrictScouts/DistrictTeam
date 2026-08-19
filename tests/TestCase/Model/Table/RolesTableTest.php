@@ -26,6 +26,9 @@ class RolesTableTest extends TestCase
     protected array $fixtures = [
         'app.Teams',
         'app.Roles',
+        'app.Members',
+        'app.MemberContactMethods',
+        'app.Appointments',
     ];
 
     /**
@@ -133,5 +136,16 @@ class RolesTableTest extends TestCase
 
         $this->assertFalse($this->Roles->save($role));
         $this->assertArrayHasKey('is_lead', $role->getErrors());
+    }
+
+    public function testCurrentAppointmentAssociation(): void
+    {
+        $role = $this->Roles->get(
+            '22222222-2222-4222-8222-222222222221',
+            contain: ['CurrentAppointment.Members'],
+        );
+
+        $this->assertNotNull($role->current_appointment);
+        $this->assertSame('Ada', $role->current_appointment->member->first_name);
     }
 }

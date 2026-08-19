@@ -84,6 +84,14 @@ class RolesControllerTest extends TestCase
         $this->assertResponseContains('The role could not be saved');
     }
 
+    public function testAddDisplaysLeadCheckbox(): void
+    {
+        $this->get('/roles/add');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('type="checkbox" name="is_lead"');
+    }
+
     /**
      * Test edit method
      *
@@ -115,6 +123,14 @@ class RolesControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('The role could not be saved');
+    }
+
+    public function testEditDisplaysLeadCheckbox(): void
+    {
+        $this->get('/roles/edit/22222222-2222-4222-8222-222222222222');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('type="checkbox" name="is_lead"');
     }
 
     /**
