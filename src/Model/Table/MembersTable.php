@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 /**
  * Members Model
  *
- * @property \App\Model\Table\MemberContactMethodsTable&\Cake\ORM\Association\HasMany $MemberContactMethods
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\MemberContactMethodsTable> $MemberContactMethods
  * @method \App\Model\Entity\Member newEmptyEntity()
  * @method \App\Model\Entity\Member newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Member> newEntities(array $data, array $options = [])

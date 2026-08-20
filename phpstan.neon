@@ -5,3 +5,9 @@ parameters:
 		- config/bootstrap.php
 	paths:
 		- src/
+	ignoreErrors:
+		# CakePHP Bake emits table method annotations with bare array/iterable
+		# parameters. Keep this suppression limited to generated table docblocks.
+		-
+			identifier: missingType.iterableValue
+			path: src/Model/Table/*Table.php

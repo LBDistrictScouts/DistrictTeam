@@ -64,7 +64,7 @@ jobs:
         run: vendor/bin/phpcs --report=checkstyle | cs2pr
       - name: Static analysis
         if: always()
-        run: phpstan
+        run: phpstan --memory-limit=1G
         env:
           SECURITY_SALT: ci-static-analysis-salt
       - name: Run tests
