@@ -243,14 +243,29 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
+          mapfile -t tags < <(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          tag_args=()
+          for tag in "${tags[@]}"; do
+            tag_args+=(--tag "$tag")
+          done
+
+          sources=()
+          for digest_file in *; do
+            sources+=("${REGISTRY}/${IMAGE_NAME}@sha256:${digest_file}")
+          done
+
+          test "${#tag_args[@]}" -gt 0
+          test "${#sources[@]}" -eq 2
+
           docker buildx imagetools create \
             --annotation "index:org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}" \
-            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+            "${tag_args[@]}" \
+            "${sources[@]}"
       - name: Create GitHub release for tag
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           TAG: ${{ github.ref_name }}
         run: |
@@ -263,17 +278,17 @@ jobs:
             echo "$IMAGE@$digest"
             echo '```'
           } > /tmp/image-notes.md
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --notes-file /tmp/image-notes.md
+          if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$GH_REPO" --notes-file /tmp/image-notes.md
           else
-            gh release create "$TAG" --title "$TAG" --notes-file /tmp/image-notes.md
+            gh release create "$TAG" --repo "$GH_REPO" --title "$TAG" --notes-file /tmp/image-notes.md
           fi
       - name: Publish deployment guidance
         run: |
           {
             echo "## Published image"
             echo
-            echo '`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}`'
+            printf '%c%s/%s%c\n' 96 "$REGISTRY" "$IMAGE_NAME" 96
             echo
             echo "Secrets are injected at runtime by the 1Password Kubernetes Operator."
           } >> "$GITHUB_STEP_SUMMARY"
