@@ -60,6 +60,21 @@ class ApiControllerTest extends TestCase
         );
     }
 
+    public function testRolesIndexIncludesRolesWithoutCurrentAppointments(): void
+    {
+        $this->get('/api/roles.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $roles = array_column($payload['data'], null, 'id');
+
+        $this->assertCount(2, $roles);
+        $this->assertArrayHasKey('22222222-2222-4222-8222-222222222222', $roles);
+        $this->assertNull(
+            $roles['22222222-2222-4222-8222-222222222222']['current_appointment'],
+        );
+    }
+
     public function testApiRoutesAreReadOnly(): void
     {
         $this->enableCsrfToken();
