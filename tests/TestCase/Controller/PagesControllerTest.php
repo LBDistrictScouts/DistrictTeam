@@ -28,6 +28,12 @@ class PagesControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
+    protected array $fixtures = [
+        'app.Teams',
+        'app.Roles',
+        'app.Members',
+    ];
+
     /**
      * testDisplay method
      *
@@ -38,7 +44,8 @@ class PagesControllerTest extends TestCase
         Configure::write('debug', true);
         $this->get('/pages/home');
         $this->assertResponseOk();
-        $this->assertResponseContains('CakePHP');
+        $this->assertResponseContains('Your team, all in one place.');
+        $this->assertResponseContains('Vacancies');
         $this->assertResponseContains('<html>');
     }
 
