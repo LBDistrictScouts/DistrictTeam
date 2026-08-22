@@ -51,6 +51,7 @@ class RolesTable extends Table
             'className' => 'Appointments',
             'foreignKey' => 'role_id',
             'finder' => 'current',
+            'strategy' => 'select',
             'sort' => ['CurrentAppointment.effective_start_date' => 'DESC'],
         ]);
     }
