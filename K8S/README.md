@@ -37,24 +37,18 @@ The 1Password Operator items are:
 Each DistrictTeam item must expose these exact keys:
 
 - `SECURITY_SALT`
-- `DATABASE_URL`
 - `POSTGRES_DB`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 - `EMAIL_TRANSPORT_DEFAULT_URL` (optional, but required to send email)
 
-Use these database hosts in `DATABASE_URL`:
+The non-secret connection values are supplied by the environment ConfigMap:
 
-```text
-test-district-team-postgres
-prod-district-team-postgres
-```
+- `DATABASE_HOST` (`test-district-team-postgres` or `prod-district-team-postgres`)
+- `DATABASE_PORT` (`5432`)
 
-For example:
-
-```text
-postgres://USER:PASSWORD@test-district-team-postgres:5432/DATABASE?encoding=utf8&timezone=UTC&cacheMetadata=true
-```
+The CakePHP app and PostgreSQL container both read the `POSTGRES_DB` Secret
+field directly. The app reads the component fields; no `DATABASE_URL` is used.
 
 ## Deploy
 
