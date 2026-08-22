@@ -71,7 +71,11 @@ jobs:
         if: always()
         run: composer test
         env:
-          DATABASE_TEST_URL: postgres://postgres:postgres@127.0.0.1:5432/district_team_test?encoding=utf8&timezone=UTC
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_PORT: 5432
+          POSTGRES_DB: district_team_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
           SECURITY_SALT: ci-test-salt
 
   manifests:

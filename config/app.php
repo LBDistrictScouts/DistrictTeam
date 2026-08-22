@@ -289,6 +289,11 @@ return [
             'className' => Connection::class,
             'driver' => Postgres::class,
             'persistent' => false,
+            'host' => env('DATABASE_HOST', 'localhost'),
+            'port' => env('DATABASE_PORT', 5432),
+            'username' => env('POSTGRES_USER', 'postgres'),
+            'password' => env('POSTGRES_PASSWORD', ''),
+            'database' => env('POSTGRES_DB', 'district_team'),
             'timezone' => 'UTC',
 
             /*
@@ -332,6 +337,11 @@ return [
             'className' => Connection::class,
             'driver' => Postgres::class,
             'persistent' => false,
+            'host' => env('DATABASE_HOST', 'localhost'),
+            'port' => env('DATABASE_PORT', 5432),
+            'username' => env('POSTGRES_USER', 'postgres'),
+            'password' => env('POSTGRES_PASSWORD', ''),
+            'database' => env('POSTGRES_DB', 'district_team_test'),
             'timezone' => 'UTC',
             //'encoding' => 'utf8mb4',
             'flags' => [],

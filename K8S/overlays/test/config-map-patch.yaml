@@ -6,3 +6,4 @@ metadata:
 data:
   APP_FULL_BASE_URL: https://district-team-test.lbdscouts.org.uk
   DEBUG: "false"
+  DATABASE_HOST: test-district-team-postgres
