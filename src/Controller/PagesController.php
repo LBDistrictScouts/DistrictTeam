@@ -61,6 +61,20 @@ class PagesController extends AppController
         }
         $this->set(compact('page', 'subpage'));
 
+        if ($page === 'home') {
+            $roles = $this->fetchTable('Roles');
+            $dashboardStats = [
+                'teams' => $this->fetchTable('Teams')->find()->count(),
+                'roles' => $roles->find()->count(),
+                'filledRoles' => $roles->find()->where(['currently_filled' => true])->count(),
+                'vacantRoles' => $roles->find()->where(['currently_filled' => false])->count(),
+                'activeMembers' => $this->fetchTable('Members')->find()
+                    ->where(['active' => true])
+                    ->count(),
+            ];
+            $this->set(compact('dashboardStats'));
+        }
+
         try {
             return $this->render(implode('/', $path));
         } catch (MissingTemplateException $exception) {
