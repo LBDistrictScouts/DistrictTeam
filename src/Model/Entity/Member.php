@@ -21,6 +21,15 @@ use Cake\ORM\Entity;
 class Member extends Entity
 {
     /**
+     * Fields excluded from serialized representations.
+     *
+     * @var array<string>
+     */
+    protected array $_hidden = [
+        'membership_number',
+    ];
+
+    /**
      * Virtual fields exposed by the entity.
      *
      * @var array<string>

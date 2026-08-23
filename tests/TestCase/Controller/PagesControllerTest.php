@@ -46,6 +46,8 @@ class PagesControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Your team, all in one place.');
         $this->assertResponseContains('Vacancies');
+        $this->assertResponseContains('Make a role');
+        $this->assertResponseContains('href="/roles/add"');
         $this->assertResponseContains('<html>');
     }
 

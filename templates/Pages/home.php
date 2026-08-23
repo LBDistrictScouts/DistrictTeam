@@ -10,6 +10,7 @@ $filledPercentage = $dashboardStats['roles'] > 0
 $quickActions = [
     ['＋', __('Add a member'), __('Create a new member record'), 'Members'],
     ['↗', __('Make an appointment'), __('Assign a member to a role'), 'Appointments'],
+    ['◎', __('Make a role'), __('Add a role to a team'), 'Roles'],
     ['◇', __('Create a team'), __('Grow the team structure'), 'Teams'],
 ];
 ?>
