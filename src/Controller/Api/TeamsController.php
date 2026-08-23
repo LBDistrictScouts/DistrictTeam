@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Model\Entity\Role;
+use App\Model\Table\TeamsTable;
+use RuntimeException;
 
 class TeamsController extends AppController
 {
@@ -11,6 +13,11 @@ class TeamsController extends AppController
 
     protected array $contain = ['ParentTeam', 'TeamLead', 'SubTeams.TeamLead'];
 
+    /**
+     * Associations included in individual team responses.
+     *
+     * @var array<int|string, mixed>
+     */
     protected array $viewContain = [
         'ParentTeam',
         'TeamLead',
@@ -53,7 +60,7 @@ class TeamsController extends AppController
     {
         $this->request->allowMethod(['get']);
 
-        $teams = $this->fetchTable($this->tableAlias);
+        $teams = $this->teamsTable();
         $team = $teams->get($id, contain: $this->viewContain);
         $roles = $team->roles;
         $subTeamIds = array_map(
@@ -107,16 +114,37 @@ class TeamsController extends AppController
      * Merge roles by UUID so a role is never returned twice.
      *
      * @param array<\App\Model\Entity\Role> $roles Team roles.
-     * @param array<\App\Model\Entity\Role> $additionalRoles Subteam lead roles.
+     * @param iterable<array<mixed>|\Cake\Datasource\EntityInterface> $additionalRoles Subteam lead roles.
      * @return array<\App\Model\Entity\Role>
      */
-    private function mergeRoles(array $roles, array $additionalRoles): array
+    private function mergeRoles(array $roles, iterable $additionalRoles): array
     {
         $rolesById = [];
-        foreach (array_merge($roles, $additionalRoles) as $role) {
+        foreach ($roles as $role) {
+            $rolesById[$role->id] = $role;
+        }
+        foreach ($additionalRoles as $role) {
+            if (!$role instanceof Role) {
+                throw new RuntimeException('Expected a hydrated role entity');
+            }
             $rolesById[$role->id] = $role;
         }
 
         return array_values($rolesById);
+    }
+
+    /**
+     * Return the concrete teams table used by this endpoint.
+     *
+     * @return \App\Model\Table\TeamsTable
+     */
+    private function teamsTable(): TeamsTable
+    {
+        $table = $this->fetchTable($this->tableAlias);
+        if (!$table instanceof TeamsTable) {
+            throw new RuntimeException('Expected the Teams table');
+        }
+
+        return $table;
     }
 }
