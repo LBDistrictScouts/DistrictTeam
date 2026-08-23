@@ -67,6 +67,7 @@ class TeamsTable extends Table
 
         $this->hasMany('Roles', [
             'foreignKey' => 'team_id',
+            'strategy' => 'select',
         ]);
 
         $this->hasOne('TeamLead', [

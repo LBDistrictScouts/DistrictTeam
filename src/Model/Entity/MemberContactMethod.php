@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+use App\Model\Enum\ContactMethodType;
 use Cake\ORM\Entity;
 
 /**
@@ -32,4 +33,21 @@ class MemberContactMethod extends Entity
         'contact_method_type' => true,
         'member' => true,
     ];
+
+    /**
+     * Serialize the enum using its human-readable label.
+     *
+     * @return array<string, mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        $data = parent::jsonSerialize();
+        $contactMethodType = $data['contact_method_type'] ?? null;
+
+        if ($contactMethodType instanceof ContactMethodType) {
+            $data['contact_method_type'] = $contactMethodType->label();
+        }
+
+        return $data;
+    }
 }

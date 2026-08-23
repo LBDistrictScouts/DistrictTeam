@@ -15,6 +15,8 @@
  */
 
 $cakeDescription = 'District Team';
+$crudControllers = ['Teams', 'Roles', 'Members', 'Appointments', 'MemberContactMethods'];
+$showCrudSidebar = in_array($this->getRequest()->getParam('controller'), $crudControllers, true);
 ?>
 <!DOCTYPE html>
 <html>
@@ -48,7 +50,16 @@ $cakeDescription = 'District Team';
     <main class="main">
         <div class="container">
             <?= $this->Flash->render() ?>
-            <?= $this->fetch('content') ?>
+            <?php if ($showCrudSidebar) : ?>
+                <div class="crud-shell">
+                    <?= $this->element('crud_sidebar') ?>
+                    <div class="crud-shell-content">
+                        <?= $this->fetch('content') ?>
+                    </div>
+                </div>
+            <?php else : ?>
+                <?= $this->fetch('content') ?>
+            <?php endif; ?>
         </div>
     </main>
     <footer>
