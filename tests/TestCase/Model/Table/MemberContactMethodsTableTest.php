@@ -105,7 +105,16 @@ class MemberContactMethodsTableTest extends TestCase
 
     public function testPhoneNumbersAreNormalizedAndInvalidFormatsAreRejected(): void
     {
-        foreach (['07804918252', '07804 918252', '+44 7804 918252'] as $phoneNumber) {
+        foreach (
+            [
+            '07804918252',
+            '07804 918252',
+            '+44 7804 918252',
+            '+447804918252',
+            '+44 (0)7804-918-252',
+            '0044 7804 918252',
+            ] as $phoneNumber
+        ) {
             $contact = $this->MemberContactMethods->newEntity([
                 'member_id' => '33333333-3333-4333-8333-333333333331',
                 'contact_method' => $phoneNumber,
@@ -118,7 +127,7 @@ class MemberContactMethodsTableTest extends TestCase
 
         $contact = $this->MemberContactMethods->newEntity([
             'member_id' => '33333333-3333-4333-8333-333333333331',
-            'contact_method' => '+447804918252',
+            'contact_method' => '+44 6804 918252',
             'contact_method_type' => ContactMethodType::PhoneNumber->value,
         ]);
 

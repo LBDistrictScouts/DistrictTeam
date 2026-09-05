@@ -66,6 +66,8 @@ Other columns can be omitted; extra columns are ignored. Include Communication e
 or Contact number for new members needing appointments; existing members can reuse
 an existing email/phone contact. Missing source-context columns appear blank in the
 mapping screen and may require new mappings, since their source combinations differ.
+Phone numbers are optional. Invalid phone values are skipped with a warning; an
+appointment without another usable contact method is also skipped.
 Uploading shows a mapping screen without changing app records. Each distinct CSV
 unit, parent team, team, role and role type combination has a destination selector
 showing existing **team / role** combinations. Select a destination or explicitly

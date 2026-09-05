@@ -65,14 +65,32 @@ class MemberContactMethodsTable extends Table
     public static function normalizePhoneNumber(string $phoneNumber): ?string
     {
         $phoneNumber = trim($phoneNumber);
-        if (
-            preg_match('/^0(7\d{3}) ?(\d{6})$/D', $phoneNumber, $matches)
-            || preg_match('/^\+44 (7\d{3}) (\d{6})$/D', $phoneNumber, $matches)
-        ) {
-            return '+44 ' . $matches[1] . ' ' . $matches[2];
+        // CSV exports use inconsistent spacing and may omit the space after +44.
+        // Allow presentation-only punctuation, then validate the underlying number.
+        if (!preg_match('/^[+()\-\s\d]+$/D', $phoneNumber)) {
+            return null;
         }
 
-        return null;
+        $digits = preg_replace('/\D/', '', $phoneNumber);
+        if ($digits === null) {
+            return null;
+        }
+        if (str_starts_with($digits, '0044')) {
+            $digits = substr($digits, 2);
+        }
+        if (str_starts_with($digits, '44')) {
+            $digits = substr($digits, 2);
+            if (str_starts_with($digits, '0')) {
+                $digits = substr($digits, 1);
+            }
+            $digits = '0' . $digits;
+        }
+
+        if (!preg_match('/^0(7\d{3})(\d{6})$/D', $digits, $matches)) {
+            return null;
+        }
+
+        return '+44 ' . $matches[1] . ' ' . $matches[2];
     }
 
     /**
@@ -141,7 +159,7 @@ class MemberContactMethodsTable extends Table
 
                 return is_string($value) && self::normalizePhoneNumber($value) !== null;
             },
-            'message' => __('Enter a UK mobile number as 07804918252, 07804 918252, or +44 7804 918252.'),
+            'message' => __('Enter a UK mobile number, for example 07804918252 or +44 7804 918252.'),
         ]);
 
         $validator

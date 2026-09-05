@@ -257,7 +257,7 @@ class MemberCsvImporterTest extends TestCase
         $importer = new MemberCsvImporter();
         $rows = $importer->read($this->upload(
             "First name,Last name,Membership number,Start date,Contact number\n"
-            . "Phone,Only,9091,01 Aug 2026,07800000000\n",
+            . "Phone,Only,9091,01 Aug 2026,+447800000000\n",
         ));
         $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
         $importer->import($rows, $mapping);
@@ -429,8 +429,6 @@ class MemberCsvImporterTest extends TestCase
             'negative membership' => ['Membership number', '-1', 'digits only'],
             'membership overflow' => ['Membership number', '2147483648', 'too large'],
             'invalid email' => ['Communication email', 'not-an-email', 'Communication email is invalid'],
-            'invalid phone number' => ['Contact number', '+447804918252', 'Contact number must use'],
-            'no contact' => ['Communication email', '', 'Include Communication email or Contact number'],
         ];
     }
 
@@ -465,6 +463,25 @@ class MemberCsvImporterTest extends TestCase
                 $table . ' must be unchanged after rollback',
             );
         }
+    }
+
+    public function testBlankOrInvalidPhoneNumberDoesNotBlockMemberImport(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(
+            "First name,Last name,Membership number,Start date,Communication email,Contact number\n"
+            . "No,Phone,9090,01 Aug 2026,no-phone@example.com,\n"
+            . "Invalid,Phone,9091,01 Aug 2026,,+44 6804 918252\n",
+        ));
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+
+        $result = $importer->import($rows, $mapping);
+
+        $this->assertSame(2, $result['members']);
+        $this->assertSame(1, $result['contacts']);
+        $this->assertSame(1, $result['appointments']);
+        $this->assertContains('Row 3: contact number skipped (invalid UK mobile number).', $result['warnings']);
+        $this->assertContains('Row 3: appointment skipped (no usable contact method).', $result['warnings']);
     }
 
     public function testPreferredNameForNewAndExistingMembersWithFallback(): void

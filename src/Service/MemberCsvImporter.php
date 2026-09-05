@@ -346,9 +346,9 @@ class MemberCsvImporter
                         if ($type === ContactMethodType::PhoneNumber) {
                             $value = MemberContactMethodsTable::normalizePhoneNumber($value);
                             if ($value === null) {
-                                throw new InvalidArgumentException(
-                                    'Contact number must use 07804918252, 07804 918252, or +44 7804 918252.',
-                                );
+                                $result['warnings'][] = "Row {$line}: contact number skipped "
+                                    . '(invalid UK mobile number).';
+                                continue;
                             }
                         }
                         $contacts = $this->fetchTable('MemberContactMethods');
@@ -387,9 +387,8 @@ class MemberCsvImporter
                             ->first()?->id;
                     }
                     if (!$contactId) {
-                        throw new InvalidArgumentException(
-                            'Include Communication email or Contact number, or use a member with an existing contact.',
-                        );
+                        $result['warnings'][] = "Row {$line}: appointment skipped (no usable contact method).";
+                        continue;
                     }
                     if (!$appointment) {
                         $result['appointments']++;
