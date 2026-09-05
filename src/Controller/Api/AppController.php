@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController as BaseController;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
 
 /**
@@ -53,22 +54,21 @@ abstract class AppController extends BaseController
     {
         $this->request->allowMethod(['get']);
 
-        $table = $this->resourceTable();
-        $query = $table->find()->contain($this->contain);
+        $query = $this->collectionQuery();
         if ($this->order !== []) {
             $query->orderBy($this->order);
         }
 
-        $items = $this->paginate($query)->toArray();
-        $paging = $this->request->getAttribute('paging')[$this->tableAlias] ?? [];
+        $page = $this->paginate($query);
+        $items = $page->toArray();
 
         $this->set([
             'data' => $items,
             'pagination' => [
-                'page' => $paging['currentPage'] ?? 1,
-                'page_count' => $paging['pageCount'] ?? 1,
-                'per_page' => $paging['perPage'] ?? count($items),
-                'total' => $paging['count'] ?? count($items),
+                'page' => $page->currentPage(),
+                'page_count' => $page->pageCount(),
+                'per_page' => $page->perPage(),
+                'total' => $page->totalCount(),
             ],
         ]);
         $this->viewBuilder()->setOption('serialize', ['data', 'pagination']);
@@ -87,6 +87,16 @@ abstract class AppController extends BaseController
         $item = $this->resourceTable()->get($id, contain: $this->contain);
         $this->set('data', $item);
         $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /**
+     * Build the collection query before sorting and pagination.
+     *
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    protected function collectionQuery(): SelectQuery
+    {
+        return $this->resourceTable()->find()->contain($this->contain);
     }
 
     /**

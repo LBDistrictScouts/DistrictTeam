@@ -25,7 +25,6 @@ class AppointmentsFixture extends TestFixture
                 'member_contact_method_id' => '44444444-4444-4444-8444-444444444441',
                 'effective_start_date' => '2020-01-01',
                 'effective_end_date' => null,
-                'active' => 1,
             ],
         ];
         parent::init();

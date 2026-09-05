@@ -29,7 +29,7 @@ class PagesControllerTest extends TestCase
     use IntegrationTestTrait;
 
     protected array $fixtures = [
-        'app.Teams',
+        'app.Groups', 'app.Teams',
         'app.Roles',
         'app.Members',
     ];

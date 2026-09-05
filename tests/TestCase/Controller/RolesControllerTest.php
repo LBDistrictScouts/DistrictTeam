@@ -21,8 +21,8 @@ class RolesControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Teams',
-        'app.Roles',
+        'app.Groups', 'app.Sections', 'app.Teams',
+        'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments',
     ];
 
     /**
@@ -33,9 +33,17 @@ class RolesControllerTest extends TestCase
      */
     public function testIndex(): void
     {
+        $this->fetchTable('Roles')->updateAll(
+            ['multi_member_role' => true],
+            ['id' => '22222222-2222-4222-8222-222222222221'],
+        );
+        $this->assertTrue($this->fetchTable('Roles')->get(
+            '22222222-2222-4222-8222-222222222221',
+        )->multi_member_role);
         $this->get('/roles');
         $this->assertResponseOk();
         $this->assertResponseContains('Digital Lead');
+        $this->assertResponseContains('Recruiting');
     }
 
     /**
@@ -46,9 +54,21 @@ class RolesControllerTest extends TestCase
      */
     public function testView(): void
     {
+        $this->fetchTable('Appointments')->saveOrFail(
+            $this->fetchTable('Appointments')->newEntity([
+                'role_id' => '22222222-2222-4222-8222-222222222221',
+                'member_id' => '33333333-3333-4333-8333-333333333332',
+                'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+                'effective_start_date' => '2020-01-01',
+            ]),
+        );
+
         $this->get('/roles/view/22222222-2222-4222-8222-222222222221');
         $this->assertResponseOk();
         $this->assertResponseContains('Digital Lead');
+        $this->assertResponseContains('Current holders');
+        $this->assertResponseContains('Ada Lovelace');
+        $this->assertResponseContains('Grace Hopper');
     }
 
     /**
@@ -66,13 +86,15 @@ class RolesControllerTest extends TestCase
             'description' => 'Runs programmes',
             'currently_filled' => false,
             'is_lead' => true,
+            'multi_member_role' => true,
         ]);
 
         $this->assertRedirect('/roles');
-        $this->assertTrue($this->getTableLocator()->get('Roles')->exists([
+        $role = $this->getTableLocator()->get('Roles')->find()->where([
             'slug' => 'programme-lead',
             'is_lead' => true,
-        ]));
+        ])->firstOrFail();
+        $this->assertTrue($role->multi_member_role);
     }
 
     public function testAddValidationFailure(): void
@@ -90,6 +112,7 @@ class RolesControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('type="checkbox" name="is_lead"');
+        $this->assertResponseContains('type="checkbox" name="multi_member_role"');
     }
 
     /**
@@ -131,6 +154,7 @@ class RolesControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('type="checkbox" name="is_lead"');
+        $this->assertResponseContains('type="checkbox" name="multi_member_role"');
     }
 
     /**

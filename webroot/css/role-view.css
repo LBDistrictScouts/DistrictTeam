@@ -1,0 +1,43 @@
+.role-detail { color: #17211b; padding-bottom: 4rem; }
+.role-detail a { color: #006b54; }
+.role-detail a:hover { color: #004b3b; text-decoration: underline; }
+.role-detail a:focus-visible { outline: 3px solid #719e37; outline-offset: 4px; border-radius: .3rem; }
+.role-breadcrumb { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 1.3rem; margin: .5rem 0 2rem; color: #637069; }
+.role-hero { display: flex; justify-content: space-between; align-items: center; gap: 2.4rem; background: #006b54; color: #fff; border-radius: 1.8rem; padding: 3.8rem 4rem; }
+.role-eyebrow { margin: 0 0 .8rem; font-size: 1.1rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.role-hero h1 { color: #fff; font-size: clamp(3rem, 4vw, 5rem); font-weight: 700; line-height: 1.12; letter-spacing: -.03em; margin: 0 0 1.2rem; overflow-wrap: anywhere; }
+.role-hero-context { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin: 0; color: #dff4ec; }
+.role-hero-context span { padding: .3rem .8rem; border: 1px solid #83bfae; border-radius: 999px; font-size: 1.2rem; font-weight: 700; }
+.role-detail .role-primary-link { background: #c8e64b; color: #17211b; border-radius: 999px; padding: 1.2rem 2.2rem; font-weight: 700; white-space: nowrap; }
+.role-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; border: 1px solid #dce5df; background: #dce5df; border-radius: 1.4rem; overflow: hidden; margin: 1.8rem 0 2.4rem; }
+.role-stats > div { padding: 2rem 2.4rem; background: #fff; }
+.role-stats strong { display: block; font-size: 2.8rem; line-height: 1.2; }
+.role-stats span { display: block; color: #637069; font-size: 1.3rem; margin-top: .4rem; }
+.role-stats .role-status { display: inline-block; font-size: 1.5rem; padding: .5rem 1rem; border-radius: 999px; }
+.role-status-filled { color: #00523f; background: #dff4ec; }
+.role-status-vacant { color: #815200; background: #fff1d2; }
+.role-status-recruiting { color: #1e3a8a; background: #dbeafe; }
+.role-detail-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
+.role-main-panels, .role-context-panels { display: grid; gap: 2rem; min-width: 0; }
+.role-panel { background: #fff; padding: 2.6rem; border: 1px solid #dce5df; border-radius: 1.4rem; min-width: 0; }
+.role-panel h2 { color: #17211b; font-weight: 700; font-size: 2rem; line-height: 1.3; margin: 0 0 1.8rem; letter-spacing: -.02em; }
+.role-holder-panel { background: #edf7f2; }
+.role-holder-list { list-style: none; padding: 0; margin: 0; }
+.role-holder-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1.5rem; align-items: center; padding: 1.5rem 0; border-top: 1px solid #d1eadd; }
+.role-holder-list li:first-child { padding-top: 0; border-top: 0; }
+.role-holder-list li:last-child { padding-bottom: 0; }
+.role-avatar { display: grid; place-items: center; width: 5.5rem; height: 5.5rem; flex: 0 0 5.5rem; border-radius: 50%; color: #006b54; background: #d1eadd; font-weight: 700; font-size: 1.8rem; }
+.role-holder-list strong { display: block; font-size: 1.8rem; margin-bottom: .4rem; }
+.role-holder-list p, .role-description { margin: 0; color: #637069; line-height: 1.6; }
+.role-appointment-link { font-size: 1.3rem; font-weight: 600; white-space: nowrap; }
+.role-empty { color: #637069; margin: 0; line-height: 1.6; }
+.role-empty + a { display: inline-block; margin-top: 1.2rem; }
+.role-text-link, .role-team-link { font-weight: 600; }
+.role-team-link { display: inline-block; font-size: 1.8rem; margin: -1rem 0 1.8rem; }
+.role-metadata { margin: 0; }
+.role-metadata dt { color: #637069; font-size: 1.2rem; margin-top: 1.8rem; }
+.role-metadata dt:first-child { margin-top: 0; }
+.role-metadata dd { margin: .4rem 0 0; font-weight: 500; overflow-wrap: anywhere; }
+.role-metadata code { display: block; white-space: normal; overflow-wrap: anywhere; font-size: 1.1rem; margin: 0; padding: .7rem; background: #f2f6f4; border: none; }
+@media (max-width: 850px) { .role-detail-grid { grid-template-columns: minmax(0, 1fr); } .role-context-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .role-hero { padding: 2.6rem; flex-direction: column; align-items: flex-start; } .role-stats { grid-template-columns: repeat(2, 1fr); } .role-stats > div, .role-panel { padding: 1.6rem 2rem; } .role-context-panels { grid-template-columns: minmax(0, 1fr); } .role-holder-list li { grid-template-columns: auto minmax(0, 1fr); } .role-appointment-link { grid-column: 2; } }

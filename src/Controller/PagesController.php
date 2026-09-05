@@ -20,6 +20,7 @@ use Cake\Core\Configure;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
+use Cake\I18n\Date;
 use Cake\View\Exception\MissingTemplateException;
 
 /**
@@ -68,9 +69,13 @@ class PagesController extends AppController
                 'roles' => $roles->find()->count(),
                 'filledRoles' => $roles->find()->where(['currently_filled' => true])->count(),
                 'vacantRoles' => $roles->find()->where(['currently_filled' => false])->count(),
-                'activeMembers' => $this->fetchTable('Members')->find()
-                    ->where(['active' => true])
-                    ->count(),
+                'activeMembers' => $this->fetchTable('Members')->find()->where([
+                    'join_date <=' => Date::today(),
+                    'OR' => [
+                        'leave_date IS' => null,
+                        'leave_date >=' => Date::today(),
+                    ],
+                ])->count(),
             ];
             $this->set(compact('dashboardStats'));
         }

@@ -1,0 +1,349 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$connection of method App\\Service\\TeamScopeBackfill\:\:run\(\) expects Cake\\Database\\Connection, Cake\\Datasource\\ConnectionInterface given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Command/BackfillTeamScopesCommand.php
+
+		-
+			message: '#^Method App\\Controller\\Api\\AppController\:\:collectionQuery\(\) return type with generic class Cake\\ORM\\Query\\SelectQuery does not specify its types\: TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Api/AppController.php
+
+		-
+			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Groups\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Cannot access property \$roles on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Cannot access property \$sub_teams on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Cannot call method set\(\) on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Method App\\Controller\\Api\\TeamsController\:\:collectionQuery\(\) return type with generic class Cake\\ORM\\Query\\SelectQuery does not specify its types\: TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Method App\\Controller\\Api\\TeamsController\:\:scopedQuery\(\) return type with generic class Cake\\ORM\\Query\\SelectQuery does not specify its types\: TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Cannot access property \$contact_method on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Cannot access property \$id on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Cannot access property \$member_id on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$sections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$teams\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\ORM\\Table\:\:\$Sections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\ORM\\Table\:\:\$Teams\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/MemberContactMethodsController.php
+
+		-
+			message: '#^Method App\\Controller\\MemberContactMethodsController\:\:deleteForMember\(\) should return Cake\\Http\\Response but returns Cake\\Http\\Response\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Controller/MemberContactMethodsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$group\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$group_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$section_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Groups\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Sections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$team_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$tree_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^PHPDoc tag @property for property App\\Model\\Table\\GroupsTable\:\:\$Sections contains unresolvable type\.$#'
+			identifier: propertyTag.unresolvableType
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^PHPDoc tag @property for property App\\Model\\Table\\GroupsTable\:\:\$Teams contains unresolvable type\.$#'
+			identifier: propertyTag.unresolvableType
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Access to an undefined property Cake\\ORM\\Association\\BelongsTo\<App\\Model\\Table\\TeamsTable\>\:\:\$Groups\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Cannot access property \$group_id on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Cannot call method get\(\) on array\|Cake\\Datasource\\EntityInterface\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Groups\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Sections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Call to an undefined method Cake\\ORM\\Behavior\:\:moveUp\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Call to an undefined method Cake\\ORM\\Behavior\:\:recover\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Method App\\Model\\Table\\TeamsTable\:\:beforeSave\(\) has parameter \$event with generic interface Cake\\Event\\EventInterface but does not specify its types\: TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Method App\\Model\\Table\\TeamsTable\:\:beforeSave\(\) has parameter \$options with generic class ArrayObject but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Method App\\Model\\Table\\TeamsTable\:\:reorderQuery\(\) return type with generic class Cake\\ORM\\Query\\SelectQuery does not specify its types\: TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$group_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 7
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$join_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$member_contact_method_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$source_key\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$team\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Method App\\Service\\MemberCsvImporter\:\:read\(\) should return array\<string, mixed\> but returns array\<int, array\<string, string\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Method App\\Service\\MemberCsvImporter\:\:roleImportResults\(\) should return array\<int, array\{unit\: string, parent\: string, team\: string, role\: string, type\: string, count\: int, status\: string, detail\: string\}\> but returns list\<non\-empty\-array\<string, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\|null\)\: mixed\)\|null, ''trim'' given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fgetcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function rewind expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#2 \$data of function fwrite expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$teams of method App\\Service\\TeamScopeBackfill\:\:plan\(\) expects list\<array\<string, mixed\>\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/TeamScopeBackfill.php

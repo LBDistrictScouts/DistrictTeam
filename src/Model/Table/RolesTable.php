@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -12,7 +14,8 @@ use Cake\Validation\Validator;
  * Roles Model
  *
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\TeamsTable> $Teams
- * @property \Cake\ORM\Association\HasOne<\App\Model\Table\AppointmentsTable> $CurrentAppointment
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $Appointments
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $CurrentAppointments
  * @method \App\Model\Entity\Role newEmptyEntity()
  * @method \App\Model\Entity\Role newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Role> newEntities(array $data, array $options = [])
@@ -47,12 +50,16 @@ class RolesTable extends Table
             'foreignKey' => 'team_id',
             'joinType' => 'INNER',
         ]);
-        $this->hasOne('CurrentAppointment', [
+        $this->belongsTo('Groups', ['foreignKey' => 'group_id']);
+        $this->hasMany('Appointments', [
+            'foreignKey' => 'role_id',
+        ]);
+        $this->hasMany('CurrentAppointments', [
             'className' => 'Appointments',
             'foreignKey' => 'role_id',
             'finder' => 'current',
             'strategy' => 'select',
-            'sort' => ['CurrentAppointment.effective_start_date' => 'DESC'],
+            'sort' => ['CurrentAppointments.effective_start_date' => 'DESC'],
         ]);
     }
 
@@ -92,6 +99,10 @@ class RolesTable extends Table
             ->boolean('is_lead')
             ->notEmptyString('is_lead');
 
+        $validator
+            ->boolean('multi_member_role')
+            ->notEmptyString('multi_member_role');
+
         return $validator;
     }
 
@@ -105,17 +116,23 @@ class RolesTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['team_id'], 'Teams'), ['errorField' => 'team_id']);
-        $rules->add($rules->isUnique(['slug']), [
+        $rules->add($rules->isUnique(['group_id', 'name']), [
+            'errorField' => 'name',
+            'message' => __('This role name is already in use by this group'),
+        ]);
+        $rules->add($rules->isUnique(['group_id', 'slug']), [
             'errorField' => 'slug',
-            'message' => __('This slug is already in use by a team or role'),
+            'message' => __('This slug is already in use by this group'),
         ]);
         $rules->add(
-            fn(EntityInterface $entity): bool => !$this->Teams->exists([
-                'slug' => $entity->get('slug'),
-            ]),
+            fn(EntityInterface $entity): bool => $entity->get('group_id') === null
+                || !$this->Teams->exists([
+                    'slug' => $entity->get('slug'),
+                    'group_id' => $entity->get('group_id'),
+                ]),
             [
                 'errorField' => 'slug',
-                'message' => __('This slug is already in use by a team or role'),
+                'message' => __('This slug is already in use by a team or role in this group'),
             ],
         );
         $rules->add(
@@ -141,5 +158,63 @@ class RolesTable extends Table
         );
 
         return $rules;
+    }
+
+    /**
+     * Derive the role's group from its selected team before integrity rules run.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Rules event.
+     * @param \Cake\Datasource\EntityInterface $entity Role being saved.
+     * @param \ArrayObject<string, mixed> $options Save options.
+     * @return void
+     */
+    public function beforeRules(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        $groupId = $this->Teams->find()
+            ->select(['group_id'])
+            ->where(['id' => $entity->get('team_id')])
+            ->first()?->get('group_id');
+        $entity->set('group_id', $groupId);
+    }
+
+    /**
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Save event.
+     * @param \Cake\Datasource\EntityInterface $entity Role being saved.
+     * @param \ArrayObject<string, mixed> $options Save options.
+     * @return void
+     */
+    public function afterSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        $this->refreshGroupRoleCounters([$entity->get('team_id'), $entity->getOriginal('team_id')]);
+    }
+
+    /**
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Delete event.
+     * @param \Cake\Datasource\EntityInterface $entity Deleted role.
+     * @param \ArrayObject<string, mixed> $options Delete options.
+     * @return void
+     */
+    public function afterDelete(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        $this->refreshGroupRoleCounters([$entity->get('team_id')]);
+    }
+
+    /**
+     * @param list<string|null> $teamIds Team IDs whose group counters need refreshing.
+     * @return void
+     */
+    private function refreshGroupRoleCounters(array $teamIds): void
+    {
+        $groupIds = [];
+        foreach (array_unique(array_filter($teamIds)) as $teamId) {
+            $groupId = $this->Teams->find()
+                ->select(['group_id'])
+                ->where(['id' => $teamId])
+                ->first()?->group_id;
+            if ($groupId !== null) {
+                $groupIds[] = $groupId;
+            }
+        }
+        $this->Teams->Groups->refreshRoleCounter($groupIds);
     }
 }

@@ -4,23 +4,31 @@
  * @var \App\Model\Entity\Member $member
  */
 ?>
-<div class="row">
-    <div class="column">
-        <div class="members form content">
-            <?= $this->Form->create($member) ?>
-            <fieldset>
-                <legend><?= __('Add Member') ?></legend>
-                <?php
-                    echo $this->Form->control('first_name');
-                    echo $this->Form->control('last_name');
-                    echo $this->Form->control('membership_number');
-                    echo $this->Form->control('join_date');
-                    echo $this->Form->control('leave_date', ['empty' => true]);
-                    echo $this->Form->control('active');
-                ?>
-            </fieldset>
-            <?= $this->Form->button(__('Submit')) ?>
-            <?= $this->Form->end() ?>
+<div class="workspace-page workspace-form-page">
+    <nav class="workspace-breadcrumb" aria-label="<?= __('Breadcrumb') ?>">
+        <?= $this->Html->link(__('Back to members'), ['action' => 'index']) ?>
+    </nav>
+    <?= $this->element('Workspace/index_header', [
+        'title' => __('Add member'),
+        'description' => __('Keep member details up to date and ready for appointments.'),
+        'actions' => [],
+    ]) ?>
+    <div class="workspace-form-panel">
+        <?= $this->Form->create($member) ?>
+        <fieldset>
+            <legend><?= __('Member details') ?></legend>
+            <?php
+                echo $this->Form->control('first_name');
+                echo $this->Form->control('last_name');
+                echo $this->Form->control('membership_number');
+                echo $this->Form->control('join_date');
+                echo $this->Form->control('leave_date', ['empty' => true]);
+            ?>
+        </fieldset>
+        <div class="workspace-form-footer">
+            <?= $this->Form->button(__('Create member')) ?>
+            <?= $this->Html->link(__('Cancel'), ['action' => 'index'], ['class' => 'button button-outline']) ?>
         </div>
+        <?= $this->Form->end() ?>
     </div>
 </div>

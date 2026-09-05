@@ -20,6 +20,7 @@ class TeamsFixture extends TestFixture
         $this->records = [
             [
                 'id' => '11111111-1111-4111-8111-111111111111',
+                'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
                 'team_name' => 'District Team',
                 'slug' => 'district-team',
                 'team_parent_id' => null,
@@ -29,6 +30,7 @@ class TeamsFixture extends TestFixture
             ],
             [
                 'id' => '11111111-1111-4111-8111-111111111112',
+                'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
                 'team_name' => 'Digital Team',
                 'slug' => 'digital-team',
                 'team_parent_id' => '11111111-1111-4111-8111-111111111111',

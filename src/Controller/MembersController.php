@@ -25,65 +25,167 @@ class MembersController extends AppController
         $this->request->allowMethod(['get', 'post']);
         $session = $this->request->getSession();
         $importer = new MemberCsvImporter();
-        $pending = $session->read('MemberCsvUpload');
         if ($this->request->is('post')) {
             try {
-                if ($this->request->getData('step') === 'import') {
-                    if (
-                        !$pending || !is_string($this->request->getData('token'))
-                        || !hash_equals($pending['token'], $this->request->getData('token'))
-                    ) {
-                        throw new InvalidArgumentException('This upload has expired. Please select the CSV again.');
-                    }
-                    $mapping = $this->request->getData('mapping', []);
-                    if (!is_array($mapping)) {
-                        throw new InvalidArgumentException('Invalid role mapping.');
-                    }
-                    $selectedUnits = $this->request->getData('units', []);
-                    $availableUnits = array_map(
-                        fn(array $row): string => 'unit:' . ($row['Unit name'] ?? ''),
-                        $pending['rows'],
-                    );
-                    if (
-                        !is_array($selectedUnits) || !$selectedUnits
-                        || array_filter($selectedUnits, fn($unit): bool => !is_string($unit))
-                        || array_diff($selectedUnits, $availableUnits)
-                    ) {
-                        throw new InvalidArgumentException('Select at least one unit from this upload.');
-                    }
-                    $rows = array_filter(
-                        $pending['rows'],
-                        fn(array $row): bool => in_array('unit:' . ($row['Unit name'] ?? ''), $selectedUnits, true),
-                    );
-                    $result = $importer->import($rows, $mapping);
-                    $session->delete('MemberCsvUpload');
-                    $pending = null;
-                    $this->set(compact('result'));
-                    $this->Flash->success(__('CSV imported successfully.'));
-                } else {
-                    $file = $this->request->getData('csv');
-                    if (!$file instanceof UploadedFileInterface) {
-                        throw new InvalidArgumentException('Please select a CSV file.');
-                    }
-                    $pending = ['token' => bin2hex(random_bytes(24)), 'rows' => $importer->read($file)];
-                    $session->write('MemberCsvUpload', $pending);
+                $file = $this->request->getData('csv');
+                if (!$file instanceof UploadedFileInterface) {
+                    throw new InvalidArgumentException('Please select a CSV file.');
                 }
+                $pending = ['token' => bin2hex(random_bytes(24)), 'rows' => $importer->read($file)];
+                $session->write('MemberCsvUpload', $pending);
+
+                $this->redirect(['action' => 'mapUnits']);
+
+                return;
             } catch (InvalidArgumentException $exception) {
                 $this->Flash->error(__('Nothing was imported. {0}', $exception->getMessage()));
             }
         }
-        if ($pending) {
-            $sources = $importer->sources($pending['rows']);
-            $token = $pending['token'];
-            $savedMappings = $importer->savedMappings($pending['rows']);
-            $roleOptions = [];
-            $roles = $this->fetchTable('Roles')->find()->contain(['Teams'])
-                ->orderBy(['Teams.team_name' => 'ASC', 'Roles.name' => 'ASC']);
-            foreach ($roles as $role) {
-                $roleOptions[$role->id] = $role->team->team_name . ' / ' . $role->name;
-            }
-            $this->set(compact('sources', 'token', 'roleOptions', 'savedMappings'));
+    }
+
+    /**
+     * Save unit-to-group and section mappings before appointments are imported.
+     *
+     * @return \Cake\Http\Response|null|void
+     */
+    public function mapUnits()
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $pending = $this->pendingUpload();
+        if (!$pending) {
+            $this->Flash->error(__('This upload has expired. Please select the CSV again.'));
+
+            return $this->redirect(['action' => 'upload']);
         }
+        $importer = new MemberCsvImporter();
+        if ($this->request->is('post')) {
+            try {
+                $this->assertUploadToken($pending);
+                $unitMapping = $this->request->getData('unit_mapping', []);
+                if (!is_array($unitMapping)) {
+                    throw new InvalidArgumentException('Invalid unit mapping.');
+                }
+                $importer->saveUnitMappings($pending['rows'], $unitMapping);
+                $this->Flash->success(__('Unit mappings saved.'));
+
+                return $this->redirect(['action' => 'mapRoles']);
+            } catch (InvalidArgumentException $exception) {
+                $this->Flash->error(__('Unit mappings were not saved. {0}', $exception->getMessage()));
+            }
+        }
+        $token = $pending['token'];
+        $unitSources = $importer->unitSources($pending['rows']);
+        $savedUnitMappings = $importer->savedUnitMappings($pending['rows']);
+        $groupOptions = $this->fetchTable('Groups')->find('list')->orderBy(['group_name' => 'ASC'])->toArray();
+        $sections = $this->sectionOptions();
+        $sectionOptions = $sections['options'];
+        $sectionGroups = $sections['groups'];
+        $this->set(compact(
+            'token',
+            'unitSources',
+            'savedUnitMappings',
+            'groupOptions',
+            'sectionOptions',
+            'sectionGroups',
+        ));
+    }
+
+    /**
+     * Map appointment roles and import the selected member records.
+     *
+     * @return \Cake\Http\Response|null|void
+     */
+    public function mapRoles()
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $session = $this->request->getSession();
+        $pending = $this->pendingUpload();
+        if (!$pending) {
+            $this->Flash->error(__('This upload has expired. Please select the CSV again.'));
+
+            return $this->redirect(['action' => 'upload']);
+        }
+        $importer = new MemberCsvImporter();
+        if ($this->request->is('post')) {
+            try {
+                $this->assertUploadToken($pending);
+                $mapping = $this->request->getData('mapping', []);
+                if (!is_array($mapping)) {
+                    throw new InvalidArgumentException('Invalid role mapping.');
+                }
+                $selectedUnits = $this->request->getData('units', []);
+                $rows = $this->selectedRows($pending['rows'], $selectedUnits);
+                $roleResults = $importer->roleImportResults($rows, $mapping);
+                $result = $importer->import($rows, $mapping);
+                $session->delete('MemberCsvUpload');
+                $this->set(compact('result', 'roleResults'));
+                $this->Flash->success(__('CSV imported successfully.'));
+            } catch (InvalidArgumentException $exception) {
+                $this->Flash->error(__('Nothing was imported. {0}', $exception->getMessage()));
+            }
+        }
+        if ($this->request->is('post') && isset($result)) {
+            return;
+        }
+        $sources = $importer->sources($pending['rows']);
+        $token = $pending['token'];
+        $savedMappings = $importer->savedMappings($pending['rows']);
+        $roleOptions = $importer->roleOptionsForSources($pending['rows']);
+        $this->set(compact('sources', 'token', 'savedMappings', 'roleOptions'));
+    }
+
+    /** @return array<string, mixed>|null */
+    private function pendingUpload(): ?array
+    {
+        $pending = $this->request->getSession()->read('MemberCsvUpload');
+
+        return is_array($pending) && isset($pending['token'], $pending['rows']) ? $pending : null;
+    }
+
+    /** @param array<string, mixed> $pending */
+    private function assertUploadToken(array $pending): void
+    {
+        $token = $this->request->getData('token');
+        if (!is_string($token) || !is_string($pending['token']) || !hash_equals($pending['token'], $token)) {
+            throw new InvalidArgumentException('This upload has expired. Please select the CSV again.');
+        }
+    }
+
+    /**
+     * @param array<int, array<string, string>> $rows
+     * @param mixed $selectedUnits
+     * @return array<int, array<string, string>>
+     */
+    private function selectedRows(array $rows, mixed $selectedUnits): array
+    {
+        $availableUnits = array_map(fn(array $row): string => 'unit:' . ($row['Unit name'] ?? ''), $rows);
+        if (
+            !is_array($selectedUnits) || !$selectedUnits
+            || array_filter($selectedUnits, fn($unit): bool => !is_string($unit))
+            || array_diff($selectedUnits, $availableUnits)
+        ) {
+            throw new InvalidArgumentException('Select at least one unit from this upload.');
+        }
+
+        return array_filter(
+            $rows,
+            fn(array $row): bool => in_array('unit:' . ($row['Unit name'] ?? ''), $selectedUnits, true),
+        );
+    }
+
+    /** @return array{options: array<string, string>, groups: array<string, string>} */
+    private function sectionOptions(): array
+    {
+        $sectionOptions = [];
+        $sectionGroups = [];
+        $sections = $this->fetchTable('Sections')->find()->contain(['Groups'])
+            ->orderBy(['Groups.group_name' => 'ASC', 'Sections.section_name' => 'ASC']);
+        foreach ($sections as $section) {
+            $sectionOptions[$section->id] = $section->group->group_name . ' / ' . $section->section_name;
+            $sectionGroups[$section->id] = $section->group_id;
+        }
+
+        return ['options' => $sectionOptions, 'groups' => $sectionGroups];
     }
 
     /**
@@ -108,7 +210,10 @@ class MembersController extends AppController
      */
     public function view(?string $id = null)
     {
-        $member = $this->Members->get($id, contain: ['MemberContactMethods']);
+        $member = $this->Members->get($id, contain: [
+            'Appointments' => ['Roles'],
+            'MemberContactMethods',
+        ]);
         $contactMethodTypes = [];
         foreach (ContactMethodType::cases() as $contactMethodType) {
             $contactMethodTypes[$contactMethodType->value] = $contactMethodType->label();

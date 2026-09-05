@@ -21,7 +21,7 @@ class AppointmentsControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Teams',
+        'app.Groups', 'app.Teams',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
@@ -68,7 +68,6 @@ class AppointmentsControllerTest extends TestCase
             'member_id' => '33333333-3333-4333-8333-333333333332',
             'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
             'effective_start_date' => '2020-01-01',
-            'active' => true,
         ]);
 
         $this->assertRedirect('/appointments');
@@ -86,6 +85,30 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('The appointment could not be saved');
     }
 
+    public function testAddPreselectsMemberAndRoleFromQueryString(): void
+    {
+        $this->get('/appointments/add?member_id=33333333-3333-4333-8333-333333333331&role_id=22222222-2222-4222-8222-222222222221');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains(
+            '<option value="22222222-2222-4222-8222-222222222221" selected="selected">Digital Lead</option>',
+        );
+        $this->assertResponseContains(
+            '<option value="33333333-3333-4333-8333-333333333331" selected="selected">Ada Lovelace</option>',
+        );
+    }
+
+    public function testAppointmentFormsDoNotOfferAnActiveControl(): void
+    {
+        $this->get('/appointments/add');
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('name="active"');
+
+        $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('name="active"');
+    }
+
     /**
      * Test edit method
      *
@@ -101,7 +124,6 @@ class AppointmentsControllerTest extends TestCase
             'member_contact_method_id' => '44444444-4444-4444-8444-444444444441',
             'effective_start_date' => '2020-01-01',
             'effective_end_date' => '2021-01-01',
-            'active' => true,
         ]);
 
         $this->assertRedirect('/appointments');

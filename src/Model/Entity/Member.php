@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 
 /**
@@ -16,6 +17,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\Date|null $leave_date
  * @property bool $active
  * @property-read string $full_name
+ * @property array<\App\Model\Entity\Appointment> $appointments
  * @property array<\App\Model\Entity\MemberContactMethod> $member_contact_methods
  */
 class Member extends Entity
@@ -36,6 +38,7 @@ class Member extends Entity
      */
     protected array $_virtual = [
         'full_name',
+        'active',
     ];
 
     /**
@@ -53,7 +56,6 @@ class Member extends Entity
         'membership_number' => true,
         'join_date' => true,
         'leave_date' => true,
-        'active' => true,
         'member_contact_methods' => true,
     ];
 
@@ -65,5 +67,18 @@ class Member extends Entity
     protected function _getFullName(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    /**
+     * Determine whether this member is active today.
+     *
+     * @return bool
+     */
+    protected function _getActive(): bool
+    {
+        $today = Date::today();
+
+        return $this->join_date <= $today
+            && ($this->leave_date === null || $this->leave_date >= $today);
     }
 }

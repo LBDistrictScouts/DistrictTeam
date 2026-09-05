@@ -26,7 +26,7 @@ class AppointmentsTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Teams',
+        'app.Groups', 'app.Teams',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
@@ -70,7 +70,6 @@ class AppointmentsTableTest extends TestCase
             'member_id' => '33333333-3333-4333-8333-333333333332',
             'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
             'effective_start_date' => '2020-01-01',
-            'active' => true,
         ]);
         $this->assertEmpty($appointment->getErrors());
 
@@ -99,7 +98,6 @@ class AppointmentsTableTest extends TestCase
             'member_id' => '33333333-3333-4333-8333-333333333331',
             'member_contact_method_id' => '44444444-4444-4444-8444-444444444441',
             'effective_start_date' => '2020-01-01',
-            'active' => true,
         ]);
 
         $this->assertFalse($this->Appointments->save($duplicate));
@@ -115,7 +113,6 @@ class AppointmentsTableTest extends TestCase
             'member_id' => '33333333-3333-4333-8333-333333333332',
             'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
             'effective_start_date' => '2020-01-01',
-            'active' => true,
         ]);
         $appointment = $this->Appointments->saveOrFail($appointment);
         $this->assertTrue($roles->get($roleId)->currently_filled);
@@ -133,17 +130,16 @@ class AppointmentsTableTest extends TestCase
     }
 
     /**
-     * @return array<string, array{int, ?int, bool, bool}>
+     * @return array<string, array{int, ?int, bool}>
      */
     public static function currentAppointmentCases(): array
     {
         return [
-            'starts today' => [0, null, true, true],
-            'ends today' => [-1, 0, true, true],
-            'single day appointment' => [0, 0, true, true],
-            'starts tomorrow' => [1, null, true, false],
-            'ended yesterday' => [-2, -1, true, false],
-            'disabled' => [-1, null, false, false],
+            'starts today' => [0, null, true],
+            'ends today' => [-1, 0, true],
+            'single day appointment' => [0, 0, true],
+            'starts tomorrow' => [1, null, false],
+            'ended yesterday' => [-2, -1, false],
         ];
     }
 
@@ -151,13 +147,11 @@ class AppointmentsTableTest extends TestCase
     public function testCurrentAppointmentDateBoundaries(
         int $startOffset,
         ?int $endOffset,
-        bool $active,
         bool $expected,
     ): void {
         $appointment = $this->Appointments->get('55555555-5555-4555-8555-555555555551');
         $appointment->effective_start_date = Date::today()->addDays($startOffset);
         $appointment->effective_end_date = $endOffset === null ? null : Date::today()->addDays($endOffset);
-        $appointment->active = $active;
         $this->Appointments->saveOrFail($appointment);
 
         $this->assertSame($expected, $this->Appointments->find('current')->where(['id' => $appointment->id])->count() > 0);
@@ -184,7 +178,6 @@ class AppointmentsTableTest extends TestCase
             'member_id' => '33333333-3333-4333-8333-333333333332',
             'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
             'effective_start_date' => Date::today(),
-            'active' => true,
         ]);
         $this->Appointments->saveOrFail($additional);
         $this->Appointments->deleteOrFail($existing);

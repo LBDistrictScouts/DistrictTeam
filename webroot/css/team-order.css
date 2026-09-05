@@ -1,0 +1,16 @@
+.team-order-list { list-style: none; margin: 0; padding: 0; }
+.team-order-list .team-order-list { margin-left: 2rem; padding-left: 1rem; border-left: 2px solid #e1e5e9; }
+.team-order-item { margin: 0; }
+.team-order-row { display: flex; align-items: center; gap: .8rem; margin-bottom: .8rem; padding: .8rem; border: 1px solid #d8dde3; border-radius: .5rem; background: #fff; }
+.team-order-name { flex: 1; overflow-wrap: anywhere; min-width: 0; }
+.team-order-row button { margin: 0; padding: 0; min-width: 3.8rem; width: 3.8rem; font-size: 2rem; }
+.team-drag-handle { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.team-drag-handle:active { cursor: grabbing; }
+.team-order-row button:disabled { opacity: .3; cursor: default; }
+.team-order-row.drop-before { border-top: 3px solid #005ca9; }
+.team-order-row.drop-after { border-bottom: 3px solid #005ca9; }
+.team-order-item.is-dragging > .team-order-row { opacity: .5; }
+
+.team-collapse-spacer { width: 3.8rem; min-width: 3.8rem; }
+.team-order-list[hidden] { display: none; }
+.team-order-toolbar { display: flex; gap: .8rem; flex-wrap: wrap; }

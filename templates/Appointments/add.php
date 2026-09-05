@@ -8,58 +8,66 @@
  * @var array<int, string> $contactMethodTypes
  */
 ?>
-<div class="row">
-    <div class="column">
-        <div class="appointments form content">
-            <?= $this->Form->create($appointment, ['id' => 'appointment-form']) ?>
-            <fieldset>
-                <legend><?= __('Add Appointment') ?></legend>
-                <?php
-                    echo $this->Form->control('role_id', ['options' => $roles]);
-                    echo $this->Form->control('member_id', ['options' => $members]);
-                    echo $this->Form->button(__('New Member'), [
-                        'type' => 'button',
-                        'id' => 'open-member-modal',
-                        'class' => 'button button-outline',
-                    ]);
-                    echo $this->Form->control('member_contact_method_id', ['options' => $memberContactMethods]);
-                    echo $this->Form->control('effective_start_date');
-                    echo $this->Form->control('effective_end_date', ['empty' => true]);
-                    echo $this->Form->control('active');
-                    ?>
-            </fieldset>
-            <?= $this->Form->button(__('Submit')) ?>
-            <?= $this->Form->end() ?>
-
-            <dialog id="member-modal">
-                <?= $this->Form->create(null, [
-                    'id' => 'add-member-form',
-                    'url' => ['action' => 'addMember'],
-                ]) ?>
-                <fieldset>
-                    <legend><?= __('Create Member') ?></legend>
-                    <?= $this->Form->control('first_name') ?>
-                    <?= $this->Form->control('last_name') ?>
-                    <?= $this->Form->control('membership_number') ?>
-                    <?= $this->Form->control('join_date', [
-                        'type' => 'date',
-                        'value' => date('Y-m-d'),
-                    ]) ?>
-                    <?= $this->Form->control('contact_method_type', [
-                        'options' => $contactMethodTypes,
-                    ]) ?>
-                    <?= $this->Form->control('contact_method') ?>
-                </fieldset>
-                <p id="member-modal-status" role="status" aria-live="polite"></p>
-                <?= $this->Form->button(__('Create and Select')) ?>
-                <?= $this->Form->button(__('Cancel'), [
+<div class="workspace-page workspace-form-page">
+    <nav class="workspace-breadcrumb" aria-label="<?= __('Breadcrumb') ?>">
+        <?= $this->Html->link(__('Back to appointments'), ['action' => 'index']) ?>
+    </nav>
+    <?= $this->element('Workspace/index_header', [
+        'title' => __('Add appointment'),
+        'description' => __('Connect a member to a role and set their appointment dates.'),
+        'actions' => [],
+    ]) ?>
+    <div class="workspace-form-panel">
+        <?= $this->Form->create($appointment, ['id' => 'appointment-form']) ?>
+        <fieldset>
+            <legend><?= __('Appointment details') ?></legend>
+            <?php
+                echo $this->Form->control('role_id', ['options' => $roles]);
+                echo $this->Form->control('member_id', ['options' => $members]);
+                echo $this->Form->button(__('New Member'), [
                     'type' => 'button',
-                    'id' => 'close-member-modal',
-                    'class' => 'button button-clear',
-                ]) ?>
-                <?= $this->Form->end() ?>
-            </dialog>
+                    'id' => 'open-member-modal',
+                    'class' => 'button button-outline',
+                ]);
+                echo $this->Form->control('member_contact_method_id', ['options' => $memberContactMethods]);
+                echo $this->Form->control('effective_start_date');
+                echo $this->Form->control('effective_end_date', ['empty' => true]);
+                ?>
+        </fieldset>
+        <div class="workspace-form-footer">
+            <?= $this->Form->button(__('Create appointment')) ?>
+            <?= $this->Html->link(__('Cancel'), ['action' => 'index'], ['class' => 'button button-outline']) ?>
         </div>
+        <?= $this->Form->end() ?>
+
+        <dialog id="member-modal">
+            <?= $this->Form->create(null, [
+                'id' => 'add-member-form',
+                'url' => ['action' => 'addMember'],
+            ]) ?>
+            <fieldset>
+                <legend><?= __('Create Member') ?></legend>
+                <?= $this->Form->control('first_name') ?>
+                <?= $this->Form->control('last_name') ?>
+                <?= $this->Form->control('membership_number') ?>
+                <?= $this->Form->control('join_date', [
+                    'type' => 'date',
+                    'value' => date('Y-m-d'),
+                ]) ?>
+                <?= $this->Form->control('contact_method_type', [
+                    'options' => $contactMethodTypes,
+                ]) ?>
+                <?= $this->Form->control('contact_method') ?>
+            </fieldset>
+            <p id="member-modal-status" role="status" aria-live="polite"></p>
+            <?= $this->Form->button(__('Create and Select')) ?>
+            <?= $this->Form->button(__('Cancel'), [
+                'type' => 'button',
+                'id' => 'close-member-modal',
+                'class' => 'button button-clear',
+            ]) ?>
+            <?= $this->Form->end() ?>
+        </dialog>
     </div>
 </div>
 

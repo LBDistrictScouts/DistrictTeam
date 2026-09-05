@@ -4,10 +4,20 @@
  * @var iterable<\App\Model\Entity\Member> $members
  */
 ?>
-<div class="members index content">
-    <?= $this->Html->link(__('New Member'), ['action' => 'add'], ['class' => 'button float-right']) ?>
-    <?= $this->Html->link(__('Upload CSV'), ['action' => 'upload'], ['class' => 'button']) ?>
-    <h3><?= __('Members') ?></h3>
+<div class="members index content workspace-page">
+    <?= $this->element('Workspace/index_header', [
+        'title' => __('Members'),
+        'description' => __('The people who make your district happen.'),
+        'actions' => [
+            ['label' => __('New Member'), 'url' => ['action' => 'add'], 'secondary' => false],
+            ['label' => __('Upload CSV'), 'url' => ['action' => 'upload'], 'secondary' => true],
+        ],
+    ]) ?>
+    <section class="workspace-table-panel" aria-label="<?= __('Members') ?>">
+    <div class="workspace-table-heading">
+        <h2><?= __('Directory') ?></h2>
+        <span><?= $this->Paginator->counter(__('{{count}} records')) ?></span>
+    </div>
     <div class="table-responsive">
         <table>
             <thead>
@@ -15,17 +25,20 @@
                     <th><?= $this->Paginator->sort('first_name') ?></th>
                     <th><?= $this->Paginator->sort('last_name') ?></th>
                     <th><?= $this->Paginator->sort('membership_number') ?></th>
-                    <th><?= $this->Paginator->sort('active') ?></th>
+                    <th><?= __('Status') ?></th>
                     <th class="actions"><?= __('Actions') ?></th>
                 </tr>
             </thead>
             <tbody>
+                <?php if (count($members) === 0): ?>
+                <tr><td colspan="5" class="workspace-empty"><?= __('No records to display yet.') ?></td></tr>
+                <?php endif; ?>
                 <?php foreach ($members as $member): ?>
                 <tr>
                     <td><?= h($member->first_name) ?></td>
                     <td><?= h($member->last_name) ?></td>
                     <td><?= h($member->membership_number) ?></td>
-                    <td><?= h($member->active) ?></td>
+                    <td><span class="workspace-status <?= $member->active ? 'workspace-status-positive' : 'workspace-status-muted' ?>"><?= $member->active ? __('Active') : __('Inactive') ?></span></td>
                     <td class="actions">
                         <?= $this->Html->link(__('View'), ['action' => 'view', $member->id]) ?>
                         <?= $this->Html->link(__('Edit'), ['action' => 'edit', $member->id]) ?>
@@ -53,4 +66,5 @@
         </ul>
         <p><?= $this->Paginator->counter(__('Page {{page}} of {{pages}}, showing {{current}} record(s) out of {{count}} total')) ?></p>
     </div>
+    </section>
 </div>

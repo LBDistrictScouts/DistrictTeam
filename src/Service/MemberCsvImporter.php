@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Model\Enum\ContactMethodType;
+use App\Model\Table\MemberContactMethodsTable;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\ORM\Table;
@@ -12,7 +13,7 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
-/** Imports membership exports in a single database transaction. */
+/** Imports membership exports and persists their mapping choices. */
 class MemberCsvImporter
 {
     use LocatorAwareTrait;
@@ -105,8 +106,130 @@ class MemberCsvImporter
         foreach ($this->fetchTable('CsvRoleMappings')->find()->where(['source_key IN' => $keys]) as $saved) {
             $mapping[$saved->source_key] = $saved->role_id ?? 'skip';
         }
+        foreach ($this->sources($rows) as $key => $source) {
+            if (isset($mapping[$key])) {
+                continue;
+            }
+            if (preg_match('/non member|disclosure/i', $source['role'])) {
+                $mapping[$key] = 'skip';
+            }
+        }
 
         return $mapping;
+    }
+
+    /**
+     * Group CSV rows by their unit and parent unit.
+     *
+     * @param array<int, array<string, string>> $rows CSV rows.
+     * @return array<string, array{unit: string, parent: string}>
+     */
+    public function unitSources(array $rows): array
+    {
+        $sources = [];
+        foreach ($rows as $row) {
+            $key = $this->unitSourceKey($row);
+            $sources[$key] ??= [
+                'unit' => $row['Unit name'] ?? '',
+                'parent' => $row['Parent Team'] ?? '',
+            ];
+        }
+
+        return $sources;
+    }
+
+    /**
+     * Load remembered Group and Section choices for the unit sources in an upload.
+     *
+     * @param array<int, array<string, string>> $rows CSV rows.
+     * @return array<string, array{group_id: string, section_id: string}>
+     */
+    public function savedUnitMappings(array $rows): array
+    {
+        $keys = array_keys($this->unitSources($rows));
+        if (!$keys) {
+            return [];
+        }
+        $mapping = [];
+        foreach ($this->fetchTable('CsvUnitMappings')->find()->where(['source_key IN' => $keys]) as $saved) {
+            $mapping[$saved->source_key] = [
+                'group_id' => $saved->group_id ?? '',
+                'section_id' => $saved->section_id ?? '',
+            ];
+        }
+
+        return $mapping;
+    }
+
+    /**
+     * Build display-ready results for every role source included in an import.
+     *
+     * @param array<int, array<string, string>> $rows Parsed CSV rows.
+     * @param array<string, string> $mapping Source keys to existing role IDs or "skip".
+     * @return array<int, array{unit: string, parent: string, team: string, role: string, type: string, count: int, status: string, detail: string}>
+     */
+    public function roleImportResults(array $rows, array $mapping): array
+    {
+        $results = [];
+        foreach ($this->sources($rows) as $key => $source) {
+            $roleId = $mapping[$key] ?? '';
+            $imported = $roleId !== '' && $roleId !== 'skip';
+            $results[] = $source + [
+                'status' => $imported ? 'successful' : 'failed',
+                'detail' => match ($roleId) {
+                    'skip' => 'Appointment skipped by mapping choice.',
+                    '' => 'No destination role was selected.',
+                    default => 'Appointment rows imported successfully.',
+                },
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Return destination roles that match each source unit's saved group and section mapping.
+     *
+     * A unit mapped to a section can use that section's teams and group-level teams. A group-only
+     * unit mapping can use every team in its group.
+     *
+     * @param array<int, array<string, string>> $rows Parsed CSV rows.
+     * @return array<string, array<string, string>> Source keys and their available role options.
+     */
+    public function roleOptionsForSources(array $rows): array
+    {
+        $unitMappings = $this->savedUnitMappings($rows);
+        $roles = $this->fetchTable('Roles')->find()->contain(['Teams'])
+            ->orderBy(['Teams.team_name' => 'ASC', 'Roles.name' => 'ASC']);
+        $options = [];
+        foreach ($this->sources($rows) as $sourceKey => $source) {
+            $unitMapping = $unitMappings[$this->unitSourceKey([
+                'Unit name' => $source['unit'],
+                'Parent Team' => $source['parent'],
+            ])] ?? null;
+            if (!$unitMapping || $unitMapping['group_id'] === '') {
+                $options[$sourceKey] = [];
+
+                continue;
+            }
+            foreach ($roles as $role) {
+                $team = $role->team;
+                if ($team->group_id !== $unitMapping['group_id']) {
+                    continue;
+                }
+                if (
+                    $unitMapping['section_id'] !== ''
+                    && $team->section_id !== null
+                    && $team->section_id !== $unitMapping['section_id']
+                ) {
+                    continue;
+                }
+                $options[$sourceKey][$role->id] = $team->team_name . ' / ' . $role->name;
+            }
+            $options[$sourceKey] ??= [];
+        }
+
+        return $options;
     }
 
     /**
@@ -119,6 +242,15 @@ class MemberCsvImporter
             $row['Unit name'] ?? '', $row['Parent Team'] ?? '', $row['Team'] ?? '',
             $row['Role'] ?? '', $row['Roletype'] ?? '',
         ]));
+    }
+
+    /**
+     * @param array<string, string> $row CSV row.
+     * @return string
+     */
+    private function unitSourceKey(array $row): string
+    {
+        return hash('sha256', json_encode([$row['Unit name'] ?? '', $row['Parent Team'] ?? '']));
     }
 
     /**
@@ -143,7 +275,7 @@ class MemberCsvImporter
             }
         }
 
-        return $this->fetchTable('Members')->getConnection()->transactional(function () use ($rows, $mapping): array {
+        $transaction = function () use ($rows, $mapping): array {
             $result = ['members' => 0, 'contacts' => 0, 'appointments' => 0, 'warnings' => []];
             $newMembers = [];
             foreach ($rows as $line => $row) {
@@ -190,8 +322,10 @@ class MemberCsvImporter
                     }
                     $contactId = null;
                     foreach (
-                        [['Communication email', ContactMethodType::Email],
-                        ['Contact number', ContactMethodType::PhoneNumber]] as [$column, $type]
+                        [
+                        ['Communication email', ContactMethodType::Email],
+                        ['Contact number', ContactMethodType::PhoneNumber],
+                        ] as [$column, $type]
                     ) {
                         $value = $row[$column] ?? '';
                         if ($value === '') {
@@ -200,13 +334,31 @@ class MemberCsvImporter
                         if ($type === ContactMethodType::Email && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
                             throw new InvalidArgumentException('Communication email is invalid.');
                         }
+                        if (
+                            in_array($type, [
+                            ContactMethodType::Email,
+                            ContactMethodType::EmailAlias,
+                            ContactMethodType::EmailGroup,
+                            ], true)
+                        ) {
+                            $value = strtolower($value);
+                        }
+                        if ($type === ContactMethodType::PhoneNumber) {
+                            $value = MemberContactMethodsTable::normalizePhoneNumber($value);
+                            if ($value === null) {
+                                throw new InvalidArgumentException(
+                                    'Contact number must use 07804918252, 07804 918252, or +44 7804 918252.',
+                                );
+                            }
+                        }
                         $contacts = $this->fetchTable('MemberContactMethods');
-                        $contact = $contacts->find()->where([
-                            'member_id' => $member->id, 'contact_method' => $value,
-                        ])->first();
+                        $contact = $contacts->find()
+                            ->where(['member_id' => $member->id, 'contact_method' => $value])
+                            ->first();
                         if (!$contact) {
                             $contact = $this->save($contacts, [
-                                'member_id' => $member->id, 'contact_method' => $value,
+                                'member_id' => $member->id,
+                                'contact_method' => $value,
                                 'contact_method_type' => $type->value,
                             ]);
                             $result['contacts']++;
@@ -221,15 +373,18 @@ class MemberCsvImporter
                     $appointments = $this->fetchTable('Appointments');
                     $key = ['member_id' => $member->id, 'role_id' => $roleId, 'effective_start_date' => $start];
                     $appointment = $appointments->find()->where($key)->first();
-                    // Exports without contact columns can reuse the member's existing contact.
                     if (!$contactId) {
                         $contactId = $appointment?->member_contact_method_id;
-                        $contactId ??= $this->fetchTable('MemberContactMethods')->find()->where([
-                            'member_id' => $member->id,
-                            'contact_method_type IN' => [
-                                ContactMethodType::Email->value, ContactMethodType::PhoneNumber->value,
-                            ],
-                        ])->orderBy(['contact_method_type' => 'ASC', 'id' => 'ASC'])->first()?->id;
+                        $contactId ??= $this->fetchTable('MemberContactMethods')->find()
+                            ->where([
+                                'member_id' => $member->id,
+                                'contact_method_type IN' => [
+                                    ContactMethodType::Email->value,
+                                    ContactMethodType::PhoneNumber->value,
+                                ],
+                            ])
+                            ->orderBy(['contact_method_type' => 'ASC', 'id' => 'ASC'])
+                            ->first()?->id;
                     }
                     if (!$contactId) {
                         throw new InvalidArgumentException(
@@ -239,7 +394,7 @@ class MemberCsvImporter
                     if (!$appointment) {
                         $result['appointments']++;
                     }
-                    $data = $key + ['member_contact_method_id' => $contactId, 'active' => true];
+                    $data = $key + ['member_contact_method_id' => $contactId];
                     if (array_key_exists('End date', $row) || !$appointment) {
                         $data['effective_end_date'] = $end;
                     }
@@ -248,7 +403,6 @@ class MemberCsvImporter
                     throw new InvalidArgumentException("Row {$line}: " . $exception->getMessage(), 0, $exception);
                 }
             }
-
             $mappings = $this->fetchTable('CsvRoleMappings');
             foreach ($this->sources($rows) as $key => $source) {
                 if (($mapping[$key] ?? '') === '') {
@@ -267,7 +421,67 @@ class MemberCsvImporter
             }
 
             return $result;
-        });
+        };
+
+        return $this->fetchTable('Members')->getConnection()->transactional($transaction);
+    }
+
+    /**
+     * Save unit mappings in their own transaction, separate from member and appointment imports.
+     *
+     * @param array<int, array<string, string>> $rows Parsed CSV rows.
+     * @param array<string, array{group_id?: string, section_id?: string}> $unitMapping Unit mapping choices.
+     * @return void
+     */
+    public function saveUnitMappings(array $rows, array $unitMapping): void
+    {
+        $sources = $this->unitSources($rows);
+        foreach ($unitMapping as $key => $destination) {
+            if (!isset($this->unitSources($rows)[$key]) || !is_array($destination)) {
+                throw new InvalidArgumentException('Invalid unit mapping.');
+            }
+            $groupId = $destination['group_id'] ?? '';
+            $sectionId = $destination['section_id'] ?? '';
+            if (!is_string($groupId) || !is_string($sectionId)) {
+                throw new InvalidArgumentException('Invalid unit mapping.');
+            }
+            if ($groupId !== '' && !Validation::uuid($groupId)) {
+                throw new InvalidArgumentException('Choose an existing group for the unit mapping.');
+            }
+            if ($sectionId !== '' && !Validation::uuid($sectionId)) {
+                throw new InvalidArgumentException('Choose an existing section for the unit mapping.');
+            }
+            if ($sectionId !== '') {
+                $section = $this->fetchTable('Sections')->find()
+                    ->select(['group_id'])->where(['id' => $sectionId])->first();
+                if (!$section || $groupId === '' || $section->group_id !== $groupId) {
+                    throw new InvalidArgumentException('The selected section must belong to the selected group.');
+                }
+            } elseif ($groupId !== '' && !$this->fetchTable('Groups')->exists(['id' => $groupId])) {
+                throw new InvalidArgumentException('Choose an existing group for the unit mapping.');
+            }
+        }
+        $transaction = function () use ($unitMapping, $sources): void {
+            $unitMappings = $this->fetchTable('CsvUnitMappings');
+            foreach ($unitMapping as $key => $destination) {
+                $groupId = $destination['group_id'] ?? '';
+                $sectionId = $destination['section_id'] ?? '';
+                if ($groupId === '' && $sectionId === '') {
+                    continue;
+                }
+                $source = $sources[$key];
+                $saved = $unitMappings->find()->where(['source_key' => $key])->first();
+                $this->save($unitMappings, [
+                    'source_key' => $key,
+                    'source_unit' => $source['unit'],
+                    'source_parent_unit' => $source['parent'],
+                    'group_id' => $groupId ?: null,
+                    'section_id' => $sectionId ?: null,
+                ], $saved);
+            }
+        };
+
+        $this->fetchTable('CsvUnitMappings')->getConnection()->transactional($transaction);
     }
 
     /**

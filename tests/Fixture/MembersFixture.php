@@ -25,7 +25,6 @@ class MembersFixture extends TestFixture
                 'membership_number' => 1001,
                 'join_date' => '2020-01-01',
                 'leave_date' => null,
-                'active' => 1,
             ],
             [
                 'id' => '33333333-3333-4333-8333-333333333332',
@@ -34,7 +33,6 @@ class MembersFixture extends TestFixture
                 'membership_number' => 1002,
                 'join_date' => '2020-01-01',
                 'leave_date' => '2021-01-01',
-                'active' => 0,
             ],
         ];
         parent::init();

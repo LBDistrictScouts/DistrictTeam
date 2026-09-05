@@ -3,6 +3,12 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Team;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Response;
+use Cake\Validation\Validation;
+use InvalidArgumentException;
+
 /**
  * Teams Controller
  *
@@ -17,15 +23,47 @@ class TeamsController extends AppController
      */
     public function index()
     {
-        //$query = $this->Teams->find('threaded', parentField: 'team_parent_id')
         $query = $this->Teams->find()
             ->orderByAsc('Teams.tree_left')
             ->contain(['ParentTeam']);
         $teams = $this->paginate($query);
 
-        //$this->Teams->recover();
-
         $this->set(compact('teams'));
+    }
+
+    /**
+     * Reorder the complete hierarchy or a selected parent’s descendants.
+     *
+     * @param string|null $parentId Parent team UUID.
+     * @return \Cake\Http\Response|null
+     */
+    public function reorder(?string $parentId = null): ?Response
+    {
+        $this->request->allowMethod(['get', 'post']);
+        if ($parentId !== null && !Validation::uuid($parentId)) {
+            throw new NotFoundException('Team not found.');
+        }
+        $parentTeam = $parentId === null ? null : $this->Teams->get($parentId);
+        $returnUrl = $parentId === null ? ['action' => 'index'] : ['action' => 'view', $parentId];
+        if ($this->request->is('post')) {
+            $ids = $this->request->getData('order', []);
+            try {
+                if (!is_array($ids)) {
+                    throw new InvalidArgumentException('Invalid team order. Reload the page and try again.');
+                }
+                $this->Teams->saveOrder($ids, $parentId);
+                $this->Flash->success(__('Team order saved.'));
+
+                return $this->redirect($returnUrl);
+            } catch (InvalidArgumentException $exception) {
+                $this->Flash->error($exception->getMessage());
+            }
+        }
+        $teams = $this->Teams->reorderQuery($parentId)->find('threaded', parentField: 'team_parent_id')
+            ->orderByAsc('Teams.tree_left')->all();
+        $this->set(compact('teams', 'parentTeam', 'returnUrl'));
+
+        return null;
     }
 
     /**
@@ -38,9 +76,13 @@ class TeamsController extends AppController
     public function view(?string $id = null)
     {
         $team = $this->Teams->get($id, contain: [
+            'Groups',
+            'Sections',
             'ParentTeam',
-            'TeamLead',
-            'SubTeams.TeamLead',
+            'TeamLead.CurrentAppointments.Members',
+            'Roles' => ['sort' => ['Roles.is_lead' => 'DESC', 'Roles.name' => 'ASC']],
+            'Roles.CurrentAppointments.Members',
+            'SubTeams.TeamLead.CurrentAppointments.Members',
         ]);
         $this->set(compact('team'));
     }
@@ -62,8 +104,8 @@ class TeamsController extends AppController
             }
             $this->Flash->error(__('The team could not be saved. Please, try again.'));
         }
-        $parentTeam = $this->Teams->ParentTeam->find('treeList', limit: 200, spacer: '>> ')->toArray();
-        $this->set(compact('team', 'parentTeam'));
+        $this->setGroupSectionOptions($team);
+        $this->set(compact('team'));
     }
 
     /**
@@ -85,8 +127,40 @@ class TeamsController extends AppController
             }
             $this->Flash->error(__('The team could not be saved. Please, try again.'));
         }
-        $parentTeam = $this->Teams->ParentTeam->find('treeList', limit: 200)->toArray();
-        $this->set(compact('team', 'parentTeam'));
+        $this->setGroupSectionOptions($team);
+        $this->set(compact('team'));
+    }
+
+    /**
+     * Offer section and parent options with group/section metadata for filtering.
+     *
+     * @param \App\Model\Entity\Team $team Team being edited.
+     * @return void
+     */
+    private function setGroupSectionOptions(Team $team): void
+    {
+        $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
+        $sections = [];
+        foreach ($this->Teams->Sections->find()->contain(['Groups'])->orderByAsc('section_name') as $section) {
+            $sections[$section->group->group_name][$section->id] = $section->section_name;
+        }
+        $parents = $this->Teams->find()->orderByAsc('Teams.tree_left');
+        if (!$team->isNew()) {
+            $parents->where(['NOT' => [
+                'Teams.tree_left >=' => $team->tree_left,
+                'Teams.tree_right <=' => $team->tree_right,
+            ]]);
+        }
+        $parentTeam = [];
+        foreach ($parents as $parent) {
+            $parentTeam[] = [
+                'value' => $parent->id,
+                'text' => str_repeat('>> ', (int)$parent->tree_level) . $parent->team_name,
+                'data-group-id' => $parent->group_id ?? '',
+                'data-section-id' => $parent->section_id ?? '',
+            ];
+        }
+        $this->set(compact('groups', 'sections', 'parentTeam'));
     }
 
     /**

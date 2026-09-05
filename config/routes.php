@@ -51,6 +51,9 @@ return function (RouteBuilder $routes): void {
 
     $routes->prefix('Api', function (RouteBuilder $builder): void {
         $builder->setExtensions(['json']);
+        $builder->connect('/group-teams/{groupUUID}', ['controller' => 'Teams', 'action' => 'groupTeams'])
+            ->setPass(['groupUUID'])
+            ->setMethods(['GET']);
 
         foreach (['Teams', 'Roles', 'Members', 'MemberContactMethods', 'Appointments'] as $resource) {
             $builder->resources($resource, ['only' => ['index', 'view']]);
@@ -69,6 +72,19 @@ return function (RouteBuilder $routes): void {
          * ...and connect the rest of 'Pages' controller's URLs.
          */
         $builder->connect('/pages/*', 'Pages::display');
+
+        $builder->connect(
+            '/member-contact-methods/add-for-member/{memberId}',
+            ['controller' => 'MemberContactMethods', 'action' => 'addForMember'],
+        )
+            ->setPass(['memberId'])
+            ->setMethods(['POST']);
+        $builder->connect(
+            '/member-contact-methods/delete-for-member/{memberId}/{id}',
+            ['controller' => 'MemberContactMethods', 'action' => 'deleteForMember'],
+        )
+            ->setPass(['memberId', 'id'])
+            ->setMethods(['POST']);
 
         /*
          * Connect catchall routes for all controllers.

@@ -73,6 +73,11 @@ leave roles unmapped to import members and contacts only, or explicitly choose
 **Skip appointment** to remember that decision. Skipped rows
 still import member and contact details. No teams or roles are created.
 
+The same screen also maps each distinct CSV **unit / parent unit** pair to an
+existing Group and, where applicable, Section. These choices are remembered in
+`csv_unit_mappings` after a successful import. A selected Section must belong to
+the selected Group.
+
 Select the units to import using the unit checkboxes. Unselected units are excluded
 on the server, including their members, contacts, appointments and mapping changes.
 Click **Import selected units** to create members, contacts and mapped appointments
@@ -105,3 +110,113 @@ in `csv_role_mappings`. These defaults are shared across uploads and sessions an
 remain editable on the mapping screen. Failed imports leave saved mappings unchanged.
 Deleting a destination role clears its saved mappings. Apply the schema change with
 `bin/cake migrations migrate` when deploying this feature.
+
+### Importing groups and sections from DistrictCoreData
+
+Configure `DISTRICT_CORE_DATA_URL`, `DISTRICT_CORE_DATA_USERNAME`, and
+`DISTRICT_CORE_DATA_PASSWORD` in the environment (or the `DistrictCoreData`
+configuration in `config/app_local.php`), then run:
+
+```bash
+bin/cake district_core_data:sync
+```
+
+As in DistrictBadges, the URL can point to the dataset directory or its
+`index.html`; the command fetches sibling `groups.json` and `sections.json`
+using Basic Auth. Use an HTTPS URL for the hosted service.
+
+Groups and sections are stored in dedicated `groups` and `sections` tables,
+using the same UUIDs and core fields as DistrictBadges. The importer updates
+names, sort order, section OSM IDs, types, and meeting details. It does not create
+teams or change their names, roles, appointments, or hierarchy. Records absent
+from later feeds are retained. Downloads and validation must succeed before the
+transaction commits; failures roll back all imported changes.
+
+Apply the schema before importing:
+
+```bash
+bin/cake migrations migrate
+bin/cake schema_cache clear
+bin/cake district_core_data:sync
+```
+
+On **Teams → Add/Edit**, choose a required group and an optional section:
+
+- District leadership team: the district group, with no section.
+- Group leadership team: its group, with no section.
+- Section leadership team: its group and section.
+
+A selected section must belong to the selected group. Every team requires a group. Multiple teams may link to the same group or section.
+If core data moves a section between groups, the database updates the group link
+on its section teams; their team hierarchy and appointments stay unchanged.
+Linked groups/sections cannot be deleted until their references are removed.
+Team detail pages and the team API include these relationships.
+
+### Ordering teams
+
+Open **Teams → Reorder teams** to arrange the complete hierarchy. From a team's
+view page, **Reorder teams** opens `/teams/reorder/{parentTeamId}` with only that
+parent's descendants. The parent itself is excluded; Save and Cancel return to
+its view page. Saving a filtered branch validates the complete descendant list
+and changes only that branch's sibling order, preserving other teams. Drag a team's
+handle up or down among teams with the same parent; its children move with it.
+Arrow buttons and the handle's up/down arrow keys are also supported. Select
+**Save order** to persist changes, or **Cancel** to leave the saved order intact.
+Reordering does not change parent, group, section, role, or appointment links.
+
+The `sort_order` column stores the saved order. Tree coordinates are rebuilt in
+the same transaction, so team listings, child-team lists, tree selectors, and API
+hierarchy order stay aligned. New teams and teams moved to another parent are
+appended to their siblings. Apply `bin/cake migrations migrate` followed by
+`bin/cake schema_cache clear` before using this feature; the migration preserves
+the current team order. If teams were added or deleted while the reorder page was
+open, reload the page before saving.
+
+The teams API exposes teams whose imported group has `type: "district"`.
+The `GroupType` model enum has `Group` (`group`) and `District` (`district`) cases.
+The importer requires both `type` and a non-empty `domains` hostname list, stores
+them on the group, and exposes them in API group objects. The shared UUID remains
+the cross-system identifier. No district UUID configuration is needed.
+
+After deploying the group metadata change, run:
+
+```bash
+bin/cake migrations migrate
+bin/cake schema_cache clear
+bin/cake district_core_data:sync
+```
+
+Existing groups start with null type/domains until synced; they are excluded
+from the teams API until core data classifies them. The importer replaces both
+fields on subsequent syncs. Groups classified as `group`
+remain available through the admin pages.
+
+### Backfill existing team groups and sections
+
+Deploy using the standard migration command; no intermediate CLI step is needed:
+
+```bash
+bin/cake migrations migrate
+bin/cake schema_cache clear
+```
+
+For an existing team database, the required-group migration fetches and imports
+DistrictCoreData using the configured URL and credentials. It identifies the
+single imported group with `type: district`, backfills team scopes, then makes
+`teams.group_id` NOT NULL. Core data credentials and connectivity must be available
+at deployment. An empty team database skips the import.
+
+Missing groups inherit down the parent hierarchy; otherwise unassigned roots
+default to the imported district group. An explicit section supplies its own group.
+Missing sections inherit only within the same group. Explicit assignments are
+preserved, so a previously unassigned legacy hierarchy becomes district teams
+with no section.
+
+Missing or multiple district groups, failed imports, and invalid team hierarchies
+stop the migration. Import and backfill writes share the migration transaction.
+Run without concurrent team edits. Rolling back restores nullability but keeps
+imported and backfilled data.
+
+The standalone `bin/cake teams:backfill_scopes --dry-run` remains available to
+preview inheritance using data already imported. It does not import core data or
+apply the migration's district fallback.

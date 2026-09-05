@@ -21,116 +21,28 @@ class MemberContactMethodsControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
+        'app.Groups',
+        'app.Teams',
+        'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
+        'app.Appointments',
     ];
 
-    /**
-     * Test index method
-     *
-     * @return void
-     * @link \App\Controller\MemberContactMethodsController::index()
-     */
-    public function testIndex(): void
+    public function testStandaloneCrudRoutesAreUnavailable(): void
     {
-        $this->get('/member-contact-methods');
-        $this->assertResponseOk();
-        $this->assertResponseContains('ada@example.com');
-    }
-
-    /**
-     * Test view method
-     *
-     * @return void
-     * @link \App\Controller\MemberContactMethodsController::view()
-     */
-    public function testView(): void
-    {
-        $this->get('/member-contact-methods/view/44444444-4444-4444-8444-444444444441');
-        $this->assertResponseOk();
-        $this->assertResponseContains('Email');
-    }
-
-    /**
-     * Test add method
-     *
-     * @return void
-     * @link \App\Controller\MemberContactMethodsController::add()
-     */
-    public function testAdd(): void
-    {
-        $this->enableCsrfToken();
-        $this->post('/member-contact-methods/add', [
-            'member_id' => '33333333-3333-4333-8333-333333333331',
-            'contact_method' => 'new@example.com',
-            'contact_method_type' => 1,
-        ]);
-
-        $this->assertRedirect('/member-contact-methods');
-        $this->assertTrue($this->getTableLocator()->get('MemberContactMethods')->exists([
-            'contact_method' => 'new@example.com',
-        ]));
-    }
-
-    public function testAddValidationFailure(): void
-    {
-        $this->enableCsrfToken();
-        $this->post('/member-contact-methods/add', []);
-
-        $this->assertResponseOk();
-        $this->assertResponseContains('The member contact method could not be saved');
-    }
-
-    /**
-     * Test edit method
-     *
-     * @return void
-     * @link \App\Controller\MemberContactMethodsController::edit()
-     */
-    public function testEdit(): void
-    {
-        $this->enableCsrfToken();
-        $this->put('/member-contact-methods/edit/44444444-4444-4444-8444-444444444442', [
-            'member_id' => '33333333-3333-4333-8333-333333333332',
-            'contact_method' => '07111111111',
-            'contact_method_type' => 10,
-        ]);
-
-        $this->assertRedirect('/member-contact-methods');
-        $contact = $this->getTableLocator()->get('MemberContactMethods')
-            ->get('44444444-4444-4444-8444-444444444442');
-        $this->assertSame('07111111111', $contact->contact_method);
-    }
-
-    public function testEditValidationFailure(): void
-    {
-        $this->enableCsrfToken();
-        $this->put(
+        foreach (
+            [
+            '/member-contact-methods',
+            '/member-contact-methods/view/44444444-4444-4444-8444-444444444441',
+            '/member-contact-methods/add',
             '/member-contact-methods/edit/44444444-4444-4444-8444-444444444442',
-            ['member_id' => '', 'contact_method' => '', 'contact_method_type' => 999],
-        );
-
-        $this->assertResponseOk();
-        $this->assertResponseContains('The member contact method could not be saved');
-    }
-
-    /**
-     * Test delete method
-     *
-     * @return void
-     * @link \App\Controller\MemberContactMethodsController::delete()
-     */
-    public function testDelete(): void
-    {
-        $this->enableCsrfToken();
-        $this->delete(
             '/member-contact-methods/delete/44444444-4444-4444-8444-444444444442',
-        );
-
-        $this->assertRedirect('/member-contact-methods');
-        $this->assertFalse($this->getTableLocator()->get('MemberContactMethods')->exists([
-            'id' => '44444444-4444-4444-8444-444444444442',
-        ]));
+            ] as $url
+        ) {
+            $this->get($url);
+            $this->assertResponseCode(404);
+        }
     }
 
     public function testAddForMemberAjax(): void
@@ -166,5 +78,28 @@ class MemberContactMethodsControllerTest extends TestCase
         );
 
         $this->assertResponseCode(422);
+    }
+
+    public function testDeleteForMemberDeletesUnusedContactMethod(): void
+    {
+        $this->enableCsrfToken();
+        $this->post('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333332/44444444-4444-4444-8444-444444444442');
+
+        $this->assertRedirect('/members/view/33333333-3333-4333-8333-333333333332');
+        $this->assertFalse($this->fetchTable('MemberContactMethods')->exists([
+            'id' => '44444444-4444-4444-8444-444444444442',
+        ]));
+    }
+
+    public function testDeleteForMemberRetainsContactMethodUsedByAppointment(): void
+    {
+        $this->enableCsrfToken();
+        $this->post('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/44444444-4444-4444-8444-444444444441');
+
+        $this->assertRedirect('/members/view/33333333-3333-4333-8333-333333333331');
+        $this->assertFlashMessage('This contact method cannot be deleted because it is used by an appointment.');
+        $this->assertTrue($this->fetchTable('MemberContactMethods')->exists([
+            'id' => '44444444-4444-4444-8444-444444444441',
+        ]));
     }
 }

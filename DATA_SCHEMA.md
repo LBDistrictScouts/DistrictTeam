@@ -8,6 +8,9 @@ The default database driver is PostgreSQL. All domain records use UUID primary k
 
 ```mermaid
 erDiagram
+    GROUPS ||--o{ SECTIONS : contains
+    GROUPS o|--o{ TEAMS : scopes
+    SECTIONS o|--o{ TEAMS : scopes
     TEAMS o|--o{ TEAMS : "parent of"
     TEAMS ||--o{ ROLES : contains
     MEMBERS ||--o{ MEMBER_CONTACT_METHODS : has
@@ -29,7 +32,10 @@ Represents an organisational unit. CakePHP's Tree behavior maintains a nested-se
 | --- | --- | --- | --- | --- |
 | `id` | `uuid` | No | — | Primary key. |
 | `team_name` | `varchar(255)` | No | — | Human-readable team name. |
+| `group_id` | `uuid` | No | — | Required group, including the district group. |
+| `section_id` | `uuid` | Yes | `NULL` | Optional section within the selected group. |
 | `team_parent_id` | `uuid` | Yes | `NULL` | Parent team; `NULL` identifies a root team. |
+| `sort_order` | `integer` | No | `0` | Saved ordering among siblings; maintained by the reorder action. |
 | `tree_left` | `integer` | Yes | `NULL` | Nested-set left boundary, maintained by Tree behavior. |
 | `tree_right` | `integer` | Yes | `NULL` | Nested-set right boundary, maintained by Tree behavior. |
 | `tree_level` | `integer` | Yes | `NULL` | Depth in the team hierarchy, maintained by Tree behavior. |
@@ -40,8 +46,46 @@ Constraints and indexes:
 - Primary key: `id`.
 - Foreign key: `team_parent_id → teams.id`, with `ON UPDATE CASCADE` and `ON DELETE RESTRICT`.
 - Index: `tree_left`.
+- Reordering updates `sort_order` and rebuilds tree coordinates atomically, preserving parents and moving each subtree together. New or reparented teams append to their siblings. Child-team associations use `sort_order`, with UUID as a stable tiebreaker.
 - The ORM verifies that a supplied parent exists.
 - The `TeamLead` has-one association selects the team's role where `is_lead` is true. Loading `SubTeams.TeamLead` exposes each child team's lead role to its parent.
+
+Team scope is independent of the parent-team hierarchy. A district or group
+leadership team has a group and no section; a section leadership team has both.
+Every team requires a group; sections remain optional. The ORM requires a selected section to belong to
+the selected group. The database enforces `group_id → groups.id` and the composite
+`(section_id, group_id) → sections.(id, group_id)`, with update cascades and delete
+restrictions. A section moving groups therefore updates its linked teams' group
+IDs. `teams.group_id` is NOT NULL.
+
+## `groups` and `sections`
+
+These models mirror DistrictBadges' core data fields, without its account/order
+relationships. Both use shared core data UUID primary keys.
+
+| Model | Fields |
+| --- | --- |
+| Group | `id`, `group_name` (required, unique, max 255), `group_osm_id` (nullable integer), `sort_order` (nullable integer), `type` (nullable string, max 16), `domains` (nullable JSON hostname list), `sections_count`, `teams_count`, `roles_count` (non-null integer counter caches) |
+| Section | `id`, `group_id` (required FK), `section_osm_id` (required unique positive integer), `section_name` (required unique, max 255), `section_type` (required, max 32), `meeting_start_time`, `meeting_end_time` (nullable `HH:MM` strings), `meeting_day` (nullable weekday name) |
+
+`groups.type` is hydrated as `App\Model\Enum\GroupType`, a string-backed enum
+with `Group = 'group'` and `District = 'district'`. JSON exposes its lowercase
+backing value. `domains` hydrates to a list of hostname strings. Both fields are
+required for new imports; domain lists must be non-empty and contain hostnames,
+not URLs. Existing groups remain null until synced, so no classification is
+inferred during migration. The teams API includes only teams linked to groups
+classified as `District`. A non-unique index on `groups.type` supports filtering.
+The counters are backfilled by migration. CakePHP's `CounterCache` behavior
+maintains section and team counts. The role count is recalculated when a role or
+its owning team is saved, moved, or deleted because roles reach groups through
+teams rather than a direct association.
+
+Section types match DistrictBadges: `earlyyears`, `beavers`, `cubs`, `scouts`,
+`explorers`. A group has many sections and teams; a section belongs to one group
+and has many teams. `sections.group_id → groups.id` restricts deletion and cascades
+updates. `(sections.id, sections.group_id)` has a unique index for team references.
+The core data importer upserts both models by UUID in one transaction and keeps
+records absent from a feed. It does not create teams.
 
 ## `roles`
 

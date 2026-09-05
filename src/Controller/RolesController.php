@@ -34,7 +34,11 @@ class RolesController extends AppController
      */
     public function view(?string $id = null)
     {
-        $role = $this->Roles->get($id, contain: ['Teams']);
+        $role = $this->Roles->get($id, contain: [
+            'Teams.Groups',
+            'Teams.Sections',
+            'CurrentAppointments.Members',
+        ]);
         $this->set(compact('role'));
     }
 

@@ -9,6 +9,13 @@ use function Cake\Core\env;
  * into source code version control.
  */
 return [
+    // Shared datasets served by DistrictCoreData using Basic Auth.
+    'DistrictCoreData' => [
+        'url' => env('DISTRICT_CORE_DATA_URL', ''),
+        'username' => env('DISTRICT_CORE_DATA_USERNAME', ''),
+        'password' => env('DISTRICT_CORE_DATA_PASSWORD', ''),
+    ],
+
     /*
      * Debug Level:
      *

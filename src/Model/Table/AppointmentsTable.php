@@ -63,7 +63,7 @@ class AppointmentsTable extends Table
     }
 
     /**
-     * Find appointments that are active and effective today.
+     * Find appointments effective today.
      *
      * @param \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Appointment> $query Query to filter.
      * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Appointment>
@@ -73,7 +73,6 @@ class AppointmentsTable extends Table
         $today = Date::today();
 
         return $query->where([
-            $this->aliasField('active') => true,
             $this->aliasField('effective_start_date') . ' <=' => $today,
             'OR' => [
                 $this->aliasField('effective_end_date') . ' IS' => null,
@@ -167,10 +166,6 @@ class AppointmentsTable extends Table
         $validator
             ->date('effective_end_date')
             ->allowEmptyDate('effective_end_date');
-
-        $validator
-            ->boolean('active')
-            ->notEmptyString('active');
 
         return $validator;
     }

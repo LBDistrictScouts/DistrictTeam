@@ -4,14 +4,29 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Model\Entity\Role;
+use App\Model\Enum\GroupType;
 use App\Model\Table\TeamsTable;
+use Cake\Http\Exception\NotFoundException;
+use Cake\ORM\Query\SelectQuery;
+use Cake\Validation\Validation;
 use RuntimeException;
 
 class TeamsController extends AppController
 {
     protected string $tableAlias = 'Teams';
 
-    protected array $contain = ['ParentTeam', 'TeamLead', 'SubTeams.TeamLead'];
+    private ?string $groupId = null;
+
+    protected array $contain = [
+        'Groups',
+        'Sections',
+        'ParentTeam.Groups',
+        'ParentTeam.Sections',
+        'TeamLead',
+        'SubTeams.TeamLead',
+        'SubTeams.Groups',
+        'SubTeams.Sections',
+    ];
 
     /**
      * Associations included in individual team responses.
@@ -19,9 +34,14 @@ class TeamsController extends AppController
      * @var array<int|string, mixed>
      */
     protected array $viewContain = [
-        'ParentTeam',
+        'Groups',
+        'Sections',
+        'ParentTeam.Groups',
+        'ParentTeam.Sections',
         'TeamLead',
         'SubTeams.TeamLead',
+        'SubTeams.Groups',
+        'SubTeams.Sections',
         'Roles' => [
             'fields' => [
                 'Roles.id',
@@ -30,16 +50,17 @@ class TeamsController extends AppController
                 'Roles.slug',
                 'Roles.currently_filled',
                 'Roles.is_lead',
+                'Roles.multi_member_role',
             ],
         ],
-        'Roles.CurrentAppointment' => [
+        'Roles.CurrentAppointments' => [
             'fields' => [
-                'CurrentAppointment.id',
-                'CurrentAppointment.role_id',
-                'CurrentAppointment.member_id',
+                'CurrentAppointments.id',
+                'CurrentAppointments.role_id',
+                'CurrentAppointments.member_id',
             ],
         ],
-        'Roles.CurrentAppointment.Members' => [
+        'Roles.CurrentAppointments.Members' => [
             'fields' => [
                 'Members.id',
                 'Members.first_name',
@@ -48,7 +69,24 @@ class TeamsController extends AppController
         ],
     ];
 
-    protected array $order = ['Teams.tree_left' => 'ASC'];
+    protected array $order = ['Teams.sort_order' => 'ASC', 'Teams.id' => 'ASC'];
+
+    /**
+     * Return a group's teams using the standard team collection response.
+     *
+     * @param string $groupUUID Shared core-data group UUID.
+     * @return void
+     */
+    public function groupTeams(string $groupUUID): void
+    {
+        $this->request->allowMethod(['get']);
+        if (!Validation::uuid($groupUUID)) {
+            throw new NotFoundException('Group not found.');
+        }
+        $group = $this->teamsTable()->Groups->get($groupUUID);
+        $this->groupId = $group->id;
+        parent::index();
+    }
 
     /**
      * Return one team with its slim role listing.
@@ -61,7 +99,7 @@ class TeamsController extends AppController
         $this->request->allowMethod(['get']);
 
         $teams = $this->teamsTable();
-        $team = $teams->get($id, contain: $this->viewContain);
+        $team = $this->scopedQuery($this->viewContain)->where(['Teams.id' => $id])->firstOrFail();
         $roles = $team->roles;
         $subTeamIds = array_map(
             fn($subTeam): string => $subTeam->id,
@@ -77,20 +115,21 @@ class TeamsController extends AppController
                     'Roles.slug',
                     'Roles.currently_filled',
                     'Roles.is_lead',
+                    'Roles.multi_member_role',
                 ])
                 ->where([
                     'Roles.team_id IN' => $subTeamIds,
                     'Roles.is_lead' => true,
                 ])
                 ->contain([
-                    'CurrentAppointment' => [
+                    'CurrentAppointments' => [
                         'fields' => [
-                            'CurrentAppointment.id',
-                            'CurrentAppointment.role_id',
-                            'CurrentAppointment.member_id',
+                            'CurrentAppointments.id',
+                            'CurrentAppointments.role_id',
+                            'CurrentAppointments.member_id',
                         ],
                     ],
-                    'CurrentAppointment.Members' => [
+                    'CurrentAppointments.Members' => [
                         'fields' => [
                             'Members.id',
                             'Members.first_name',
@@ -108,6 +147,38 @@ class TeamsController extends AppController
 
         $this->set('data', $team);
         $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /**
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    protected function collectionQuery(): SelectQuery
+    {
+        return $this->scopedQuery($this->contain);
+    }
+
+    /**
+     * Scope top-level and embedded teams to the requested group, or district groups by default.
+     *
+     * @param array<int|string, mixed> $contain Relationships to include.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    private function scopedQuery(array $contain): SelectQuery
+    {
+        $groups = $this->teamsTable()->Groups->find()->select(['id']);
+        $groups->where($this->groupId === null
+            ? ['type' => GroupType::District]
+            : ['id' => $this->groupId]);
+
+        $query = $this->teamsTable()->find()
+            ->where(['Teams.group_id IN' => clone $groups])
+            ->contain($contain)
+            ->contain([
+                'ParentTeam' => ['conditions' => ['ParentTeam.group_id IN' => clone $groups]],
+                'SubTeams' => ['conditions' => ['SubTeams.group_id IN' => clone $groups]],
+            ]);
+
+        return $query;
     }
 
     /**

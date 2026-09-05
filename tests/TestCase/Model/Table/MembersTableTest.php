@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Model\Table;
 
 use App\Model\Table\MembersTable;
+use Cake\I18n\Date;
 use Cake\TestSuite\TestCase;
 
 /**
@@ -107,22 +108,23 @@ class MembersTableTest extends TestCase
         $this->assertSame('full_name', $this->Members->getDisplayField());
     }
 
-    public function testBeforeSaveDerivesActiveFromLeaveDate(): void
+    public function testActiveIsDerivedFromMembershipDates(): void
     {
         $member = $this->Members->newEntity([
             'first_name' => 'Active',
             'last_name' => 'Member',
             'membership_number' => 2002,
-            'join_date' => '2020-01-01',
+            'join_date' => Date::today()->subDays(1),
             'leave_date' => null,
-            'active' => false,
         ]);
-        $saved = $this->Members->saveOrFail($member);
-        $this->assertTrue($saved->active);
+        $this->assertTrue($member->active);
 
-        $saved->leave_date = '2025-01-01';
-        $saved = $this->Members->saveOrFail($saved);
-        $this->assertFalse($saved->active);
+        $member->leave_date = Date::today()->subDays(1);
+        $this->assertFalse($member->active);
+
+        $member->join_date = Date::today()->addDays(1);
+        $member->leave_date = null;
+        $this->assertFalse($member->active);
     }
 
     public function testMemberContactMethodsAssociation(): void

@@ -48,6 +48,14 @@ class AppointmentsController extends AppController
     public function add()
     {
         $appointment = $this->Appointments->newEmptyEntity();
+        $memberId = $this->request->getQuery('member_id');
+        if (is_string($memberId) && $this->Appointments->Members->exists(['id' => $memberId])) {
+            $appointment->member_id = $memberId;
+        }
+        $roleId = $this->request->getQuery('role_id');
+        if (is_string($roleId) && $this->Appointments->Roles->exists(['id' => $roleId])) {
+            $appointment->role_id = $roleId;
+        }
         if ($this->request->is('post')) {
             $appointment = $this->Appointments->patchEntity($appointment, $this->request->getData());
             if ($this->Appointments->save($appointment)) {

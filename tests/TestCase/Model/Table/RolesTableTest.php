@@ -24,7 +24,7 @@ class RolesTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Teams',
+        'app.Groups', 'app.Teams',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
@@ -98,7 +98,7 @@ class RolesTableTest extends TestCase
         $this->assertArrayHasKey('team_id', $role->getErrors());
     }
 
-    public function testSlugMustBeUniqueAcrossRolesAndTeams(): void
+    public function testRoleNamesAndSlugsMustBeUniqueWithinTheirGroup(): void
     {
         $duplicateRole = $this->Roles->newEntity([
             'team_id' => '11111111-1111-4111-8111-111111111111',
@@ -106,6 +106,7 @@ class RolesTableTest extends TestCase
             'currently_filled' => false,
         ]);
         $this->assertFalse($this->Roles->save($duplicateRole));
+        $this->assertArrayHasKey('name', $duplicateRole->getErrors());
         $this->assertArrayHasKey('slug', $duplicateRole->getErrors());
 
         $duplicateTeam = $this->Roles->newEntity([
@@ -115,6 +116,19 @@ class RolesTableTest extends TestCase
         ]);
         $this->assertFalse($this->Roles->save($duplicateTeam));
         $this->assertArrayHasKey('slug', $duplicateTeam->getErrors());
+
+        $team = $this->Roles->Teams->saveOrFail($this->Roles->Teams->newEntity([
+            'group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            'team_name' => 'Group Leadership Team',
+        ]));
+        $sameRoleInAnotherGroup = $this->Roles->newEntity([
+            'team_id' => $team->id,
+            'name' => 'Digital Lead',
+            'currently_filled' => false,
+            'is_lead' => false,
+        ]);
+        $this->assertNotFalse($this->Roles->save($sameRoleInAnotherGroup));
+        $this->assertSame('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', $sameRoleInAnotherGroup->group_id);
     }
 
     public function testExistingRoleCanBeSavedWithItsOwnSlug(): void
@@ -138,14 +152,29 @@ class RolesTableTest extends TestCase
         $this->assertArrayHasKey('is_lead', $role->getErrors());
     }
 
-    public function testCurrentAppointmentAssociation(): void
+    public function testCurrentAppointmentsAssociation(): void
     {
         $role = $this->Roles->get(
             '22222222-2222-4222-8222-222222222221',
-            contain: ['CurrentAppointment.Members'],
+            contain: ['CurrentAppointments.Members'],
         );
 
-        $this->assertNotNull($role->current_appointment);
-        $this->assertSame('Ada', $role->current_appointment->member->first_name);
+        $this->assertCount(1, $role->current_appointments);
+        $this->assertSame('Ada', $role->current_appointments[0]->member->first_name);
+    }
+
+    public function testStaffingStatusDistinguishesRecruitingRoles(): void
+    {
+        $filledRole = $this->Roles->get('22222222-2222-4222-8222-222222222221');
+        $vacantRole = $this->Roles->get('22222222-2222-4222-8222-222222222222');
+
+        $this->assertSame('filled', $filledRole->staffing_status);
+        $this->assertSame('vacant', $vacantRole->staffing_status);
+
+        $filledRole->multi_member_role = true;
+        $vacantRole->multi_member_role = true;
+
+        $this->assertSame('recruiting', $filledRole->staffing_status);
+        $this->assertSame('recruiting', $vacantRole->staffing_status);
     }
 }

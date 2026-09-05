@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 
 /**
@@ -23,6 +24,11 @@ use Cake\ORM\Entity;
 class Appointment extends Entity
 {
     /**
+     * @var list<string>
+     */
+    protected array $_virtual = ['active'];
+
+    /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
      *
      * Note that when '*' is set to true, this allows all unspecified fields to
@@ -37,9 +43,21 @@ class Appointment extends Entity
         'member_contact_method_id' => true,
         'effective_start_date' => true,
         'effective_end_date' => true,
-        'active' => true,
         'role' => true,
         'member' => true,
         'member_contact_method' => true,
     ];
+
+    /**
+     * Determine whether this appointment is effective today.
+     *
+     * @return bool
+     */
+    protected function _getActive(): bool
+    {
+        $today = Date::today();
+
+        return $this->effective_start_date <= $today
+            && ($this->effective_end_date === null || $this->effective_end_date >= $today);
+    }
 }

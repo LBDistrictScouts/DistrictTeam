@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Enum\ContactMethodType;
+use ArrayObject;
 use Cake\Database\Type\EnumType;
+use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -55,6 +57,65 @@ class MemberContactMethodsTable extends Table
     }
 
     /**
+     * Normalize an accepted UK mobile number for storage.
+     *
+     * @param string $phoneNumber Phone number supplied by a user or import.
+     * @return string|null Normalized number, or null when its format is invalid.
+     */
+    public static function normalizePhoneNumber(string $phoneNumber): ?string
+    {
+        $phoneNumber = trim($phoneNumber);
+        if (
+            preg_match('/^0(7\d{3}) ?(\d{6})$/D', $phoneNumber, $matches)
+            || preg_match('/^\+44 (7\d{3}) (\d{6})$/D', $phoneNumber, $matches)
+        ) {
+            return '+44 ' . $matches[1] . ' ' . $matches[2];
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether a contact type is stored as a lowercase email value.
+     *
+     * @param mixed $contactMethodType Contact method type value.
+     * @return bool
+     */
+    private static function isEmailType(mixed $contactMethodType): bool
+    {
+        return in_array((int)$contactMethodType, [
+            ContactMethodType::Email->value,
+            ContactMethodType::EmailAlias->value,
+            ContactMethodType::EmailGroup->value,
+        ], true);
+    }
+
+    /**
+     * Normalize phone numbers before validation and persistence.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Event.
+     * @param \ArrayObject<string, mixed> $data Request data.
+     * @param \ArrayObject<string, mixed> $options Marshal options.
+     * @return void
+     */
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options): void
+    {
+        if (!is_string($data['contact_method'] ?? null)) {
+            return;
+        }
+
+        $contactMethodType = $data['contact_method_type'] ?? null;
+        if ((int)$contactMethodType === ContactMethodType::PhoneNumber->value) {
+            $normalized = self::normalizePhoneNumber($data['contact_method']);
+            if ($normalized !== null) {
+                $data['contact_method'] = $normalized;
+            }
+        } elseif (self::isEmailType($contactMethodType)) {
+            $data['contact_method'] = strtolower($data['contact_method']);
+        }
+    }
+
+    /**
      * Default validation rules.
      *
      * @param \Cake\Validation\Validator $validator Validator instance.
@@ -71,6 +132,17 @@ class MemberContactMethodsTable extends Table
             ->maxLength('contact_method', 255)
             ->requirePresence('contact_method', 'create')
             ->notEmptyString('contact_method');
+
+        $validator->add('contact_method', 'phoneNumberFormat', [
+            'rule' => function (mixed $value, array $context): bool {
+                if ((int)($context['data']['contact_method_type'] ?? 0) !== ContactMethodType::PhoneNumber->value) {
+                    return true;
+                }
+
+                return is_string($value) && self::normalizePhoneNumber($value) !== null;
+            },
+            'message' => __('Enter a UK mobile number as 07804918252, 07804 918252, or +44 7804 918252.'),
+        ]);
 
         $validator
             ->enum('contact_method_type', ContactMethodType::class)

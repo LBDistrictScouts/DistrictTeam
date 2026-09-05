@@ -40,13 +40,11 @@ $cakeDescription = 'District Team';
         </div>
         <div class="top-nav-links">
             <?= $this->Html->link(__('Teams'), ['controller' => 'Teams', 'action' => 'index']) ?>
+            <?= $this->Html->link(__('Groups'), ['controller' => 'Groups', 'action' => 'index']) ?>
+            <?= $this->Html->link(__('Sections'), ['controller' => 'Sections', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Members'), ['controller' => 'Members', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Roles'), ['controller' => 'Roles', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Appointments'), ['controller' => 'Appointments', 'action' => 'index']) ?>
-            <?= $this->Html->link(
-                __('Contact methods'),
-                ['controller' => 'MemberContactMethods', 'action' => 'index'],
-            ) ?>
         </div>
     </nav>
     <main class="main">

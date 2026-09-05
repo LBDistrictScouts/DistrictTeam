@@ -12,7 +12,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 class MemberCsvImporterTest extends TestCase
 {
     protected array $fixtures = [
-        'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments', 'app.CsvRoleMappings',
+        'app.Groups', 'app.Sections', 'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
     ];
 
     public function testExampleAndRepeatUpload(): void
@@ -25,7 +25,7 @@ class MemberCsvImporterTest extends TestCase
         $member = $this->fetchTable('Members')->find()->where(['membership_number' => 475931])->firstOrFail();
         $this->assertSame('2024-11-07', $member->join_date->format('Y-m-d'));
         $this->assertTrue($this->fetchTable('MemberContactMethods')->exists([
-            'member_id' => $member->id, 'contact_method' => '07800000000',
+            'member_id' => $member->id, 'contact_method' => '+44 7800 000000',
         ]));
         $result = $this->importCsv(file_get_contents(CONFIG . 'Examples/directory-example.csv'));
         $this->assertSame(0, $result['members']);
@@ -122,6 +122,77 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame([], $importer->savedMappings($rows));
     }
 
+    public function testUnitMappingsPersistForEachUnitAndParentUnit(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(file_get_contents(CONFIG . 'Examples/directory-example.csv')));
+        $key = array_key_first($importer->unitSources($rows));
+        $unitMapping = [$key => [
+            'group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            'section_id' => 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+        ]];
+
+        $importer->saveUnitMappings($rows, $unitMapping);
+
+        $this->assertSame($unitMapping, $importer->savedUnitMappings($rows));
+        $saved = $this->fetchTable('CsvUnitMappings')->get($key);
+        $this->assertSame('Letchworth And Baldock', $saved->source_unit);
+        $this->assertSame('Programme Team', $saved->source_parent_unit);
+    }
+
+    public function testNonMemberAndDisclosureRolesDefaultToSkip(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = [
+            2 => ['Unit name' => 'Unit A', 'Parent Team' => '', 'Team' => 'Support',
+                'Role' => 'Non Member - Needs Disclosure', 'Roletype' => 'Volunteer'],
+            3 => ['Unit name' => 'Unit A', 'Parent Team' => '', 'Team' => 'Support',
+                'Role' => 'Disclosure checker', 'Roletype' => 'Volunteer'],
+            4 => ['Unit name' => 'Unit A', 'Parent Team' => '', 'Team' => 'Support',
+                'Role' => 'Team member', 'Roletype' => 'Volunteer'],
+        ];
+
+        $saved = $importer->savedMappings($rows);
+        $this->assertCount(2, $saved);
+        $this->assertSame(['skip', 'skip'], array_values($saved));
+    }
+
+    public function testUnitMappingRejectsSectionFromAnotherGroup(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(file_get_contents(CONFIG . 'Examples/directory-example.csv')));
+        $key = array_key_first($importer->unitSources($rows));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('section must belong to the selected group');
+        $importer->saveUnitMappings($rows, [$key => [
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'section_id' => 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+        ]]);
+    }
+
+    public function testRoleOptionsAreLimitedToTheMappedUnitGroup(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(file_get_contents(CONFIG . 'Examples/directory-example.csv')));
+        $unitKey = array_key_first($importer->unitSources($rows));
+
+        $importer->saveUnitMappings($rows, [$unitKey => [
+            'group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            'section_id' => '',
+        ]]);
+        $this->assertSame([], current($importer->roleOptionsForSources($rows)));
+
+        $importer->saveUnitMappings($rows, [$unitKey => [
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'section_id' => '',
+        ]]);
+        $this->assertSame([
+            '22222222-2222-4222-8222-222222222221' => 'Digital Team / Digital Lead',
+            '22222222-2222-4222-8222-222222222222' => 'District Team / Vacant Role',
+        ], current($importer->roleOptionsForSources($rows)));
+    }
+
     public function testBothExamplesImportEveryAppointmentWithDates(): void
     {
         $importer = new MemberCsvImporter();
@@ -195,6 +266,23 @@ class MemberCsvImporterTest extends TestCase
         ])->firstOrFail();
         $this->assertNull($appointment->effective_end_date);
         $this->assertSame('2026-08-01', $appointment->effective_start_date->format('Y-m-d'));
+        $this->assertSame('+44 7800 000000', $this->fetchTable('MemberContactMethods')->get($appointment->member_contact_method_id)->contact_method);
+    }
+
+    public function testCsvEmailIsLowercasedBeforeDuplicateMatching(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(
+            "First name,Last name,Membership number,Start date,Communication email\n"
+            . "Upper,Case,9092,01 Aug 2026,TEAM.LEAD@EXAMPLE.ORG\n",
+        ));
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+
+        $importer->import($rows, $mapping);
+
+        $this->assertTrue($this->fetchTable('MemberContactMethods')->exists([
+            'contact_method' => 'team.lead@example.org',
+        ]));
     }
 
     public function testMissingStartDateGivesActionableError(): void
@@ -341,6 +429,7 @@ class MemberCsvImporterTest extends TestCase
             'negative membership' => ['Membership number', '-1', 'digits only'],
             'membership overflow' => ['Membership number', '2147483648', 'too large'],
             'invalid email' => ['Communication email', 'not-an-email', 'Communication email is invalid'],
+            'invalid phone number' => ['Contact number', '+447804918252', 'Contact number must use'],
             'no contact' => ['Communication email', '', 'Include Communication email or Contact number'],
         ];
     }

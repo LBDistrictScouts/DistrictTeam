@@ -23,11 +23,11 @@ class MembersControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Teams',
+        'app.Groups', 'app.Teams',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
-        'app.Appointments', 'app.CsvRoleMappings',
+        'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
     ];
 
     public function testUploadForm(): void
@@ -43,20 +43,39 @@ class MembersControllerTest extends TestCase
         $upload = new UploadedFile($stream, null, UPLOAD_ERR_OK, 'members.csv', 'text/csv');
         $this->enableCsrfToken();
         $this->post('/members/upload', ['csv' => $upload]);
+        $this->assertResponseCode(302);
+        $this->session(['MemberCsvUpload' => $_SESSION['MemberCsvUpload']]);
+        $this->get('/members/map-units');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Map CSV units');
+        $this->assertResponseContains('unit-group-select');
+        $this->assertResponseContains('member-csv-unit-mapping.js');
+        $pending = $_SESSION['MemberCsvUpload'];
+        $unitKey = array_key_first((new MemberCsvImporter())->unitSources($pending['rows']));
+        $this->enableCsrfToken();
+        $this->post('/members/map-units', [
+            'token' => $pending['token'],
+            'unit_mapping' => [$unitKey => ['group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'section_id' => '']],
+        ]);
+        $this->assertResponseCode(302);
+        $this->get('/members/map-roles');
         $this->assertResponseOk();
         $this->assertResponseContains('Map CSV roles');
+        $this->assertResponseContains('Select all');
+        $this->assertResponseContains('Unselect all');
         $this->assertResponseContains('Digital Team / Digital Lead');
         $this->assertSame(2, $this->fetchTable('Members')->find()->count());
-        $pending = $_SESSION['MemberCsvUpload'];
         $sources = (new MemberCsvImporter())->sources($pending['rows']);
         $mapping = array_fill_keys(array_keys($sources), '22222222-2222-4222-8222-222222222222');
         $this->session(['MemberCsvUpload' => $pending]);
-        $this->post('/members/upload', [
-            'step' => 'import', 'token' => $pending['token'], 'mapping' => $mapping,
+        $this->post('/members/map-roles', [
+            'token' => $pending['token'], 'mapping' => $mapping,
             'units' => ['unit:Letchworth And Baldock'],
         ]);
         $this->assertResponseOk();
         $this->assertResponseContains('CSV imported successfully.');
+        $this->assertResponseContains('Step 4 of 4');
+        $this->assertResponseContains('Successful');
         $this->assertSession(null, 'MemberCsvUpload');
         $member = $this->fetchTable('Members')->find()->where(['membership_number' => 475931])->firstOrFail();
         $this->assertTrue($this->fetchTable('Appointments')->exists([
@@ -75,13 +94,20 @@ class MembersControllerTest extends TestCase
             'text/csv',
         );
         $rows = $importer->read($upload);
+        $unitMappings = [];
+        foreach (array_keys($importer->unitSources($rows)) as $unitKey) {
+            $unitMappings[$unitKey] = [
+                'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'section_id' => '',
+            ];
+        }
+        $importer->saveUnitMappings($rows, $unitMappings);
         $this->session(['MemberCsvUpload' => ['token' => 'test-token', 'rows' => $rows]]);
         $this->assertFalse($this->fetchTable('Roles')->get('22222222-2222-4222-8222-222222222222')->currently_filled);
         $this->assertFalse($this->fetchTable('Appointments')->exists([
             'role_id' => '22222222-2222-4222-8222-222222222222',
         ]));
 
-        $this->get('/members/upload');
+        $this->get('/members/map-roles');
         $this->assertResponseOk();
         $html = (string)$this->_response->getBody();
         $sourceCount = count($importer->sources($rows));
@@ -93,6 +119,28 @@ class MembersControllerTest extends TestCase
         ) {
             $this->assertSame($sourceCount, substr_count($html, '<option value="' . $id . '">' . $label . '</option>'));
         }
+    }
+
+    public function testNewUploadSelectsAllUnitsByDefault(): void
+    {
+        $importer = new MemberCsvImporter();
+        $upload = new UploadedFile(
+            fopen(CONFIG . 'Examples/directory-example.csv', 'r'),
+            null,
+            UPLOAD_ERR_OK,
+            'members.csv',
+            'text/csv',
+        );
+        $rows = $importer->read($upload);
+        $this->session(['MemberCsvUpload' => ['token' => 'test-token', 'rows' => $rows]]);
+
+        $this->get('/members/map-roles');
+
+        $this->assertResponseOk();
+        $this->assertMatchesRegularExpression(
+            '/name="units\[\]" value="unit:Letchworth And Baldock"\s+checked/',
+            (string)$this->_response->getBody(),
+        );
     }
 
     public function testSavedMappingsArePreselectedOnNextUpload(): void
@@ -110,8 +158,12 @@ class MembersControllerTest extends TestCase
         $key = array_key_first($mapping);
         $mapping[$key] = '22222222-2222-4222-8222-222222222222';
         $importer->import($rows, $mapping);
+        $unitKey = array_key_first($importer->unitSources($rows));
+        $importer->saveUnitMappings($rows, [$unitKey => [
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'section_id' => '',
+        ]]);
         $this->session(['MemberCsvUpload' => ['token' => 'new-upload', 'rows' => $rows]]);
-        $this->get('/members/upload');
+        $this->get('/members/map-roles');
         $this->assertResponseOk();
         $html = (string)$this->_response->getBody();
         $this->assertStringContainsString(
@@ -132,16 +184,39 @@ class MembersControllerTest extends TestCase
         ];
         $this->session(['MemberCsvUpload' => ['token' => 'test', 'rows' => $rows]]);
         $this->enableCsrfToken();
-        $this->post('/members/upload', [
-            'step' => 'import', 'token' => 'test', 'units' => ['unit:Selected Unit'], 'mapping' => [],
+        $this->post('/members/map-roles', [
+            'token' => 'test', 'units' => ['unit:Selected Unit'], 'mapping' => [],
         ]);
         $this->assertResponseOk();
         $this->assertResponseContains('CSV imported successfully.');
+        $this->assertResponseContains('Failed');
         $member = $this->fetchTable('Members')->find()->where(['membership_number' => 9090])->firstOrFail();
         $this->assertTrue($this->fetchTable('MemberContactMethods')->exists(['member_id' => $member->id]));
         $this->assertFalse($this->fetchTable('Members')->exists(['membership_number' => 9091]));
         $this->assertFalse($this->fetchTable('Appointments')->exists(['member_id' => $member->id]));
         $this->assertSame(0, $this->fetchTable('CsvRoleMappings')->find()->count());
+    }
+
+    public function testUnitMappingsAreSavedBeforeRoleImport(): void
+    {
+        $rows = [
+            2 => ['First name' => 'Selected', 'Last name' => 'Person', 'Membership number' => '9090',
+                'Start date' => '01 Aug 2026', 'Unit name' => 'Selected Unit'],
+            3 => ['First name' => 'Excluded', 'Last name' => 'Person', 'Membership number' => '9091',
+                'Start date' => '01 Aug 2026', 'Unit name' => 'Excluded Unit'],
+        ];
+        $importer = new MemberCsvImporter();
+        $keys = array_keys($importer->unitSources($rows));
+        $this->session(['MemberCsvUpload' => ['token' => 'test', 'rows' => $rows]]);
+        $this->enableCsrfToken();
+
+        $this->post('/members/map-units', [
+            'token' => 'test',
+            'unit_mapping' => [$keys[1] => ['group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'section_id' => '']],
+        ]);
+
+        $this->assertResponseCode(302);
+        $this->assertSame(1, $this->fetchTable('CsvUnitMappings')->find()->count());
     }
 
     public function testNoSelectedUnitsDoesNotImport(): void
@@ -150,7 +225,7 @@ class MembersControllerTest extends TestCase
             2 => ['Unit name' => 'Unit A'],
         ]]]);
         $this->enableCsrfToken();
-        $this->post('/members/upload', ['step' => 'import', 'token' => 'test', 'units' => '']);
+        $this->post('/members/map-roles', ['token' => 'test', 'units' => '']);
         $this->assertResponseOk();
         $this->assertResponseContains('Select at least one unit');
         $this->assertSame(2, $this->fetchTable('Members')->find()->count());
@@ -159,9 +234,8 @@ class MembersControllerTest extends TestCase
     public function testExpiredMappingUpload(): void
     {
         $this->enableCsrfToken();
-        $this->post('/members/upload', ['step' => 'import', 'token' => 'expired']);
-        $this->assertResponseOk();
-        $this->assertResponseContains('This upload has expired');
+        $this->post('/members/map-roles', ['token' => 'expired']);
+        $this->assertResponseCode(302);
     }
 
     public function testMismatchedTokenPreservesPendingUpload(): void
@@ -172,8 +246,8 @@ class MembersControllerTest extends TestCase
         ]]];
         $this->session(['MemberCsvUpload' => $pending]);
         $this->enableCsrfToken();
-        $this->post('/members/upload', [
-            'step' => 'import', 'token' => 'old-token', 'units' => ['unit:Unit A'], 'mapping' => [],
+        $this->post('/members/map-roles', [
+            'token' => 'old-token', 'units' => ['unit:Unit A'], 'mapping' => [],
         ]);
 
         $this->assertResponseOk();
@@ -192,8 +266,8 @@ class MembersControllerTest extends TestCase
         $key = array_key_first((new MemberCsvImporter())->sources($pending['rows']));
         $this->session(['MemberCsvUpload' => $pending]);
         $this->enableCsrfToken();
-        $request = ['step' => 'import', 'token' => $pending['token'], 'units' => ['unit:Unit A']];
-        $this->post('/members/upload', $request + ['mapping' => [$key => 'invalid-role']]);
+        $request = ['token' => $pending['token'], 'units' => ['unit:Unit A']];
+        $this->post('/members/map-roles', $request + ['mapping' => [$key => 'invalid-role']]);
 
         $this->assertResponseOk();
         $this->assertResponseContains('Nothing was imported');
@@ -204,7 +278,7 @@ class MembersControllerTest extends TestCase
         // Retry using the upload retained by the failed request.
         $this->session(['MemberCsvUpload' => $_SESSION['MemberCsvUpload']]);
         $roleId = '22222222-2222-4222-8222-222222222222';
-        $this->post('/members/upload', $request + ['mapping' => [$key => $roleId]]);
+        $this->post('/members/map-roles', $request + ['mapping' => [$key => $roleId]]);
 
         $this->assertResponseOk();
         $this->assertResponseContains('CSV imported successfully.');
@@ -227,14 +301,14 @@ class MembersControllerTest extends TestCase
         $this->enableCsrfToken();
         $this->post('/members/upload', ['csv' => $upload]);
 
-        $this->assertResponseOk();
+        $this->assertResponseCode(302);
         $pending = $_SESSION['MemberCsvUpload'];
         $this->assertNotSame('old-token', $pending['token']);
         $this->assertNotEmpty($pending['rows']);
         $this->assertSame(2, $this->fetchTable('Members')->find()->count());
 
         $this->session(['MemberCsvUpload' => $pending]);
-        $this->post('/members/upload', ['step' => 'import', 'token' => 'old-token']);
+        $this->post('/members/map-roles', ['token' => 'old-token']);
         $this->assertResponseContains('This upload has expired');
         $this->assertSession($pending, 'MemberCsvUpload');
     }
@@ -272,6 +346,8 @@ class MembersControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('ada@example.com');
+        $this->assertResponseContains('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/44444444-4444-4444-8444-444444444441');
+        $this->assertResponseContains('Are you sure you want to delete this contact method?');
     }
 
     /**
@@ -291,10 +367,9 @@ class MembersControllerTest extends TestCase
         ]);
 
         $this->assertRedirect('/members');
-        $this->assertTrue($this->getTableLocator()->get('Members')->exists([
-            'membership_number' => 3001,
-            'active' => true,
-        ]));
+        $member = $this->getTableLocator()->get('Members')
+            ->find()->where(['membership_number' => 3001])->firstOrFail();
+        $this->assertTrue($member->active);
     }
 
     public function testAddValidationFailure(): void
@@ -304,6 +379,17 @@ class MembersControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('The member could not be saved');
+    }
+
+    public function testMemberFormsDoNotOfferAnActiveControl(): void
+    {
+        $this->get('/members/add');
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('name="active"');
+
+        $this->get('/members/edit/33333333-3333-4333-8333-333333333331');
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('name="active"');
     }
 
     /**

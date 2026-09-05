@@ -48,7 +48,7 @@ jobs:
           php-version: '8.5'
           extensions: mbstring, intl, pdo_pgsql
           coverage: none
-          tools: cs2pr, phpstan:2.1
+          tools: cs2pr
       - name: Cache Composer downloads
         uses: actions/cache@v5
         with:
@@ -64,7 +64,7 @@ jobs:
         run: vendor/bin/phpcs --report=checkstyle | cs2pr
       - name: Static analysis
         if: always()
-        run: phpstan --memory-limit=1G
+        run: vendor/bin/phpstan analyse --memory-limit=1G
         env:
           SECURITY_SALT: ci-static-analysis-salt
       - name: Run tests
@@ -77,6 +77,17 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
           SECURITY_SALT: ci-test-salt
+
+  javascript-tests:
+    name: Browser Script Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Run browser script tests
+        run: node --test tests/js/*.test.cjs
 
   manifests:
     name: Validate Kubernetes Manifests
@@ -98,7 +109,7 @@ jobs:
 
   docker-smoke-test:
     name: Smoke Test Docker Image
-    needs: [php-tests, manifests]
+    needs: [php-tests, javascript-tests, manifests]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6

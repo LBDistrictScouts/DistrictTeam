@@ -1,0 +1,36 @@
+.appointment-detail { color: #17211b; padding-bottom: 4rem; }
+.appointment-detail a { color: #006b54; }
+.appointment-detail a:hover { color: #004b3b; text-decoration: underline; }
+.appointment-detail a:focus-visible, .appointment-detail summary:focus-visible { outline: 3px solid #719e37; outline-offset: 4px; border-radius: .3rem; }
+.appointment-breadcrumb { display: flex; flex-wrap: wrap; gap: 1rem; margin: .5rem 0 2rem; color: #637069; font-size: 1.3rem; }
+.appointment-hero { display: flex; justify-content: space-between; align-items: center; gap: 2.4rem; padding: 3.8rem 4rem; color: #fff; background: #006b54; border-radius: 1.8rem; }
+.appointment-eyebrow { margin: 0 0 .8rem; font-size: 1.1rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.appointment-hero h1 { margin: 0 0 1.2rem; color: #fff; font-size: clamp(3rem, 4vw, 5rem); font-weight: 700; line-height: 1.12; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.appointment-hero-context { margin: 0; color: #dff4ec; }
+.appointment-detail .appointment-primary-link { padding: 1.2rem 2.2rem; color: #17211b; background: #c8e64b; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+.appointment-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 1.8rem 0 2.4rem; overflow: hidden; border: 1px solid #dce5df; border-radius: 1.4rem; background: #dce5df; }
+.appointment-stats > div { padding: 2rem 2.4rem; background: #fff; }
+.appointment-stats strong { display: block; font-size: 2.1rem; line-height: 1.25; overflow-wrap: anywhere; }
+.appointment-stats span { display: block; margin-top: .4rem; color: #637069; font-size: 1.3rem; }
+.appointment-stats .appointment-status { display: inline-block; padding: .5rem 1rem; font-size: 1.5rem; border-radius: 999px; }
+.appointment-status-current { color: #00523f; background: #dff4ec; }
+.appointment-status-ended { color: #815200; background: #fff1d2; }
+.appointment-detail-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(28rem, .7fr); gap: 2rem; align-items: start; }
+.appointment-context-panels { display: grid; gap: 2rem; }
+.appointment-panel { min-width: 0; padding: 2.6rem; border: 1px solid #dce5df; border-radius: 1.4rem; background: #fff; }
+.appointment-panel h2 { margin: 0 0 1.8rem; color: #17211b; font-size: 2rem; font-weight: 700; letter-spacing: -.02em; }
+.appointment-person-panel { background: #edf7f2; }
+.appointment-person { display: flex; align-items: center; gap: 1.5rem; }
+.appointment-avatar { display: grid; place-items: center; flex: 0 0 5.5rem; width: 5.5rem; height: 5.5rem; color: #006b54; border-radius: 50%; background: #d1eadd; font-size: 1.8rem; font-weight: 700; }
+.appointment-person strong { display: block; margin-bottom: .4rem; font-size: 1.8rem; }
+.appointment-person div > a, .appointment-role-link { font-weight: 600; }
+.appointment-contact-type { margin: 0 0 .5rem; color: #637069; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.appointment-contact-value { margin: 0; font-size: 1.7rem; overflow-wrap: anywhere; }
+.appointment-empty { margin: 0; color: #637069; line-height: 1.6; }
+.appointment-record-details summary { cursor: pointer; color: #637069; font-size: 1.3rem; }
+.appointment-metadata { margin: 1.5rem 0 0; }
+.appointment-metadata dt { margin-top: 1.8rem; color: #637069; font-size: 1.2rem; }
+.appointment-metadata dd { margin: .4rem 0 0; font-weight: 500; overflow-wrap: anywhere; }
+.appointment-metadata code { display: block; padding: .7rem; font-size: 1.1rem; white-space: normal; overflow-wrap: anywhere; border: 0; background: #f2f6f4; }
+@media (max-width: 850px) { .appointment-detail-grid { grid-template-columns: 1fr; } .appointment-context-panels { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .appointment-hero { align-items: flex-start; flex-direction: column; padding: 2.6rem; } .appointment-stats, .appointment-context-panels { grid-template-columns: 1fr; } .appointment-stats > div, .appointment-panel { padding: 2rem; } }

@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use ArrayObject;
-use Cake\Datasource\EntityInterface;
-use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -49,22 +46,10 @@ class MembersTable extends Table
             'dependent' => true,
             'strategy' => 'select',
         ]);
-    }
-
-    /**
-     * Set the member's active status from their leave date.
-     *
-     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Before save event.
-     * @param \Cake\Datasource\EntityInterface $entity Entity being saved.
-     * @param \ArrayObject<string, mixed> $options Save options.
-     * @return void
-     */
-    public function beforeSave(
-        EventInterface $event,
-        EntityInterface $entity,
-        ArrayObject $options,
-    ): void {
-        $entity->set('active', $entity->get('leave_date') === null);
+        $this->hasMany('Appointments', [
+            'foreignKey' => 'member_id',
+            'strategy' => 'select',
+        ]);
     }
 
     /**
@@ -101,10 +86,6 @@ class MembersTable extends Table
         $validator
             ->date('leave_date')
             ->allowEmptyDate('leave_date');
-
-        $validator
-            ->boolean('active')
-            ->notEmptyString('active');
 
         return $validator;
     }

@@ -102,4 +102,46 @@ class MemberContactMethodsTableTest extends TestCase
         $this->assertFalse($this->MemberContactMethods->save($missingMember));
         $this->assertArrayHasKey('member_id', $missingMember->getErrors());
     }
+
+    public function testPhoneNumbersAreNormalizedAndInvalidFormatsAreRejected(): void
+    {
+        foreach (['07804918252', '07804 918252', '+44 7804 918252'] as $phoneNumber) {
+            $contact = $this->MemberContactMethods->newEntity([
+                'member_id' => '33333333-3333-4333-8333-333333333331',
+                'contact_method' => $phoneNumber,
+                'contact_method_type' => ContactMethodType::PhoneNumber->value,
+            ]);
+
+            $this->assertEmpty($contact->getErrors());
+            $this->assertSame('+44 7804 918252', $contact->contact_method);
+        }
+
+        $contact = $this->MemberContactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => '+447804918252',
+            'contact_method_type' => ContactMethodType::PhoneNumber->value,
+        ]);
+
+        $this->assertArrayHasKey('phoneNumberFormat', $contact->getErrors()['contact_method']);
+    }
+
+    public function testEmailContactMethodsAreLowercased(): void
+    {
+        foreach (
+            [
+            ContactMethodType::Email,
+            ContactMethodType::EmailAlias,
+            ContactMethodType::EmailGroup,
+            ] as $contactMethodType
+        ) {
+            $contact = $this->MemberContactMethods->newEntity([
+                'member_id' => '33333333-3333-4333-8333-333333333331',
+                'contact_method' => 'Team.Lead+Alias@EXAMPLE.ORG',
+                'contact_method_type' => $contactMethodType->value,
+            ]);
+
+            $this->assertEmpty($contact->getErrors());
+            $this->assertSame('team.lead+alias@example.org', $contact->contact_method);
+        }
+    }
 }
