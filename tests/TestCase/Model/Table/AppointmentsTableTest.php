@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Model\Table;
 
 use App\Model\Table\AppointmentsTable;
+use Cake\I18n\Date;
 use Cake\TestSuite\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * App\Model\Table\AppointmentsTable Test Case
@@ -128,5 +130,66 @@ class AppointmentsTableTest extends TestCase
 
         $this->Appointments->deleteOrFail($appointment);
         $this->assertFalse($roles->get($roleId)->currently_filled);
+    }
+
+    /**
+     * @return array<string, array{int, ?int, bool, bool}>
+     */
+    public static function currentAppointmentCases(): array
+    {
+        return [
+            'starts today' => [0, null, true, true],
+            'ends today' => [-1, 0, true, true],
+            'single day appointment' => [0, 0, true, true],
+            'starts tomorrow' => [1, null, true, false],
+            'ended yesterday' => [-2, -1, true, false],
+            'disabled' => [-1, null, false, false],
+        ];
+    }
+
+    #[DataProvider('currentAppointmentCases')]
+    public function testCurrentAppointmentDateBoundaries(
+        int $startOffset,
+        ?int $endOffset,
+        bool $active,
+        bool $expected,
+    ): void {
+        $appointment = $this->Appointments->get('55555555-5555-4555-8555-555555555551');
+        $appointment->effective_start_date = Date::today()->addDays($startOffset);
+        $appointment->effective_end_date = $endOffset === null ? null : Date::today()->addDays($endOffset);
+        $appointment->active = $active;
+        $this->Appointments->saveOrFail($appointment);
+
+        $this->assertSame($expected, $this->Appointments->find('current')->where(['id' => $appointment->id])->count() > 0);
+        $this->assertSame($expected, $this->Appointments->Roles->get($appointment->role_id)->currently_filled);
+    }
+
+    public function testMovingAppointmentSynchronizesBothRoles(): void
+    {
+        $appointment = $this->Appointments->get('55555555-5555-4555-8555-555555555551');
+        $oldRoleId = $appointment->role_id;
+        $newRoleId = '22222222-2222-4222-8222-222222222222';
+        $appointment->role_id = $newRoleId;
+        $this->Appointments->saveOrFail($appointment);
+
+        $this->assertFalse($this->Appointments->Roles->get($oldRoleId)->currently_filled);
+        $this->assertTrue($this->Appointments->Roles->get($newRoleId)->currently_filled);
+    }
+
+    public function testDeletingOneOfTwoCurrentAppointmentsKeepsRoleFilled(): void
+    {
+        $existing = $this->Appointments->get('55555555-5555-4555-8555-555555555551');
+        $additional = $this->Appointments->newEntity([
+            'role_id' => $existing->role_id,
+            'member_id' => '33333333-3333-4333-8333-333333333332',
+            'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+            'effective_start_date' => Date::today(),
+            'active' => true,
+        ]);
+        $this->Appointments->saveOrFail($additional);
+        $this->Appointments->deleteOrFail($existing);
+
+        $this->assertTrue($this->Appointments->Roles->get($additional->role_id)->currently_filled);
+        $this->assertSame([$additional->id], $this->Appointments->find('current')->all()->extract('id')->toList());
     }
 }

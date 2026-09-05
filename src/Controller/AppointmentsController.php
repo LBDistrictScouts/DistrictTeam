@@ -62,8 +62,20 @@ class AppointmentsController extends AppController
             ->find()
             ->limit(200)
             ->all()
-            ->combine('id', 'full_name');
-        $memberContactMethods = $this->Appointments->MemberContactMethods->find('list', limit: 200)->all();
+            ->combine('id', 'full_name')
+            ->toArray();
+        $memberContactMethods = [];
+        if ($members) {
+            $contactMethods = $this->Appointments->MemberContactMethods->find()
+                ->where(['member_id IN' => array_keys($members)]);
+            foreach ($contactMethods as $contactMethod) {
+                $memberContactMethods[] = [
+                    'value' => $contactMethod->id,
+                    'text' => $contactMethod->contact_method,
+                    'data-member-id' => $contactMethod->member_id,
+                ];
+            }
+        }
         $contactMethodTypes = $this->contactMethodTypes();
         $this->set(compact(
             'appointment',

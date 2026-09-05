@@ -4,7 +4,7 @@
  * @var \App\Model\Entity\Appointment $appointment
  * @var \Cake\Collection\CollectionInterface|array<string> $roles
  * @var \Cake\Collection\CollectionInterface|array<string> $members
- * @var \Cake\Collection\CollectionInterface|array<string> $memberContactMethods
+ * @var array<array<string, string>> $memberContactMethods
  * @var array<int, string> $contactMethodTypes
  */
 ?>
@@ -68,6 +68,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const dialog = document.getElementById('member-modal');
     const form = document.getElementById('add-member-form');
     const status = document.getElementById('member-modal-status');
+    const memberSelect = document.getElementById('member-id');
+    const contactMethodSelect = document.getElementById('member-contact-method-id');
+    const contactMethods = Array.from(contactMethodSelect.options);
+
+    const updateContactMethods = function () {
+        const selectedId = contactMethodSelect.value;
+        const options = contactMethods.filter(function (option) {
+            return option.dataset.memberId === memberSelect.value;
+        });
+        contactMethodSelect.replaceChildren(...options);
+        if (options.some(option => option.value === selectedId)) {
+            contactMethodSelect.value = selectedId;
+        }
+        if (options.length === 0) {
+            contactMethodSelect.add(new Option('<?= h(__('No contact methods available')) ?>', ''));
+        }
+    };
+
+    memberSelect.addEventListener('change', updateContactMethods);
+    updateContactMethods();
 
     document.getElementById('open-member-modal').addEventListener('click', function () {
         status.textContent = '';
@@ -112,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 );
             }
 
-            const memberSelect = document.getElementById('member-id');
             memberSelect.add(new Option(
                 result.member.full_name,
                 result.member.id,
@@ -120,13 +139,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 true,
             ));
 
-            const contactMethodSelect = document.getElementById('member-contact-method-id');
-            contactMethodSelect.add(new Option(
+            const contactOption = new Option(
                 result.contactMethod.contact_method,
                 result.contactMethod.id,
                 true,
                 true,
-            ));
+            );
+            contactOption.dataset.memberId = result.member.id;
+            contactMethods.push(contactOption);
+            updateContactMethods();
+            contactMethodSelect.value = result.contactMethod.id;
 
             form.reset();
             dialog.close();

@@ -55,7 +55,7 @@ class RolesController extends AppController
             }
             $this->Flash->error(__('The role could not be saved. Please, try again.'));
         }
-        $teams = $this->Roles->Teams->find('list', limit: 200)->all();
+        $teams = $this->Roles->Teams->find('treeList', limit: 200, spacer: '>> ')->toArray();
         $this->set(compact('role', 'teams'));
     }
 

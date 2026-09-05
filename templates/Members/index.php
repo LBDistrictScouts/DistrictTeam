@@ -6,6 +6,7 @@
 ?>
 <div class="members index content">
     <?= $this->Html->link(__('New Member'), ['action' => 'add'], ['class' => 'button float-right']) ?>
+    <?= $this->Html->link(__('Upload CSV'), ['action' => 'upload'], ['class' => 'button']) ?>
     <h3><?= __('Members') ?></h3>
     <div class="table-responsive">
         <table>

@@ -112,6 +112,8 @@ th {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
     max-width: 112rem;
     padding: 2rem;
     margin: 0 auto;
@@ -123,6 +125,11 @@ th {
 .top-nav-title span {
     color: var(--color-cakephp-gray);
 }
+.top-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
 .top-nav-links a {
     margin: 0 0.5rem;
 }
@@ -130,65 +137,6 @@ th {
 .top-nav-links a {
     font-weight: bold;
 }
-/* Shared CRUD navigation */
-.crud-shell {
-    align-items: flex-start;
-    display: grid;
-    gap: 2.4rem;
-    grid-template-columns: 21rem minmax(0, 1fr);
-}
-.crud-shell-content {
-    min-width: 0;
-    width: 100%;
-}
-.crud-sidebar {
-    background: var(--color-white);
-    border: 1px solid #dce5df;
-    border-radius: 1.4rem;
-    padding: 1.4rem;
-    position: sticky;
-    top: 2rem;
-}
-.crud-sidebar-label {
-    color: var(--color-lightgray);
-    font-family: "Raleway", sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    margin: .4rem .8rem 1rem;
-    text-transform: uppercase;
-}
-.crud-sidebar nav {
-    display: grid;
-    gap: .4rem;
-}
-.crud-sidebar-link {
-    align-items: center;
-    border-radius: .9rem;
-    color: var(--color-lightgray);
-    display: flex;
-    font-family: "Raleway", sans-serif;
-    font-weight: 700;
-    gap: 1rem;
-    padding: 1rem 1.1rem;
-}
-.crud-sidebar-link:hover,
-.crud-sidebar-link:focus {
-    background: #eff8f4;
-    color: #006b54;
-}
-.crud-sidebar-link.is-active {
-    background: #dff4ec;
-    color: #006b54;
-}
-.crud-sidebar-icon {
-    align-items: center;
-    display: flex;
-    flex: 0 0 2rem;
-    font-size: 1.6rem;
-    justify-content: center;
-}
-
 /* View action */
 .view.content .text {
     margin-top: 1.2rem;
@@ -334,24 +282,6 @@ input[type='color'] {
     }
     .heading {
         margin-bottom: 1rem;
-    }
-    .crud-shell {
-        display: block;
-    }
-    .crud-sidebar {
-        margin-bottom: 1.5rem;
-        overflow-x: auto;
-        position: static;
-    }
-    .crud-sidebar-label {
-        display: none;
-    }
-    .crud-sidebar nav {
-        display: flex;
-        min-width: max-content;
-    }
-    .crud-sidebar-link {
-        padding: .8rem 1rem;
     }
     .asc:after {
         content: " \2192";

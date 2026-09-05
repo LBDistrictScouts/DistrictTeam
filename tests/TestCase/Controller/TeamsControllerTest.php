@@ -37,12 +37,11 @@ class TeamsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('District Team');
         $this->assertResponseContains('>> Digital Team');
-        $this->assertResponseContains('class="crud-sidebar"');
+        $this->assertResponseNotContains('class="crud-sidebar"');
         $this->assertResponseContains('href="/roles"');
         $this->assertResponseContains('href="/members"');
         $this->assertResponseContains('href="/appointments"');
         $this->assertResponseContains('href="/member-contact-methods"');
-        $this->assertResponseContains('aria-current="page"');
     }
 
     /**
