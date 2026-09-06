@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
       - name: Render Kustomize environments
         run: |
           kubectl kustomize K8S/overlays/test > /tmp/district-team-test.yaml
