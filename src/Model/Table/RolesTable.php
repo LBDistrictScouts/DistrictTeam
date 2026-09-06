@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
  * Roles Model
  *
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\TeamsTable> $Teams
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $Appointments
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $CurrentAppointments
  * @method \App\Model\Entity\Role newEmptyEntity()

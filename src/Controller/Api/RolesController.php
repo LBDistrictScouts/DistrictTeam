@@ -44,7 +44,7 @@ class RolesController extends AppController
     /**
      * Build the role collection query, optionally limited to one group.
      *
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Role>
      */
     protected function collectionQuery(): SelectQuery
     {
