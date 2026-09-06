@@ -68,6 +68,7 @@ IDs and related objects. District and group teams can have a `group_id` with
 | Teams | `GET /api/teams` | `GET /api/teams/{uuid}` |
 | Teams for a group | `GET /api/group-teams/{groupUUID}` | — |
 | Roles | `GET /api/roles` | `GET /api/roles/{uuid}` |
+| Roles for a group | `GET /api/group-roles/{groupUUID}` | — |
 | Members | `GET /api/members` | `GET /api/members/{uuid}` |
 | Contact methods | `GET /api/member-contact-methods` | `GET /api/member-contact-methods/{uuid}` |
 | Appointments | `GET /api/appointments` | `GET /api/appointments/{uuid}` |
@@ -86,6 +87,14 @@ unknown group UUIDs return 404. Either group type (`group` or `district`) can be
 requested. The endpoint is read-only and accepts `.json` or `Accept: application/json`.
 
 Example: `GET /api/group-teams/48d34b95-7058-5bbf-a3ec-a543309f6c52.json?limit=20&page=1`.
+
+`GET /api/group-roles/{groupUUID}` takes the same group UUID and returns the
+same `data` array and `pagination` envelope as `/api/roles`. It includes roles
+whose team belongs to the requested group, ordered as `/api/roles` does. A known
+group without roles returns an empty `data` array; invalid or unknown group UUIDs
+return 404. The endpoint is read-only and accepts `.json` or `Accept: application/json`.
+
+Example: `GET /api/group-roles/48d34b95-7058-5bbf-a3ec-a543309f6c52.json?limit=20&page=1`.
 
 Collection responses use this envelope:
 

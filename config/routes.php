@@ -54,6 +54,9 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/group-teams/{groupUUID}', ['controller' => 'Teams', 'action' => 'groupTeams'])
             ->setPass(['groupUUID'])
             ->setMethods(['GET']);
+        $builder->connect('/group-roles/{groupUUID}', ['controller' => 'Roles', 'action' => 'groupRoles'])
+            ->setPass(['groupUUID'])
+            ->setMethods(['GET']);
 
         foreach (['Teams', 'Roles', 'Members', 'MemberContactMethods', 'Appointments'] as $resource) {
             $builder->resources($resource, ['only' => ['index', 'view']]);

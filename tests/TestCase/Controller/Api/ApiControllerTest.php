@@ -423,4 +423,58 @@ class ApiControllerTest extends TestCase
         $this->post('/api/group-teams/' . $groupId . '.json', []);
         $this->assertResponseCode(404);
     }
+
+    /**
+     * @return void
+     */
+    public function testGroupRolesReturnsScopedSortedCollection(): void
+    {
+        $groupId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        $teams = $this->fetchTable('Teams');
+        $roles = $this->fetchTable('Roles');
+        $teams->updateAll(['group_id' => $groupId], []);
+        $roles->updateAll(['group_id' => $groupId], []);
+
+        $this->get('/api/group-roles/' . $groupId . '.json?limit=1');
+
+        $this->assertResponseOk();
+        $this->assertContentType('application/json');
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame(['data', 'pagination'], array_keys($payload));
+        $this->assertSame(2, $payload['pagination']['total']);
+        $this->assertSame(2, $payload['pagination']['page_count']);
+        $this->assertSame('Vacant Role', $payload['data'][0]['name']);
+        $this->assertSame($groupId, $payload['data'][0]['team']['group']['id']);
+        $this->assertSame([], $payload['data'][0]['current_appointments']);
+
+        $this->get('/api/group-roles/' . $groupId . '.json?limit=1&page=2');
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame('Digital Lead', $payload['data'][0]['name']);
+
+        // The existing unscoped endpoint still returns both roles.
+        $this->get('/api/roles.json');
+        $this->assertSame(2, json_decode((string)$this->_response->getBody(), true)['pagination']['total']);
+    }
+
+    /**
+     * @return void
+     */
+    public function testGroupRolesHandlesEmptyOrUnknownGroups(): void
+    {
+        $groupId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        $this->get('/api/group-roles/' . $groupId . '.json');
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([], $payload['data']);
+        $this->assertSame(0, $payload['pagination']['total']);
+
+        foreach (['not-a-uuid', '99999999-9999-4999-8999-999999999999'] as $id) {
+            $this->get('/api/group-roles/' . $id . '.json');
+            $this->assertResponseCode(404);
+        }
+        $this->enableCsrfToken();
+        $this->post('/api/group-roles/' . $groupId . '.json', []);
+        $this->assertResponseCode(404);
+    }
 }
