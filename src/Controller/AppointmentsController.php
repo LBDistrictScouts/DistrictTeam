@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\MemberContactMethod;
 use App\Model\Enum\ContactMethodType;
 use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
+use Cake\Validation\Validation;
 
 /**
  * Appointments Controller
@@ -59,7 +61,7 @@ class AppointmentsController extends AppController
         }
         if ($this->request->is('post')) {
             $appointment = $this->Appointments->patchEntity($appointment, $this->request->getData());
-            if ($this->Appointments->save($appointment)) {
+            if (!$this->hasNonGroupEmailContactMethod($appointment) && $this->Appointments->save($appointment)) {
                 $this->Flash->success(__('The appointment has been saved.'));
 
                 return $this->redirect(['action' => 'index']);
@@ -76,7 +78,15 @@ class AppointmentsController extends AppController
         $memberContactMethods = [];
         if ($members) {
             $contactMethods = $this->Appointments->MemberContactMethods->find()
-                ->where(['member_id IN' => array_keys($members)]);
+                ->where([
+                    'member_id IN' => array_keys($members),
+                    'is_non_group_email' => false,
+                    'contact_method_type IN' => [
+                        ContactMethodType::Email->value,
+                        ContactMethodType::EmailAlias->value,
+                        ContactMethodType::EmailGroup->value,
+                    ],
+                ]);
             foreach ($contactMethods as $contactMethod) {
                 $contactMethod = $contactMethod instanceof EntityInterface
                     ? $contactMethod->toArray()
@@ -139,6 +149,8 @@ class AppointmentsController extends AppController
                     'id' => $contactMethod->id,
                     'contact_method' => $contactMethod->contact_method,
                     'contact_method_type' => $contactMethod->contact_method_type->label(),
+                    'is_non_group_email' => $contactMethod->is_non_group_email,
+                    'is_appointment_email' => $this->isAppointmentEmail($contactMethod->contact_method_type),
                 ],
             ];
 
@@ -173,7 +185,7 @@ class AppointmentsController extends AppController
         $appointment = $this->Appointments->get($id, contain: []);
         if ($this->request->is(['patch', 'post', 'put'])) {
             $appointment = $this->Appointments->patchEntity($appointment, $this->request->getData());
-            if ($this->Appointments->save($appointment)) {
+            if (!$this->hasNonGroupEmailContactMethod($appointment) && $this->Appointments->save($appointment)) {
                 $this->Flash->success(__('The appointment has been saved.'));
 
                 return $this->redirect(['action' => 'index']);
@@ -183,7 +195,16 @@ class AppointmentsController extends AppController
         $roles = $this->Appointments->Roles->find('list', limit: 200)->all();
         $members = $this->Appointments->Members->find('list', limit: 200)->all();
         $memberContactMethods = [];
-        foreach ($this->Appointments->MemberContactMethods->find() as $contactMethod) {
+        foreach (
+            $this->Appointments->MemberContactMethods->find()->where([
+            'is_non_group_email' => false,
+            'contact_method_type IN' => [
+                ContactMethodType::Email->value,
+                ContactMethodType::EmailAlias->value,
+                ContactMethodType::EmailGroup->value,
+            ],
+            ]) as $contactMethod
+        ) {
             $contactMethod = $contactMethod instanceof EntityInterface
                 ? $contactMethod->toArray()
                 : $contactMethod;
@@ -229,5 +250,57 @@ class AppointmentsController extends AppController
         }
 
         return $contactMethodTypes;
+    }
+
+    /**
+     * Reject non-group email contact methods submitted outside the selector.
+     *
+     * @param \Cake\Datasource\EntityInterface $appointment Appointment being saved.
+     * @return bool Whether the contact method is a non-group email.
+     */
+    private function hasNonGroupEmailContactMethod(EntityInterface $appointment): bool
+    {
+        if (!$appointment->isNew() && !$appointment->isDirty('member_contact_method_id')) {
+            return false;
+        }
+
+        $contactMethodId = $appointment->get('member_contact_method_id');
+        if (!is_string($contactMethodId) || $contactMethodId === '') {
+            return false;
+        }
+
+        if (!Validation::uuid($contactMethodId)) {
+            return false;
+        }
+
+        $contactMethod = $this->Appointments->MemberContactMethods->find()
+            ->where(['id' => $contactMethodId])
+            ->first();
+        if (!$contactMethod instanceof MemberContactMethod) {
+            return false;
+        }
+        $isUnavailable = $contactMethod->is_non_group_email
+            || !$this->isAppointmentEmail($contactMethod->contact_method_type);
+        if ($isUnavailable) {
+            $appointment->setError(
+                'member_contact_method_id',
+                __('Only group email contact methods can be used for an appointment'),
+            );
+        }
+
+        return $isUnavailable;
+    }
+
+    /**
+     * @param \App\Model\Enum\ContactMethodType $contactMethodType Contact method type.
+     * @return bool Whether the type represents an email address.
+     */
+    private function isAppointmentEmail(ContactMethodType $contactMethodType): bool
+    {
+        return in_array($contactMethodType, [
+            ContactMethodType::Email,
+            ContactMethodType::EmailAlias,
+            ContactMethodType::EmailGroup,
+        ], true);
     }
 }

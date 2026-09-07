@@ -147,12 +147,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 true,
             ));
 
-            const contactOption = new Option(
-                result.contactMethod.contact_method,
-                result.contactMethod.id,
-                true,
-                true,
-            );
+            if (result.contactMethod.is_non_group_email || !result.contactMethod.is_appointment_email) {
+                updateContactMethods();
+                status.textContent = '<?= h(__('Only group email contact methods can be used for an appointment. Add one to continue.')) ?>';
+                return;
+            }
+
+            const contactOption = new Option(result.contactMethod.contact_method, result.contactMethod.id, true, true);
             contactOption.dataset.memberId = result.member.id;
             contactMethods.push(contactOption);
             updateContactMethods();

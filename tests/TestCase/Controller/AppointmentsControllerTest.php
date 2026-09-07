@@ -39,6 +39,7 @@ class AppointmentsControllerTest extends TestCase
         $this->get('/appointments');
         $this->assertResponseOk();
         $this->assertResponseContains('Digital Lead');
+        $this->assertResponseContains('Non-group email');
     }
 
     /**
@@ -52,6 +53,7 @@ class AppointmentsControllerTest extends TestCase
         $this->get('/appointments/view/55555555-5555-4555-8555-555555555551');
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
+        $this->assertResponseContains('Non-group email');
     }
 
     /**
@@ -62,11 +64,17 @@ class AppointmentsControllerTest extends TestCase
      */
     public function testAdd(): void
     {
+        $contacts = $this->fetchTable('MemberContactMethods');
+        $contact = $contacts->saveOrFail($contacts->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333332',
+            'contact_method' => 'grace@district.example.org',
+            'contact_method_type' => 1,
+        ]));
         $this->enableCsrfToken();
         $this->post('/appointments/add', [
             'role_id' => '22222222-2222-4222-8222-222222222222',
             'member_id' => '33333333-3333-4333-8333-333333333332',
-            'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+            'member_contact_method_id' => $contact->id,
             'effective_start_date' => '2020-01-01',
         ]);
 
@@ -128,8 +136,47 @@ class AppointmentsControllerTest extends TestCase
         $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('data-member-id="33333333-3333-4333-8333-333333333331"');
         $this->assertResponseContains('contactMethods.filter');
+        $this->assertResponseNotContains('value="44444444-4444-4444-8444-444444444441"');
+    }
+
+    public function testAddRejectsNonGroupEmailContactMethod(): void
+    {
+        $this->enableCsrfToken();
+        $this->post('/appointments/add', [
+            'role_id' => '22222222-2222-4222-8222-222222222222',
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'member_contact_method_id' => '44444444-4444-4444-8444-444444444441',
+            'effective_start_date' => '2022-01-01',
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Only group email contact methods can be used for an appointment');
+    }
+
+    public function testAppointmentFormsDoNotOfferPhoneContacts(): void
+    {
+        $this->get('/appointments/add');
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('value="44444444-4444-4444-8444-444444444442"');
+
+        $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('value="44444444-4444-4444-8444-444444444442"');
+    }
+
+    public function testAddRejectsPhoneContactMethod(): void
+    {
+        $this->enableCsrfToken();
+        $this->post('/appointments/add', [
+            'role_id' => '22222222-2222-4222-8222-222222222222',
+            'member_id' => '33333333-3333-4333-8333-333333333332',
+            'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+            'effective_start_date' => '2022-01-01',
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Only group email contact methods can be used for an appointment');
     }
 
     /**

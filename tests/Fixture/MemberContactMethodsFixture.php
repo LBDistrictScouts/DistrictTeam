@@ -23,12 +23,14 @@ class MemberContactMethodsFixture extends TestFixture
                 'member_id' => '33333333-3333-4333-8333-333333333331',
                 'contact_method' => 'ada@example.com',
                 'contact_method_type' => 1,
+                'is_non_group_email' => true,
             ],
             [
                 'id' => '44444444-4444-4444-8444-444444444442',
                 'member_id' => '33333333-3333-4333-8333-333333333332',
                 'contact_method' => '07000000000',
                 'contact_method_type' => 10,
+                'is_non_group_email' => false,
             ],
         ];
         parent::init();

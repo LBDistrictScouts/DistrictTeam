@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Service;
 
+use App\Model\Enum\ContactMethodType;
 use App\Service\MemberCsvImporter;
 use Cake\TestSuite\TestCase;
 use InvalidArgumentException;
@@ -266,6 +267,7 @@ class MemberCsvImporterTest extends TestCase
         $importer->import($rows, $mapping);
         $appointment = $this->fetchTable('Appointments')->get('55555555-5555-4555-8555-555555555551');
         $this->assertSame('2026-12-31', $appointment->effective_end_date->format('Y-m-d'));
+        $this->assertSame('44444444-4444-4444-8444-444444444441', $appointment->member_contact_method_id);
 
         // A date subsequently set on the record takes priority over a blank CSV date.
         $appointment->effective_end_date = '2027-12-31';
@@ -277,7 +279,7 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame('2027-12-31', $appointment->effective_end_date->format('Y-m-d'));
     }
 
-    public function testPhoneOnlyExportWithoutEndDate(): void
+    public function testPhoneOnlyExportCreatesTheContactButSkipsTheAppointment(): void
     {
         $importer = new MemberCsvImporter();
         $rows = $importer->read($this->upload(
@@ -285,13 +287,71 @@ class MemberCsvImporterTest extends TestCase
             . "Phone,Only,9091,01 Aug 2026,+447800000000\n",
         ));
         $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+        $result = $importer->import($rows, $mapping);
+        $this->assertSame(1, $result['contacts']);
+        $this->assertSame(0, $result['appointments']);
+        $this->assertContains('Row 2: appointment skipped (no usable email contact method).', $result['warnings']);
+        $this->assertTrue($this->fetchTable('MemberContactMethods')->exists([
+            'contact_method' => '+44 7800 000000',
+        ]));
+    }
+
+    public function testAppointmentUsesTheBestEmailForTheAppointmentGroup(): void
+    {
+        $contacts = $this->fetchTable('MemberContactMethods');
+        $memberId = '33333333-3333-4333-8333-333333333331';
+        $appointmentGroupEmail = $contacts->saveOrFail($contacts->newEntity([
+            'member_id' => $memberId,
+            'contact_method' => 'district.alias@district.example.org',
+            'contact_method_type' => ContactMethodType::EmailAlias->value,
+        ]));
+        $contacts->saveOrFail($contacts->newEntity([
+            'member_id' => $memberId,
+            'contact_method' => 'other-group.list@group.example.org',
+            'contact_method_type' => ContactMethodType::EmailGroup->value,
+        ]));
+
+        $importer = new MemberCsvImporter();
+        $rows = [2 => [
+            'First name' => 'Ada', 'Last name' => 'Lovelace', 'Membership number' => '1001',
+            'Start date' => '01 Aug 2026', 'Unit name' => '', 'Parent Team' => '', 'Team' => '', 'Role' => '',
+        ]];
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+
         $importer->import($rows, $mapping);
         $appointment = $this->fetchTable('Appointments')->find()->where([
-            'role_id' => current($mapping),
+            'role_id' => current($mapping), 'member_id' => $memberId,
         ])->firstOrFail();
-        $this->assertNull($appointment->effective_end_date);
-        $this->assertSame('2026-08-01', $appointment->effective_start_date->format('Y-m-d'));
-        $this->assertSame('+44 7800 000000', $this->fetchTable('MemberContactMethods')->get($appointment->member_contact_method_id)->contact_method);
+        $this->assertSame($appointmentGroupEmail->id, $appointment->member_contact_method_id);
+    }
+
+    public function testAppointmentPrefersAnotherGroupEmailOverAPersonalEmail(): void
+    {
+        $contacts = $this->fetchTable('MemberContactMethods');
+        $memberId = '33333333-3333-4333-8333-333333333332';
+        $contacts->saveOrFail($contacts->newEntity([
+            'member_id' => $memberId,
+            'contact_method' => 'grace@example.com',
+            'contact_method_type' => ContactMethodType::Email->value,
+        ]));
+        $otherGroupEmail = $contacts->saveOrFail($contacts->newEntity([
+            'member_id' => $memberId,
+            'contact_method' => 'group.list@group.example.org',
+            'contact_method_type' => ContactMethodType::EmailGroup->value,
+        ]));
+
+        $importer = new MemberCsvImporter();
+        $rows = [2 => [
+            'First name' => 'Grace', 'Last name' => 'Hopper', 'Membership number' => '1002',
+            'Start date' => '01 Aug 2026', 'Unit name' => '', 'Parent Team' => '', 'Team' => '', 'Role' => '',
+        ]];
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+
+        $importer->import($rows, $mapping);
+        $appointment = $this->fetchTable('Appointments')->find()->where([
+            'role_id' => current($mapping), 'member_id' => $memberId,
+        ])->firstOrFail();
+        $this->assertSame($otherGroupEmail->id, $appointment->member_contact_method_id);
     }
 
     public function testCsvEmailIsLowercasedBeforeDuplicateMatching(): void
@@ -506,7 +566,7 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame(1, $result['contacts']);
         $this->assertSame(1, $result['appointments']);
         $this->assertContains('Row 3: contact number skipped (invalid UK phone number).', $result['warnings']);
-        $this->assertContains('Row 3: appointment skipped (no usable contact method).', $result['warnings']);
+        $this->assertContains('Row 3: appointment skipped (no usable email contact method).', $result['warnings']);
     }
 
     public function testPreferredNameForNewAndExistingMembersWithFallback(): void

@@ -120,7 +120,9 @@ class TeamsController extends AppController
         $this->request->allowMethod(['get', 'post']);
         $creator = new StandardGroupTemplateCreator();
         $reviewOverrides = filter_var(
-            $this->request->is('post') ? $this->request->getData('review_overrides', false) : $this->request->getQuery('review_overrides', false),
+            $this->request->is('post')
+                ? $this->request->getData('review_overrides', false)
+                : $this->request->getQuery('review_overrides', false),
             FILTER_VALIDATE_BOOL,
         );
         $submittedTeams = [];
@@ -131,7 +133,10 @@ class TeamsController extends AppController
                     throw new InvalidArgumentException('Invalid template selection.');
                 }
                 $created = $creator->createTeams(array_values($submittedTeams), $reviewOverrides);
-                $this->Flash->success($reviewOverrides ? __('{0} standard team names applied.', $created) : __('{0} standard teams created.', $created));
+                $message = $reviewOverrides
+                    ? __('{0} standard team names applied.', $created)
+                    : __('{0} standard teams created.', $created);
+                $this->Flash->success($message);
 
                 return $this->redirect(['action' => 'index']);
             } catch (InvalidArgumentException | RuntimeException $exception) {

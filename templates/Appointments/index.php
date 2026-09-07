@@ -33,10 +33,15 @@
                 <tr><td colspan="5" class="workspace-empty"><?= __('No records to display yet.') ?></td></tr>
                 <?php endif; ?>
                 <?php foreach ($appointments as $appointment): ?>
-                <tr>
+                <tr<?= $appointment->member_contact_method?->is_non_group_email ? ' class="appointment-non-group-email"' : '' ?>>
                     <td><?= $appointment->hasValue('role') ? $this->Html->link($appointment->role->name, ['controller' => 'Roles', 'action' => 'view', $appointment->role->id]) : '' ?></td>
                     <td><?= $appointment->hasValue('member') ? $this->Html->link($appointment->member->full_name, ['controller' => 'Members', 'action' => 'view', $appointment->member->id]) : '' ?></td>
-                    <td><?= $appointment->hasValue('member_contact_method') ? h($appointment->member_contact_method->contact_method) : '' ?></td>
+                    <td>
+                        <?= $appointment->hasValue('member_contact_method') ? h($appointment->member_contact_method->contact_method) : '' ?>
+                        <?php if ($appointment->member_contact_method?->is_non_group_email) : ?>
+                            <span class="workspace-status workspace-status-warning"><?= __('Non-group email') ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td><span class="workspace-status <?= $appointment->active ? 'workspace-status-positive' : 'workspace-status-muted' ?>"><?= $appointment->active ? __('Active') : __('Ended') ?></span></td>
                     <td class="actions">
                         <?= $this->Html->link(__('View'), ['action' => 'view', $appointment->id]) ?>

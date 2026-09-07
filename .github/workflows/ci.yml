@@ -47,7 +47,7 @@ jobs:
         with:
           php-version: '8.5'
           extensions: mbstring, intl, pdo_pgsql
-          coverage: none
+          coverage: xdebug
           tools: cs2pr
       - name: Cache Composer downloads
         uses: actions/cache@v6
@@ -69,7 +69,7 @@ jobs:
           SECURITY_SALT: ci-static-analysis-salt
       - name: Run tests
         if: always()
-        run: composer test
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --colors=always --coverage-text --only-summary-for-coverage-text
         env:
           DATABASE_HOST: 127.0.0.1
           DATABASE_PORT: 5432

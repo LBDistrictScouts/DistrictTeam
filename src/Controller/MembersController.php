@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Group;
+use App\Model\Entity\Section;
 use App\Model\Enum\ContactMethodType;
 use App\Service\MemberCsvImporter;
 use InvalidArgumentException;
@@ -183,6 +185,9 @@ class MembersController extends AppController
         $sections = $this->fetchTable('Sections')->find()->contain(['Groups'])
             ->orderBy(['Groups.group_name' => 'ASC', 'Sections.section_name' => 'ASC']);
         foreach ($sections as $section) {
+            if (!$section instanceof Section) {
+                continue;
+            }
             $sectionOptions[$section->id] = $section->group->group_name . ' / ' . $section->section_name;
             $sectionGroups[$section->id] = $section->group_id;
         }
@@ -206,10 +211,16 @@ class MembersController extends AppController
         }
         $groups = [];
         foreach ($this->fetchTable('Groups')->find()->select(['id', 'group_name', 'type']) as $group) {
+            if (!$group instanceof Group) {
+                continue;
+            }
             $groups[$group->id] = $group;
         }
         $sections = [];
         foreach ($this->fetchTable('Sections')->find()->select(['id', 'group_id', 'section_name']) as $section) {
+            if (!$section instanceof Section) {
+                continue;
+            }
             $sections[$section->id] = $section;
         }
 
@@ -254,15 +265,24 @@ class MembersController extends AppController
         }
 
         natcasesort($filters['district']);
-        uasort($filters['district_sections'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
-        uasort($filters['groups'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+        uasort(
+            $filters['district_sections'],
+            fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']),
+        );
+        uasort(
+            $filters['groups'],
+            fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']),
+        );
         foreach ($filters['district_sections'] as &$section) {
             natcasesort($section['units']);
         }
         unset($section);
         foreach ($filters['groups'] as &$group) {
             natcasesort($group['units']);
-            uasort($group['sections'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+            uasort(
+                $group['sections'],
+                fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']),
+            );
             foreach ($group['sections'] as &$section) {
                 natcasesort($section['units']);
             }

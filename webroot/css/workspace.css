@@ -45,6 +45,9 @@
 .workspace-status-filled { background: #dff4ec; color: #00523f; }
 .workspace-status-vacant { background: #fff1d2; color: #815200; }
 .workspace-status-recruiting { background: #dbeafe; color: #1e3a8a; }
+.workspace-status-warning { margin: .4rem 0 0; background: #fff0ed; color: #9b3e33; }
+.workspace-page tbody tr.appointment-non-group-email { background: #fff8f6; }
+.workspace-page tbody tr.appointment-non-group-email:hover { background: #fff0ed; }
 .roles-table { table-layout: fixed; }
 .roles-table th, .roles-table td { box-sizing: border-box; }
 .roles-table th:nth-child(1) { width: 30%; }

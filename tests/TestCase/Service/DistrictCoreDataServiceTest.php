@@ -16,7 +16,14 @@ class DistrictCoreDataServiceTest extends TestCase
     /**
      * @var array<string>
      */
-    protected array $fixtures = ['app.Groups', 'app.Sections', 'app.Teams', 'app.Roles'];
+    protected array $fixtures = [
+        'app.Groups',
+        'app.Sections',
+        'app.Teams',
+        'app.Roles',
+        'app.Members',
+        'app.MemberContactMethods',
+    ];
 
     /**
      * @return void
@@ -98,6 +105,29 @@ class DistrictCoreDataServiceTest extends TestCase
                 $this->fetchTable('Sections')->get('cccccccc-cccc-4ccc-8ccc-cccccccccccc')->group_id,
             );
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function testRefreshNonGroupEmailFlagsUsesSynchronizedDomains(): void
+    {
+        $service = new DistrictCoreDataService([
+            'url' => 'https://example.org', 'username' => 'test', 'password' => 'secret',
+        ]);
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+
+        $this->assertSame(0, $service->refreshNonGroupEmailFlags());
+
+        $groups = [['id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'group_name' => 'District', 'sort_order' => 1, 'type' => 'district', 'domains' => ['example.com']]];
+        $sections = [['id' => 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+            'group_id' => $groups[0]['id'], 'section_name' => 'District Cubs',
+            'section_id' => 456, 'section_type' => 'cubs']];
+        $service->sync($groups, $sections);
+
+        $this->assertSame(1, $service->refreshNonGroupEmailFlags());
+        $this->assertFalse($contactMethods->get('44444444-4444-4444-8444-444444444441')->is_non_group_email);
     }
 
     /**

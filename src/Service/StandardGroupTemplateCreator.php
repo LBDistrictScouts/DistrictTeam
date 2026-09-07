@@ -22,7 +22,8 @@ class StandardGroupTemplateCreator
         $teamIds = [];
         foreach ($existingTeams as $team) {
             if ($team['template'] !== null) {
-                $teamIds[$this->key((string)$team['group_id'], $this->templateValue($team['template']))] = (string)$team['id'];
+                $teamKey = $this->key((string)$team['group_id'], $this->templateValue($team['template']));
+                $teamIds[$teamKey] = (string)$team['id'];
             }
         }
         $plan = ['teams' => [], 'roles' => []];
@@ -39,7 +40,11 @@ class StandardGroupTemplateCreator
                 if ($teamId === null) {
                     $plan['teams'][] = $teamProposal + ['action' => 'create'];
                 } elseif ($reviewOverrides && $this->teamName($existingTeams, $teamId) !== $definition['team_name']) {
-                    $plan['teams'][] = $teamProposal + ['action' => 'update', 'id' => $teamId, 'existing_name' => $this->teamName($existingTeams, $teamId)];
+                    $plan['teams'][] = $teamProposal + [
+                        'action' => 'update',
+                        'id' => $teamId,
+                        'existing_name' => $this->teamName($existingTeams, $teamId),
+                    ];
                 }
                 foreach ($definition['roles'] as [$roleName, $roleTemplate, $isLead, $multiMember]) {
                     $roleKey = $this->key((string)$group['id'], $roleTemplate);
@@ -53,7 +58,11 @@ class StandardGroupTemplateCreator
                     if ($role === null) {
                         $plan['roles'][] = $roleProposal + ['action' => 'create'];
                     } elseif ($reviewOverrides && $role['name'] !== $roleName) {
-                        $plan['roles'][] = $roleProposal + ['action' => 'update', 'id' => $role['id'], 'existing_name' => $role['name']];
+                        $plan['roles'][] = $roleProposal + [
+                            'action' => 'update',
+                            'id' => $role['id'],
+                            'existing_name' => $role['name'],
+                        ];
                     }
                 }
             }
@@ -78,14 +87,20 @@ class StandardGroupTemplateCreator
             }
         }
 
-        return array_values(array_filter($this->plan($reviewOverrides)['roles'], fn(array $role): bool => isset($teamTemplates[$role['team_key']])));
+        return array_values(array_filter(
+            $this->plan($reviewOverrides)['roles'],
+            fn(array $role): bool => isset($teamTemplates[$role['team_key']]),
+        ));
     }
 
     /** @param list<array{team_name?: mixed, skip?: mixed}> $selections @return int */
     public function createTeams(array $selections, bool $reviewOverrides = false): int
     {
         $plan = $this->plan($reviewOverrides);
-        $skippedRoles = array_map(fn(array $role): array => ['role_name' => $role['role_name'], 'skip' => true], $plan['roles']);
+        $skippedRoles = array_map(
+            fn(array $role): array => ['role_name' => $role['role_name'], 'skip' => true],
+            $plan['roles'],
+        );
 
         return $this->create($selections, $skippedRoles, $reviewOverrides)['teams'];
     }
@@ -134,11 +149,20 @@ class StandardGroupTemplateCreator
         $teamIds = [];
         foreach ($existingTeams as $team) {
             if ($team['template'] !== null) {
-                $teamIds[$this->key((string)$team['group_id'], $this->templateValue($team['template']))] = (string)$team['id'];
+                $teamKey = $this->key((string)$team['group_id'], $this->templateValue($team['template']));
+                $teamIds[$teamKey] = (string)$team['id'];
             }
         }
         $result = ['teams' => 0, 'roles' => 0];
-        $teams->getConnection()->transactional(function () use ($plan, $selectedTeams, $selectedRoles, $teams, $roles, &$teamIds, &$result): void {
+        $teams->getConnection()->transactional(function () use (
+            $plan,
+            $selectedTeams,
+            $selectedRoles,
+            $teams,
+            $roles,
+            &$teamIds,
+            &$result,
+        ): void {
             foreach ($plan['teams'] as $index => $team) {
                 if (!$selectedTeams[$index]['apply']) {
                     continue;
@@ -162,7 +186,14 @@ class StandardGroupTemplateCreator
             }
             foreach ($plan['roles'] as $index => $role) {
                 $teamIndex = $this->teamIndex($plan['teams'], $role['team_key']);
-                if (!$selectedRoles[$index]['apply'] || ($teamIndex !== null && !$selectedTeams[$teamIndex]['apply'] && $plan['teams'][$teamIndex]['action'] === 'create')) {
+                if (!$selectedRoles[$index]['apply']) {
+                    continue;
+                }
+                if (
+                    $teamIndex !== null
+                    && !$selectedTeams[$teamIndex]['apply']
+                    && $plan['teams'][$teamIndex]['action'] === 'create'
+                ) {
                     continue;
                 }
                 if ($role['action'] === 'update') {
@@ -174,11 +205,15 @@ class StandardGroupTemplateCreator
                 }
                 $teamId = $teamIds[$role['team_key']] ?? null;
                 if ($teamId === null) {
-                    throw new InvalidArgumentException('The proposed template has changed. Reload the page and try again.');
+                    throw new InvalidArgumentException(
+                        'The proposed template has changed. Reload the page and try again.',
+                    );
                 }
                 $entity = $roles->newEntity([
-                    'team_id' => $teamId, 'name' => $selectedRoles[$index]['name'],
-                    'is_lead' => $role['is_lead'], 'multi_member_role' => $role['multi_member_role'],
+                    'team_id' => $teamId,
+                    'name' => $selectedRoles[$index]['name'],
+                    'is_lead' => $role['is_lead'],
+                    'multi_member_role' => $role['multi_member_role'],
                 ]);
                 $entity->template = $role['template'];
                 $roles->saveOrFail($entity);
@@ -196,15 +231,21 @@ class StandardGroupTemplateCreator
      * @param list<array<string, mixed>> $existingTeams
      * @param list<array<string, mixed>> $existingRoles
      */
-    private function validateSelections(array $plan, array $teams, array $roles, array $existingTeams, array $existingRoles): void
-    {
+    private function validateSelections(
+        array $plan,
+        array $teams,
+        array $roles,
+        array $existingTeams,
+        array $existingRoles,
+    ): void {
         $teamNames = [];
         $teamIds = [];
         foreach ($existingTeams as $team) {
             $key = $this->key((string)$team['group_id'], (string)$team['team_name']);
             $teamNames[$key] = true;
             if ($team['template'] !== null) {
-                $teamIds[$this->key((string)$team['group_id'], $this->templateValue($team['template']))] = (string)$team['id'];
+                $teamKey = $this->key((string)$team['group_id'], $this->templateValue($team['template']));
+                $teamIds[$teamKey] = (string)$team['id'];
             }
         }
         foreach ($plan['teams'] as $index => $team) {
@@ -213,7 +254,10 @@ class StandardGroupTemplateCreator
             }
             $key = $this->key((string)$team['group_id'], $teams[$index]['name']);
             if (isset($teamNames[$key])) {
-                throw new InvalidArgumentException(sprintf('A team named "%s" already exists in this group.', $teams[$index]['name']));
+                throw new InvalidArgumentException(sprintf(
+                    'A team named "%s" already exists in this group.',
+                    $teams[$index]['name'],
+                ));
             }
             $teamNames[$key] = true;
             if ($team['action'] === 'create' && $team['parent_key'] !== null) {
@@ -236,18 +280,31 @@ class StandardGroupTemplateCreator
         }
         foreach ($plan['roles'] as $index => $role) {
             $teamIndex = $this->teamIndex($plan['teams'], $role['team_key']);
-            if (!$roles[$index]['apply'] || ($teamIndex !== null && !$teams[$teamIndex]['apply'] && $plan['teams'][$teamIndex]['action'] === 'create')) {
+            if (!$roles[$index]['apply']) {
+                continue;
+            }
+            if (
+                $teamIndex !== null
+                && !$teams[$teamIndex]['apply']
+                && $plan['teams'][$teamIndex]['action'] === 'create'
+            ) {
                 continue;
             }
             $key = $this->key((string)$role['group_id'], $roles[$index]['name']);
             if (isset($roleNames[$key])) {
-                throw new InvalidArgumentException(sprintf('A role named "%s" already exists in this group.', $roles[$index]['name']));
+                throw new InvalidArgumentException(sprintf(
+                    'A role named "%s" already exists in this group.',
+                    $roles[$index]['name'],
+                ));
             }
             $roleNames[$key] = true;
             if ($role['action'] === 'create' && $role['is_lead']) {
                 $leadKey = $teamIds[$role['team_key']] ?? $role['team_key'];
                 if (isset($leadTeams[$leadKey])) {
-                    throw new InvalidArgumentException(sprintf('The team "%s" already has a lead role.', $role['team_name']));
+                    throw new InvalidArgumentException(sprintf(
+                        'The team "%s" already has a lead role.',
+                        $role['team_name'],
+                    ));
                 }
                 $leadTeams[$leadKey] = true;
             }
@@ -272,7 +329,14 @@ class StandardGroupTemplateCreator
             if (!$skip && $name === '') {
                 throw new InvalidArgumentException('A name is required unless the item is skipped.');
             }
-            $result[] = ['name' => $name, 'skip' => $skip, 'apply' => !$skip && ($proposal['action'] === 'create' || filter_var($selection['apply'] ?? false, FILTER_VALIDATE_BOOL))];
+            $result[] = [
+                'name' => $name,
+                'skip' => $skip,
+                'apply' => !$skip && (
+                    $proposal['action'] === 'create'
+                    || filter_var($selection['apply'] ?? false, FILTER_VALIDATE_BOOL)
+                ),
+            ];
         }
 
         return $result;
@@ -297,7 +361,10 @@ class StandardGroupTemplateCreator
     private function roleByTemplate(array $roles, string $key): ?array
     {
         foreach ($roles as $role) {
-            if ($role['template'] !== null && $this->key((string)$role['group_id'], $this->templateValue($role['template'])) === $key) {
+            if (
+                $role['template'] !== null
+                && $this->key((string)$role['group_id'], $this->templateValue($role['template'])) === $key
+            ) {
                 return $role;
             }
         }
@@ -306,18 +373,44 @@ class StandardGroupTemplateCreator
     }
 
     /**
-     * @return array{list<array<string, mixed>>, array<string, list<array{id: string, section_type: string, section_name: string}>>, list<array<string, mixed>>, list<array<string, mixed>>}
+     * @return array{
+     *     list<array<string, mixed>>,
+     *     array<string, list<array{id: string, section_type: string, section_name: string}>>,
+     *     list<array<string, mixed>>,
+     *     list<array<string, mixed>>
+     * }
      */
     private function sourceData(): array
     {
-        $groups = $this->fetchTable('Groups')->find()->select(['id', 'group_name'])->where(['type' => GroupType::Group->value])->orderByAsc('sort_order')->orderByAsc('group_name')->enableHydration(false)->all()->toList();
+        $groups = $this->fetchTable('Groups')->find()
+            ->select(['id', 'group_name'])
+            ->where(['type' => GroupType::Group->value])
+            ->orderByAsc('sort_order')
+            ->orderByAsc('group_name')
+            ->enableHydration(false)
+            ->all()
+            ->toList();
         $teams = $this->teams();
 
         return [
             array_map(static fn($group): array => (array)$group, array_values($groups)),
             $this->mappedSections(),
-            array_map(static fn($team): array => (array)$team, array_values($teams->find()->select(['id', 'group_id', 'team_name', 'template'])->enableHydration(false)->all()->toList())),
-            array_map(static fn($role): array => (array)$role, array_values($this->roles()->find()->select(['id', 'team_id', 'group_id', 'name', 'is_lead', 'template'])->enableHydration(false)->all()->toList())),
+            array_map(
+                static fn($team): array => (array)$team,
+                array_values($teams->find()
+                    ->select(['id', 'group_id', 'team_name', 'template'])
+                    ->enableHydration(false)
+                    ->all()
+                    ->toList()),
+            ),
+            array_map(
+                static fn($role): array => (array)$role,
+                array_values($this->roles()->find()
+                    ->select(['id', 'team_id', 'group_id', 'name', 'is_lead', 'template'])
+                    ->enableHydration(false)
+                    ->all()
+                    ->toList()),
+            ),
         ];
     }
 
@@ -328,13 +421,50 @@ class StandardGroupTemplateCreator
      */
     private function definitions(array $group, array $sections): array
     {
-        $definitions = [['team_name' => $group['group_name'] . ' Leadership Team', 'template' => 'leadership-team', 'parent_template' => null, 'group_id' => $group['id'], 'group_name' => $group['group_name'], 'section_id' => null, 'section_name' => null, 'roles' => [['Group Lead Volunteer', 'group-lead-volunteer', true, false], ['Group Leadership Team Member', 'group-leadership-team-member', false, true]]]];
+        $definitions = [[
+            'team_name' => $group['group_name'] . ' Leadership Team',
+            'template' => 'leadership-team',
+            'parent_template' => null,
+            'group_id' => $group['id'],
+            'group_name' => $group['group_name'],
+            'section_id' => null,
+            'section_name' => null,
+            'roles' => [
+                ['Group Lead Volunteer', 'group-lead-volunteer', true, false],
+                ['Group Leadership Team Member', 'group-leadership-team-member', false, true],
+            ],
+        ]];
         foreach ($sections as $section) {
             $name = $this->sectionTeamName($group['group_name'], $this->templateValue($section['section_type']));
             $template = $this->sectionTemplate($this->templateValue($section['section_type']));
-            $definitions[] = ['team_name' => $name, 'template' => $template, 'parent_template' => 'leadership-team', 'group_id' => $group['id'], 'group_name' => $group['group_name'], 'section_id' => $section['id'], 'section_name' => $section['section_name'], 'roles' => [[$name . ' Team Leader', $template . '-team-leader', true, false], [$name . ' Team Member', $template . '-team-member', false, true]]];
+            $definitions[] = [
+                'team_name' => $name,
+                'template' => $template,
+                'parent_template' => 'leadership-team',
+                'group_id' => $group['id'],
+                'group_name' => $group['group_name'],
+                'section_id' => $section['id'],
+                'section_name' => $section['section_name'],
+                'roles' => [
+                    [$name . ' Team Leader', $template . '-team-leader', true, false],
+                    [$name . ' Team Member', $template . '-team-member', false, true],
+                ],
+            ];
         }
-        $definitions[] = ['team_name' => 'Trustee Board', 'template' => 'trustee-board', 'parent_template' => 'leadership-team', 'group_id' => $group['id'], 'group_name' => $group['group_name'], 'section_id' => null, 'section_name' => null, 'roles' => [['Trustee Board Chair', 'trustee-board-chair', true, false], ['Group Treasurer', 'group-treasurer', false, false], ['Trustee Board Member', 'trustee-board-member', false, true]]];
+        $definitions[] = [
+            'team_name' => 'Trustee Board',
+            'template' => 'trustee-board',
+            'parent_template' => 'leadership-team',
+            'group_id' => $group['id'],
+            'group_name' => $group['group_name'],
+            'section_id' => null,
+            'section_name' => null,
+            'roles' => [
+                ['Trustee Board Chair', 'trustee-board-chair', true, false],
+                ['Group Treasurer', 'group-treasurer', false, false],
+                ['Trustee Board Member', 'trustee-board-member', false, true],
+            ],
+        ];
 
         return $definitions;
     }
@@ -376,10 +506,29 @@ class StandardGroupTemplateCreator
     /** @return array<string, list<array{id: string, section_type: string, section_name: string}>> */
     private function mappedSections(): array
     {
-        $rows = $this->fetchTable('CsvUnitMappings')->find()->select(['section_id' => 'Sections.id', 'group_id' => 'Sections.group_id', 'section_type' => 'Sections.section_type', 'section_name' => 'Sections.section_name'])->innerJoinWith('Sections')->where(['CsvUnitMappings.section_id IS NOT' => null, 'Sections.section_type IN' => ['earlyyears', 'beavers', 'cubs', 'scouts']])->distinct(['Sections.id'])->enableHydration(false)->all()->toList();
+        $rows = $this->fetchTable('CsvUnitMappings')->find()
+            ->select([
+                'section_id' => 'Sections.id',
+                'group_id' => 'Sections.group_id',
+                'section_type' => 'Sections.section_type',
+                'section_name' => 'Sections.section_name',
+            ])
+            ->innerJoinWith('Sections')
+            ->where([
+                'CsvUnitMappings.section_id IS NOT' => null,
+                'Sections.section_type IN' => ['earlyyears', 'beavers', 'cubs', 'scouts'],
+            ])
+            ->distinct(['Sections.id'])
+            ->enableHydration(false)
+            ->all()
+            ->toList();
         $sections = [];
         foreach ($rows as $row) {
-            $sections[(string)$row['group_id']][] = ['id' => (string)$row['section_id'], 'section_type' => $this->templateValue($row['section_type']), 'section_name' => (string)$row['section_name']];
+            $sections[(string)$row['group_id']][] = [
+                'id' => (string)$row['section_id'],
+                'section_type' => $this->templateValue($row['section_type']),
+                'section_name' => (string)$row['section_name'],
+            ];
         }
 
         return $sections;
@@ -389,7 +538,10 @@ class StandardGroupTemplateCreator
     private function sectionTemplate(string $type): string
     {
         return match ($type) {
-            'earlyyears' => 'squirrel-section', 'beavers' => 'beaver-section', 'cubs' => 'cub-section', 'scouts' => 'scout-section',
+            'earlyyears' => 'squirrel-section',
+            'beavers' => 'beaver-section',
+            'cubs' => 'cub-section',
+            'scouts' => 'scout-section',
             default => throw new InvalidArgumentException("Unsupported section type: {$type}"),
         };
     }

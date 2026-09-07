@@ -77,7 +77,9 @@ class RolesController extends AppController
         $this->request->allowMethod(['get', 'post']);
         $creator = new StandardGroupTemplateCreator();
         $reviewOverrides = filter_var(
-            $this->request->is('post') ? $this->request->getData('review_overrides', false) : $this->request->getQuery('review_overrides', false),
+            $this->request->is('post')
+                ? $this->request->getData('review_overrides', false)
+                : $this->request->getQuery('review_overrides', false),
             FILTER_VALIDATE_BOOL,
         );
         $submittedRoles = [];
@@ -88,7 +90,10 @@ class RolesController extends AppController
                     throw new InvalidArgumentException('Invalid template selection.');
                 }
                 $count = $creator->createRoles(array_values($submittedRoles), $reviewOverrides);
-                $this->Flash->success($reviewOverrides ? __('{0} standard role names applied.', $count) : __('{0} standard roles created.', $count));
+                $message = $reviewOverrides
+                    ? __('{0} standard role names applied.', $count)
+                    : __('{0} standard roles created.', $count);
+                $this->Flash->success($message);
 
                 return $this->redirect(['action' => 'index']);
             } catch (InvalidArgumentException $exception) {

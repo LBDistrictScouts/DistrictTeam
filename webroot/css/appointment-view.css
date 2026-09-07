@@ -26,6 +26,8 @@
 .appointment-person div > a, .appointment-role-link { font-weight: 600; }
 .appointment-contact-type { margin: 0 0 .5rem; color: #637069; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .appointment-contact-value { margin: 0; font-size: 1.7rem; overflow-wrap: anywhere; }
+.appointment-panel.appointment-non-group-email { border-color: #e8b5ad; background: #fff8f6; }
+.appointment-email-warning { display: inline-block; margin: 1.2rem 0 0; padding: .4rem 1rem; color: #9b3e33; border-radius: 999px; background: #fff0ed; font-size: 1.2rem; font-weight: 700; }
 .appointment-empty { margin: 0; color: #637069; line-height: 1.6; }
 .appointment-record-details summary { cursor: pointer; color: #637069; font-size: 1.3rem; }
 .appointment-metadata { margin: 1.5rem 0 0; }
