@@ -7,6 +7,7 @@ use App\Model\Entity\Group;
 use App\Model\Entity\Section;
 use App\Model\Enum\ContactMethodType;
 use App\Service\MemberCsvImporter;
+use Cake\I18n\Date;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
@@ -301,9 +302,41 @@ class MembersController extends AppController
     public function index()
     {
         $query = $this->Members->find();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'status' => $this->indexChoice('status', ['active', 'inactive']),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . $filters['q'] . '%';
+            $conditions = [
+                'Members.first_name LIKE' => $term,
+                'Members.last_name LIKE' => $term,
+            ];
+            if (ctype_digit($filters['q'])) {
+                $conditions['Members.membership_number'] = (int)$filters['q'];
+            }
+            $query->where(['OR' => $conditions]);
+        }
+        $today = Date::today();
+        if ($filters['status'] === 'active') {
+            $query->where([
+                'Members.join_date <=' => $today,
+                'OR' => ['Members.leave_date IS' => null, 'Members.leave_date >=' => $today],
+            ]);
+        } elseif ($filters['status'] === 'inactive') {
+            $query->where(['OR' => [
+                'Members.join_date >' => $today,
+                'Members.leave_date <' => $today,
+            ]]);
+        }
         $members = $this->paginate($query);
 
-        $this->set(compact('members'));
+        $filterControls = [[
+            'name' => 'status', 'label' => __('Status'),
+            'options' => ['active' => __('Active'), 'inactive' => __('Inactive')],
+            'empty' => __('All members'),
+        ]];
+        $this->set(compact('members', 'filters', 'filterControls'));
     }
 
     /**

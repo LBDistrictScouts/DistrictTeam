@@ -28,9 +28,24 @@ class TeamsController extends AppController
         $query = $this->Teams->find()
             ->orderByAsc('Teams.tree_left')
             ->contain(['ParentTeam']);
+        $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'group_id' => $this->indexFilter('group_id'),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . $filters['q'] . '%';
+            $query->where(['OR' => ['Teams.team_name LIKE' => $term, 'Teams.slug LIKE' => $term]]);
+        }
+        if ($filters['group_id'] !== '') {
+            $query->where(['Teams.group_id' => $filters['group_id']]);
+        }
         $teams = $this->paginate($query);
 
-        $this->set(compact('teams'));
+        $filterControls = [[
+            'name' => 'group_id', 'label' => __('Group'), 'options' => $groups, 'empty' => __('All groups'),
+        ]];
+        $this->set(compact('teams', 'filters', 'filterControls'));
     }
 
     /**

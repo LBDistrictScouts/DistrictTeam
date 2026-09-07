@@ -24,9 +24,40 @@ class RolesController extends AppController
         $query = $this->Roles->find()
             ->orderByAsc('Teams.tree_left')
             ->contain(['Teams']);
+        $groups = $this->Roles->Groups->find('list')->orderByAsc('sort_order')
+            ->orderByAsc('group_name')->toArray();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'group_id' => $this->indexFilter('group_id'),
+            'status' => $this->indexChoice('status', ['filled', 'vacant', 'recruiting']),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . $filters['q'] . '%';
+            $query->where(['OR' => [
+                'Roles.name LIKE' => $term,
+                'Roles.slug LIKE' => $term,
+                'Teams.team_name LIKE' => $term,
+            ]]);
+        }
+        if ($filters['group_id'] !== '') {
+            $query->where(['Roles.group_id' => $filters['group_id']]);
+        }
+        if ($filters['status'] === 'filled') {
+            $query->where(['Roles.multi_member_role' => false, 'Roles.currently_filled' => true]);
+        } elseif ($filters['status'] === 'vacant') {
+            $query->where(['Roles.multi_member_role' => false, 'Roles.currently_filled' => false]);
+        } elseif ($filters['status'] === 'recruiting') {
+            $query->where(['Roles.multi_member_role' => true]);
+        }
         $roles = $this->paginate($query);
 
-        $this->set(compact('roles'));
+        $filterControls = [
+            ['name' => 'group_id', 'label' => __('Group'), 'options' => $groups, 'empty' => __('All groups')],
+            ['name' => 'status', 'label' => __('Status'), 'options' => [
+                'filled' => __('Filled'), 'vacant' => __('Vacant'), 'recruiting' => __('Recruiting'),
+            ], 'empty' => __('All statuses')],
+        ];
+        $this->set(compact('roles', 'filters', 'filterControls'));
     }
 
     /**

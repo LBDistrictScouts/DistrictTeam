@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Enum\GroupType;
+
 class GroupsController extends AppController
 {
     /**
@@ -14,9 +16,32 @@ class GroupsController extends AppController
     {
         $this->request->allowMethod(['get']);
         $query = $this->fetchTable('Groups')->find();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'type' => $this->indexChoice('type', ['district', 'group']),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . $filters['q'] . '%';
+            $conditions = ['Groups.group_name LIKE' => $term];
+            if (ctype_digit($filters['q'])) {
+                $conditions['Groups.group_osm_id'] = (int)$filters['q'];
+            }
+            $query->where(['OR' => $conditions]);
+        }
+        if ($filters['type'] !== '') {
+            $query->where(['Groups.type' => $filters['type']]);
+        }
+        $groupTypeOptions = [];
+        foreach (GroupType::cases() as $type) {
+            $groupTypeOptions[$type->value] = $type->label();
+        }
+        $filterControls = [[
+            'name' => 'type', 'label' => __('Type'), 'options' => $groupTypeOptions, 'empty' => __('All types'),
+        ]];
         $this->set('groups', $this->paginate($query, [
             'order' => ['Groups.sort_order' => 'ASC', 'Groups.group_name' => 'ASC'],
         ]));
+        $this->set(compact('filters', 'filterControls'));
     }
 
     /**

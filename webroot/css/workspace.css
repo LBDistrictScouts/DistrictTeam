@@ -15,6 +15,24 @@
 .workspace-actions .workspace-secondary { border: 1px solid #9cc8b8; color: #fff; }
 .workspace-actions .workspace-secondary:hover { background: #005441; }
 .workspace-table-panel { border: 1px solid #dce5df; background: #fff; border-radius: 1.4rem; overflow: hidden; }
+.workspace-index-filters { background: #fff; border: 1px solid #dce5df; border-radius: 1.4rem; margin: 0 0 2.4rem; overflow: hidden; }
+.workspace-index-filters summary { color: #006b54; cursor: pointer; font-family: "Raleway", sans-serif; font-size: 1.4rem; font-weight: 700; padding: 1.3rem 1.8rem; }
+.workspace-index-filters[open] summary { border-bottom: 1px solid #e5ece8; }
+.workspace-index-filters-body { padding: 1.5rem 1.8rem 1.8rem; }
+.workspace-index-filter-form { margin: 0; }
+.workspace-index-filter-fields { align-items: end; display: flex; flex-wrap: wrap; gap: 1.4rem 1.8rem; }
+.workspace-index-search { flex: 0 1 34rem; margin: 0 1.8rem 1.4rem 0; max-width: 40rem; width: 100%; }
+.workspace-index-filter-control { flex: 0 1 20rem; margin: 0 1.8rem 1.4rem 0; max-width: 24rem; width: 100%; }
+.workspace-index-filter-fields .input { margin: 0; }
+.workspace-index-filter-fields label { color: #365347; font-size: 1.2rem; font-weight: 700; margin-bottom: .4rem; }
+.workspace-index-filter-fields input, .workspace-index-filter-fields select { background: #fafcfb; border: 1px solid #cad9d0; border-radius: .6rem; box-shadow: none; font-size: 1.3rem; height: 3.8rem; margin: 0; min-height: 0; padding: .6rem .9rem; width: 100%; }
+.workspace-index-filter-fields input:focus, .workspace-index-filter-fields select:focus { border-color: #006b54; outline: 2px solid #006b54; outline-offset: 2px; }
+.workspace-index-filter-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.4rem; }
+.workspace-index-filter-actions button, .workspace-index-filter-actions .button { align-items: center; border-radius: .6rem; box-sizing: border-box; display: inline-flex; font-size: 1.2rem; height: 3.6rem; justify-content: center; line-height: 1; margin: 0; min-height: 0; padding: .7rem 1.2rem; text-transform: none; }
+.workspace-index-filter-actions button { background: #006b54; border-color: #006b54; }
+.workspace-index-filter-actions button:hover { background: #004b3b; border-color: #004b3b; }
+.workspace-index-filter-actions .button-outline { background: #fff; border-color: #cad9d0; color: #006b54; }
+.workspace-index-filter-actions .button-outline:hover { background: #edf7f2; border-color: #006b54; color: #004b3b; }
 .workspace-table-heading { padding: 2.2rem 2.6rem; display: flex; gap: 1rem; justify-content: space-between; align-items: center; }
 .workspace-table-heading h2 { color: #17211b; font-size: 1.8rem; font-weight: 700; margin: 0; }
 .workspace-table-heading > span { color: #637069; font-size: 1.2rem; background: #f0f5f2; border-radius: 999px; padding: .4rem 1rem; }
@@ -39,6 +57,10 @@
 .workspace-page .pagination li.active a { background: #006b54; color: #fff; border-color: #006b54; }
 .workspace-page .pagination li.disabled a { color: #8c9891; border-color: #edf1ee; background: #f7f9f7; }
 .workspace-page .paginator p { margin: 0; font-size: 1.2rem; color: #637069; }
+.workspace-pagination-limit { align-items: center; display: flex; margin: 0; }
+.workspace-pagination-limit .input { align-items: center; display: flex; gap: .7rem; margin: 0; }
+.workspace-pagination-limit label { color: #637069; font-size: 1.2rem; margin: 0; white-space: nowrap; }
+.workspace-pagination-limit select { background-color: #fafcfb; border: 1px solid #cad9d0; border-radius: .6rem; font-size: 1.2rem; height: 3.4rem; margin: 0; min-width: 6.2rem; padding: .4rem 2.5rem .4rem .7rem; width: auto; }
 .workspace-status { display: inline-block; border-radius: 999px; font-size: 1.15rem; font-weight: 600; padding: .4rem 1rem; white-space: nowrap; }
 .workspace-status-positive { background: #dff4ec; color: #00523f; }
 .workspace-status-muted { background: #fff1d2; color: #815200; }

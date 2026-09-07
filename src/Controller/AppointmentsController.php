@@ -7,6 +7,7 @@ use App\Model\Entity\MemberContactMethod;
 use App\Model\Enum\ContactMethodType;
 use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
+use Cake\I18n\Date;
 use Cake\Validation\Validation;
 
 /**
@@ -24,10 +25,50 @@ class AppointmentsController extends AppController
     public function index()
     {
         $query = $this->Appointments->find()
-            ->contain(['Roles', 'Members', 'MemberContactMethods']);
+            ->contain(['Roles', 'Members', 'MemberContactMethods', 'Roles.Groups']);
+        $groups = $this->Appointments->Roles->Groups->find('list')->orderByAsc('sort_order')
+            ->orderByAsc('group_name')->toArray();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'group_id' => $this->indexFilter('group_id'),
+            'status' => $this->indexChoice('status', ['active', 'ended']),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . $filters['q'] . '%';
+            $query->where(['OR' => [
+                'Roles.name LIKE' => $term,
+                'Members.first_name LIKE' => $term,
+                'Members.last_name LIKE' => $term,
+                'MemberContactMethods.contact_method LIKE' => $term,
+            ]]);
+        }
+        if ($filters['group_id'] !== '') {
+            $query->where(['Roles.group_id' => $filters['group_id']]);
+        }
+        $today = Date::today();
+        if ($filters['status'] === 'active') {
+            $query->where([
+                'Appointments.effective_start_date <=' => $today,
+                'OR' => [
+                    'Appointments.effective_end_date IS' => null,
+                    'Appointments.effective_end_date >=' => $today,
+                ],
+            ]);
+        } elseif ($filters['status'] === 'ended') {
+            $query->where(['OR' => [
+                'Appointments.effective_start_date >' => $today,
+                'Appointments.effective_end_date <' => $today,
+            ]]);
+        }
         $appointments = $this->paginate($query);
 
-        $this->set(compact('appointments'));
+        $filterControls = [
+            ['name' => 'group_id', 'label' => __('Group'), 'options' => $groups, 'empty' => __('All groups')],
+            ['name' => 'status', 'label' => __('Status'), 'options' => [
+                'active' => __('Active'), 'ended' => __('Ended'),
+            ], 'empty' => __('All appointments')],
+        ];
+        $this->set(compact('appointments', 'filters', 'filterControls'));
     }
 
     /**

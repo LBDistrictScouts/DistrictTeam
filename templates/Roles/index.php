@@ -13,6 +13,7 @@
             ['label' => __('Create standard roles'), 'url' => ['action' => 'createStandardGroupTemplate'], 'secondary' => true],
         ],
     ]) ?>
+    <?= $this->element('Workspace/index_filters', compact('filters', 'filterControls')) ?>
     <section class="workspace-table-panel" aria-label="<?= __('Roles') ?>">
     <div class="workspace-table-heading">
         <h2><?= __('Directory') ?></h2>
@@ -62,6 +63,7 @@
         </table>
     </div>
     <div class="paginator">
+        <?= $this->element('Workspace/pagination_limit') ?>
         <ul class="pagination">
             <?= $this->Paginator->first('<< ' . __('first')) ?>
             <?= $this->Paginator->prev('< ' . __('previous')) ?>
