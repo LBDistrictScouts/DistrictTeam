@@ -132,6 +132,7 @@ class GroupsController extends AppController
             'vacantRoles',
             'coveredRoles',
             'trusteeAppointmentCount',
+            'trusteeBoardTarget',
             'trusteeBoardRoles',
             'missingTrusteeRoles',
             'missingTrusteeMemberCount',

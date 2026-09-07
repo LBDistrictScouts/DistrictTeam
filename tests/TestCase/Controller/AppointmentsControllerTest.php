@@ -62,6 +62,22 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('value="non-group-emails" selected="selected"');
     }
 
+    public function testEndedFilterExcludesFutureAppointments(): void
+    {
+        $appointments = $this->fetchTable('Appointments');
+        $appointments->saveOrFail($appointments->newEntity([
+            'role_id' => '22222222-2222-4222-8222-222222222222',
+            'member_id' => '33333333-3333-4333-8333-333333333332',
+            'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+            'effective_start_date' => '2099-01-01',
+        ]));
+
+        $this->get('/appointments?status=ended');
+
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('Grace Hopper');
+    }
+
     /**
      * Test view method
      *
@@ -186,7 +202,18 @@ class AppointmentsControllerTest extends TestCase
             '<option value="33333333-3333-4333-8333-333333333331" selected="selected">Ada Lovelace</option>',
         );
         $this->assertResponseContains('contactMethods.filter');
-        $this->assertResponseNotContains('value="44444444-4444-4444-8444-444444444441"');
+        $this->assertResponseNotContains('value="44444444-4444-4444-8444-444444444442"');
+    }
+
+    public function testEditIncludesTheCurrentLegacyContactMethod(): void
+    {
+        $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
+
+        $this->assertResponseOk();
+        $this->assertMatchesRegularExpression(
+            '/<option value="44444444-4444-4444-8444-444444444441"[^>]*selected="selected"/',
+            (string)$this->_response->getBody(),
+        );
     }
 
     public function testAppointmentFormsOfferMemberSearch(): void

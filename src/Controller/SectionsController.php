@@ -21,7 +21,7 @@ class SectionsController extends AppController
             ->orderByAsc('group_name')->toArray();
         $filters = [
             'q' => $this->indexFilter('q'),
-            'group_id' => $this->indexFilter('group_id'),
+            'group_id' => $this->indexChoice('group_id', array_keys($groups)),
             'section_type' => $this->indexChoice('section_type', array_keys(SectionType::options())),
         ];
         if ($filters['q'] !== '') {

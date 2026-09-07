@@ -31,7 +31,7 @@ class AppointmentsController extends AppController
             ->orderByAsc('group_name')->toArray();
         $filters = [
             'q' => $this->indexFilter('q'),
-            'group_id' => $this->indexFilter('group_id'),
+            'group_id' => $this->indexChoice('group_id', array_keys($groups)),
             'status' => $this->indexChoice('status', ['active', 'ended']),
             'email' => $this->indexChoice('email', ['non-group-emails']),
         ];
@@ -60,10 +60,7 @@ class AppointmentsController extends AppController
                 ],
             ]);
         } elseif ($filters['status'] === 'ended') {
-            $query->where(['OR' => [
-                'Appointments.effective_start_date >' => $today,
-                'Appointments.effective_end_date <' => $today,
-            ]]);
+            $query->where(['Appointments.effective_end_date <' => $today]);
         }
         $appointments = $this->paginate($query);
 
@@ -248,16 +245,21 @@ class AppointmentsController extends AppController
         $roleSelectorData = $this->roleSelectorData();
         $members = $this->selectedMemberOptions($appointment);
         $memberContactMethods = [];
-        foreach (
-            $this->Appointments->MemberContactMethods->find()->where([
+        $contactMethodConditions = [
             'is_non_group_email' => false,
             'contact_method_type IN' => [
                 ContactMethodType::Email->value,
                 ContactMethodType::EmailAlias->value,
                 ContactMethodType::EmailGroup->value,
             ],
-            ]) as $contactMethod
-        ) {
+        ];
+        if (is_string($appointment->member_contact_method_id) && $appointment->member_contact_method_id !== '') {
+            $contactMethodConditions = ['OR' => [
+                $contactMethodConditions,
+                ['id' => $appointment->member_contact_method_id],
+            ]];
+        }
+        foreach ($this->Appointments->MemberContactMethods->find()->where($contactMethodConditions) as $contactMethod) {
             $contactMethod = $contactMethod instanceof EntityInterface
                 ? $contactMethod->toArray()
                 : $contactMethod;

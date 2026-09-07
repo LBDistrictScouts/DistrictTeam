@@ -31,7 +31,7 @@ class TeamsController extends AppController
         $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
         $filters = [
             'q' => $this->indexFilter('q'),
-            'group_id' => $this->indexFilter('group_id'),
+            'group_id' => $this->indexChoice('group_id', array_keys($groups)),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . $filters['q'] . '%';

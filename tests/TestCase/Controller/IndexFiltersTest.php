@@ -58,4 +58,13 @@ class IndexFiltersTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('name="limit"');
     }
+
+    public function testInvalidGroupFilterIsIgnored(): void
+    {
+        foreach (['/appointments', '/roles', '/teams', '/sections'] as $path) {
+            $this->get($path . '?group_id=invalid');
+
+            $this->assertResponseOk();
+        }
+    }
 }

@@ -62,6 +62,31 @@ class GroupsControllerTest extends TestCase
 
             $this->assertResponseOk();
             $this->assertResponseContains('1 Trustee Board member place needs an appointment.');
+            $this->assertMatchesRegularExpression(
+                '/<article class="report-card-stat-danger">\s*<strong>0<\/strong>/',
+                (string)$this->_response->getBody(),
+            );
+        } finally {
+            Configure::write('TrusteeBoard.targetAppointments', $target);
+        }
+    }
+
+    public function testGroupReportCardSummaryUsesTheConfiguredTrusteeBoardTarget(): void
+    {
+        $target = Configure::read('TrusteeBoard.targetAppointments');
+        Configure::write('TrusteeBoard.targetAppointments', 1);
+
+        try {
+            $this->fetchTable('Roles')->updateAll([
+                'is_trustee_role' => true,
+            ], ['id' => '22222222-2222-4222-8222-222222222221']);
+            $this->get('/groups/report-card/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+
+            $this->assertResponseOk();
+            $this->assertDoesNotMatchRegularExpression(
+                '/<article class="report-card-stat-danger">\s*<strong>1<\/strong>/',
+                (string)$this->_response->getBody(),
+            );
         } finally {
             Configure::write('TrusteeBoard.targetAppointments', $target);
         }

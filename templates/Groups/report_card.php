@@ -5,6 +5,7 @@
  * @var list<\App\Model\Entity\Role> $vacantRoles
  * @var list<\App\Model\Entity\Role> $coveredRoles
  * @var int $trusteeAppointmentCount
+ * @var int $trusteeBoardTarget
  * @var list<\App\Model\Entity\Role> $trusteeBoardRoles
  * @var list<string> $missingTrusteeRoles
  * @var int $missingTrusteeMemberCount
@@ -47,7 +48,7 @@ $this->Html->css('report-card', ['block' => true]);
             <strong><?= $this->Number->format(count($nonGroupEmails)) ?></strong>
             <span><?= __n('Non-group email', 'Non-group emails', count($nonGroupEmails)) ?></span>
         </article>
-        <article class="<?= $trusteeAppointmentCount < 5 ? 'report-card-stat-danger' : '' ?>">
+        <article class="<?= $trusteeAppointmentCount < $trusteeBoardTarget ? 'report-card-stat-danger' : '' ?>">
             <strong><?= $this->Number->format($trusteeAppointmentCount) ?></strong>
             <span><?= __n(
                 'Trustee Board appointment',
