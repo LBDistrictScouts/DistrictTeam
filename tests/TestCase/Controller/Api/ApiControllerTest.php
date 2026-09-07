@@ -47,6 +47,18 @@ class ApiControllerTest extends TestCase
         $this->assertSame(2, $payload['pagination']['total']);
     }
 
+    public function testMemberSearchReturnsSelect2Results(): void
+    {
+        $this->get('/api/member-search?q=ada');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([
+            ['id' => '33333333-3333-4333-8333-333333333331', 'text' => 'Ada Lovelace'],
+        ], $payload['results']);
+        $this->assertFalse($payload['pagination']['more']);
+    }
+
     public function testAppointmentViewReturnsRelatedRecords(): void
     {
         $this->get('/api/appointments/55555555-5555-4555-8555-555555555551.json');
@@ -162,6 +174,24 @@ class ApiControllerTest extends TestCase
 
         $this->assertSame('Email', $payload['data']['contact_method_type']);
         $this->assertArrayNotHasKey('membership_number', $payload['data']['member']);
+    }
+
+    public function testAppointmentContactMethodsReturnOnlyEligibleEmails(): void
+    {
+        $contacts = $this->fetchTable('MemberContactMethods');
+        $eligibleContact = $contacts->saveOrFail($contacts->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'ada@district.example.org',
+            'contact_method_type' => 1,
+        ]));
+
+        $this->get('/api/appointment-contact-methods?member_id=33333333-3333-4333-8333-333333333331');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([
+            ['id' => $eligibleContact->id, 'text' => 'ada@district.example.org'],
+        ], $payload['results']);
     }
 
     public function testRolesIndexIncludesRolesWithoutCurrentAppointments(): void

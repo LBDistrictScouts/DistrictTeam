@@ -10,5 +10,6 @@ data:
   APP_DEFAULT_TIMEZONE: Europe/London
   APP_FULL_BASE_URL: https://district-team.example.com
   DEBUG: "false"
+  TRUSTEE_BOARD_TARGET_APPOINTMENTS: "8"
   DATABASE_HOST: district-team-postgres
   DATABASE_PORT: "5432"

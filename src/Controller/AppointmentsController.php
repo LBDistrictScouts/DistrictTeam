@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Appointment;
 use App\Model\Entity\MemberContactMethod;
 use App\Model\Enum\ContactMethodType;
 use Cake\Datasource\EntityInterface;
@@ -32,6 +33,7 @@ class AppointmentsController extends AppController
             'q' => $this->indexFilter('q'),
             'group_id' => $this->indexFilter('group_id'),
             'status' => $this->indexChoice('status', ['active', 'ended']),
+            'email' => $this->indexChoice('email', ['non-group-emails']),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . $filters['q'] . '%';
@@ -44,6 +46,9 @@ class AppointmentsController extends AppController
         }
         if ($filters['group_id'] !== '') {
             $query->where(['Roles.group_id' => $filters['group_id']]);
+        }
+        if ($filters['email'] === 'non-group-emails') {
+            $query->where(['MemberContactMethods.is_non_group_email' => true]);
         }
         $today = Date::today();
         if ($filters['status'] === 'active') {
@@ -67,6 +72,9 @@ class AppointmentsController extends AppController
             ['name' => 'status', 'label' => __('Status'), 'options' => [
                 'active' => __('Active'), 'ended' => __('Ended'),
             ], 'empty' => __('All appointments')],
+            ['name' => 'email', 'label' => __('Email'), 'options' => [
+                'non-group-emails' => __('Non-group emails'),
+            ], 'empty' => __('All email addresses')],
         ];
         $this->set(compact('appointments', 'filters', 'filterControls'));
     }
@@ -80,7 +88,12 @@ class AppointmentsController extends AppController
      */
     public function view(?string $id = null)
     {
-        $appointment = $this->Appointments->get($id, contain: ['Roles', 'Members', 'MemberContactMethods']);
+        $appointment = $this->Appointments->get($id, contain: [
+            'Roles.Teams.Groups',
+            'Roles.Teams.Sections',
+            'Members',
+            'MemberContactMethods',
+        ]);
         $this->set(compact('appointment'));
     }
 
@@ -92,6 +105,7 @@ class AppointmentsController extends AppController
     public function add()
     {
         $appointment = $this->Appointments->newEmptyEntity();
+        $appointment->effective_start_date = Date::today();
         $memberId = $this->request->getQuery('member_id');
         if (is_string($memberId) && $this->Appointments->Members->exists(['id' => $memberId])) {
             $appointment->member_id = $memberId;
@@ -109,13 +123,9 @@ class AppointmentsController extends AppController
             }
             $this->Flash->error(__('The appointment could not be saved. Please, try again.'));
         }
-        $roles = $this->Appointments->Roles->find('list', limit: 200)->all();
-        $members = $this->Appointments->Members
-            ->find()
-            ->limit(200)
-            ->all()
-            ->combine('id', 'full_name')
-            ->toArray();
+        $roles = $this->Appointments->Roles->find('list')->orderByAsc('name')->all();
+        $roleSelectorData = $this->roleSelectorData();
+        $members = $this->selectedMemberOptions($appointment);
         $memberContactMethods = [];
         if ($members) {
             $contactMethods = $this->Appointments->MemberContactMethods->find()
@@ -143,6 +153,7 @@ class AppointmentsController extends AppController
         $this->set(compact(
             'appointment',
             'roles',
+            'roleSelectorData',
             'members',
             'memberContactMethods',
             'contactMethodTypes',
@@ -233,8 +244,9 @@ class AppointmentsController extends AppController
             }
             $this->Flash->error(__('The appointment could not be saved. Please, try again.'));
         }
-        $roles = $this->Appointments->Roles->find('list', limit: 200)->all();
-        $members = $this->Appointments->Members->find('list', limit: 200)->all();
+        $roles = $this->Appointments->Roles->find('list')->orderByAsc('name')->all();
+        $roleSelectorData = $this->roleSelectorData();
+        $members = $this->selectedMemberOptions($appointment);
         $memberContactMethods = [];
         foreach (
             $this->Appointments->MemberContactMethods->find()->where([
@@ -255,7 +267,7 @@ class AppointmentsController extends AppController
                 'data-member-id' => $contactMethod['member_id'],
             ];
         }
-        $this->set(compact('appointment', 'roles', 'members', 'memberContactMethods'));
+        $this->set(compact('appointment', 'roles', 'roleSelectorData', 'members', 'memberContactMethods'));
     }
 
     /**
@@ -291,6 +303,89 @@ class AppointmentsController extends AppController
         }
 
         return $contactMethodTypes;
+    }
+
+    /** @return array<string, string> */
+    private function selectedMemberOptions(Appointment $appointment): array
+    {
+        if (!is_string($appointment->member_id) || $appointment->member_id === '') {
+            return [];
+        }
+        $member = $this->Appointments->Members->find()
+            ->select(['id', 'first_name', 'last_name'])
+            ->where(['id' => $appointment->member_id])
+            ->first();
+
+        if (!$member instanceof EntityInterface) {
+            return [];
+        }
+
+        return [(string)$member->get('id') => (string)$member->get('full_name')];
+    }
+
+    /**
+     * Return the group, section, team and role relationships used by the
+     * cascading role selector on appointment forms.
+     *
+     * @return array{groups: list<array{id: string, text: string}>, sections: list<array{id: string, groupId: string, text: string}>, teams: list<array{id: string, groupId: string, sectionId: string, text: string}>, roles: list<array{id: string, teamId: string, text: string}>}
+     */
+    private function roleSelectorData(): array
+    {
+        $roles = $this->Appointments->Roles;
+        $groups = $roles->Groups->find()
+            ->select(['id', 'group_name'])
+            ->orderByAsc('sort_order')
+            ->orderByAsc('group_name');
+        $sections = $roles->Groups->Sections->find()
+            ->select(['id', 'group_id', 'section_name'])
+            ->orderByAsc('section_name');
+        $teams = $roles->Teams->find()
+            ->select(['id', 'group_id', 'section_id', 'team_name'])
+            ->orderByAsc('tree_left')
+            ->orderByAsc('team_name');
+        $roleList = $roles->find()
+            ->select(['id', 'team_id', 'name'])
+            ->orderByAsc('name');
+
+        $data = ['groups' => [], 'sections' => [], 'teams' => [], 'roles' => []];
+        foreach ($groups->all() as $group) {
+            if ($group instanceof EntityInterface) {
+                $data['groups'][] = [
+                    'id' => (string)$group->get('id'),
+                    'text' => (string)$group->get('group_name'),
+                ];
+            }
+        }
+        foreach ($sections->all() as $section) {
+            if ($section instanceof EntityInterface) {
+                $data['sections'][] = [
+                    'id' => (string)$section->get('id'),
+                    'groupId' => (string)$section->get('group_id'),
+                    'text' => (string)$section->get('section_name'),
+                ];
+            }
+        }
+        foreach ($teams->all() as $team) {
+            if ($team instanceof EntityInterface) {
+                $data['teams'][] = [
+                    'id' => (string)$team->get('id'),
+                    'groupId' => (string)$team->get('group_id'),
+                    'sectionId' => (string)($team->get('section_id') ?? ''),
+                    'text' => (string)$team->get('team_name'),
+                ];
+            }
+        }
+        foreach ($roleList->all() as $role) {
+            if ($role instanceof EntityInterface) {
+                $data['roles'][] = [
+                    'id' => (string)$role->get('id'),
+                    'teamId' => (string)$role->get('team_id'),
+                    'text' => (string)$role->get('name'),
+                ];
+            }
+        }
+
+        return $data;
     }
 
     /**

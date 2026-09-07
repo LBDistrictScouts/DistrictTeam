@@ -31,7 +31,16 @@
                     'label' => __('Multi Member Role'),
                     'help' => __('Keep this role open for further appointments.'),
                 ]);
-            ?>
+                echo $this->Form->control('is_trustee_role', [
+                    'type' => 'checkbox',
+                    'label' => __('Trustee Board role'),
+                ]);
+                echo $this->Form->control('is_covered_until', [
+                    'type' => 'date',
+                    'label' => __('Covered until'),
+                    'help' => __('Use for interim cover of an otherwise vacant role.'),
+                ]);
+                ?>
         </fieldset>
         <div class="workspace-form-footer">
             <?= $this->Form->button(__('Create role')) ?>

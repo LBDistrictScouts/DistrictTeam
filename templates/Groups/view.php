@@ -28,6 +28,11 @@ $typeLabel = $group->type?->label() ?? __('Unclassified');
                 </span>
             </p>
         </div>
+        <?= $this->Html->link(
+            __('Report Card'),
+            ['action' => 'reportCard', $group->id],
+            ['class' => 'group-primary-link'],
+        ) ?>
     </header>
 
     <div class="group-stats" aria-label="<?= __('Group at a glance') ?>">

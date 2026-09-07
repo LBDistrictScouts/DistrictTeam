@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 
 /**
@@ -18,6 +19,8 @@ use Cake\ORM\Entity;
  * @property bool $currently_filled
  * @property bool $is_lead
  * @property bool $multi_member_role
+ * @property bool $is_trustee_role
+ * @property \Cake\I18n\Date|null $is_covered_until
  * @property string $staffing_status
  *
  * @property \App\Model\Entity\Team $team
@@ -53,6 +56,8 @@ class Role extends Entity
         'currently_filled' => true,
         'is_lead' => true,
         'multi_member_role' => true,
+        'is_trustee_role' => true,
+        'is_covered_until' => true,
         'team' => true,
     ];
 
@@ -80,9 +85,17 @@ class Role extends Entity
     protected function _getStaffingStatus(): string
     {
         if ($this->multi_member_role) {
-            return 'recruiting';
+            return $this->currently_filled ? 'recruiting' : 'vacant';
         }
 
-        return $this->currently_filled ? 'filled' : 'vacant';
+        if ($this->currently_filled) {
+            return 'filled';
+        }
+
+        if ($this->is_covered_until !== null && $this->is_covered_until >= Date::today()) {
+            return 'covered';
+        }
+
+        return 'vacant';
     }
 }

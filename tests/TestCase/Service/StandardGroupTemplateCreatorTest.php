@@ -43,6 +43,15 @@ class StandardGroupTemplateCreatorTest extends TestCase
         $this->assertSame($leadership->id, $trusteeBoard->team_parent_id);
         $this->assertTrue($this->fetchTable('Roles')->exists(['team_id' => $cubs->id, 'name' => 'First Scout Group Cubs Team Leader', 'is_lead' => true]));
         $this->assertTrue($this->fetchTable('Roles')->exists(['team_id' => $cubs->id, 'name' => 'First Scout Group Cubs Team Member', 'multi_member_role' => true]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'name' => 'Group Lead Volunteer', 'is_trustee_role' => true,
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'name' => 'Trustee Board Chair', 'is_trustee_role' => true,
+        ]));
+        $this->assertFalse($this->fetchTable('Roles')->exists([
+            'name' => 'First Scout Group Cubs Team Leader', 'is_trustee_role' => true,
+        ]));
 
         $cubs->team_name = 'Cubs Team';
         $teams->saveOrFail($cubs);

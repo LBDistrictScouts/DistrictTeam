@@ -9,7 +9,7 @@
 .role-hero-context { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin: 0; color: #dff4ec; }
 .role-hero-context span { padding: .3rem .8rem; border: 1px solid #83bfae; border-radius: 999px; font-size: 1.2rem; font-weight: 700; }
 .role-detail .role-primary-link { background: #c8e64b; color: #17211b; border-radius: 999px; padding: 1.2rem 2.2rem; font-weight: 700; white-space: nowrap; }
-.role-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; border: 1px solid #dce5df; background: #dce5df; border-radius: 1.4rem; overflow: hidden; margin: 1.8rem 0 2.4rem; }
+.role-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; border: 1px solid #dce5df; background: #dce5df; border-radius: 1.4rem; overflow: hidden; margin: 1.8rem 0 2.4rem; }
 .role-stats > div { padding: 2rem 2.4rem; background: #fff; }
 .role-stats strong { display: block; font-size: 2.8rem; line-height: 1.2; }
 .role-stats span { display: block; color: #637069; font-size: 1.3rem; margin-top: .4rem; }
@@ -17,6 +17,7 @@
 .role-status-filled { color: #00523f; background: #dff4ec; }
 .role-status-vacant { color: #815200; background: #fff1d2; }
 .role-status-recruiting { color: #1e3a8a; background: #dbeafe; }
+.role-status-covered { background: #e9e2f8; color: #503a78; }
 .role-detail-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
 .role-main-panels, .role-context-panels { display: grid; gap: 2rem; min-width: 0; }
 .role-panel { background: #fff; padding: 2.6rem; border: 1px solid #dce5df; border-radius: 1.4rem; min-width: 0; }

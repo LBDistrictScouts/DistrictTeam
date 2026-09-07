@@ -1,0 +1,13 @@
+.select2-container--district-team .select2-selection--single { background: #fafcfb; border: 1px solid #cad9d0; border-radius: .7rem; height: 4.2rem; padding: .55rem .9rem; }
+.select2-container--district-team .select2-selection__rendered { color: #17211b; font-size: 1.4rem; line-height: 2.8rem; }
+.select2-container--district-team .select2-selection__arrow { height: 4rem; }
+.select2-container--district-team.select2-container--focus .select2-selection--single { border-color: #006b54; outline: 2px solid #006b54; outline-offset: 2px; }
+.select2-dropdown { border: 1px solid #cad9d0; border-radius: .7rem; overflow: hidden; }
+.select2-search--dropdown { padding: .9rem; }
+.select2-search--dropdown .select2-search__field { border-color: #cad9d0; border-radius: .5rem; }
+.select2-results__option--highlighted.select2-results__option--selectable { background: #006b54; }
+.workspace-form-panel .appointment-member-selection { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 1.2rem; grid-column: 1 / -1; }
+.workspace-form-panel .appointment-member-selection .input.select { grid-column: auto; }
+.appointment-member-selection .input { margin-bottom: 1.6rem; }
+.appointment-member-selection .button { margin: 0 0 1.6rem; white-space: nowrap; }
+@media (max-width: 620px) { .workspace-form-panel .appointment-member-selection { grid-template-columns: 1fr; gap: 0; }.appointment-member-selection .button { justify-self: start; } }

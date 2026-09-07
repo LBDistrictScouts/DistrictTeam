@@ -46,6 +46,36 @@ class RolesControllerTest extends TestCase
         $this->assertResponseContains('Recruiting');
     }
 
+    public function testIndexShowsCoveredRole(): void
+    {
+        $this->fetchTable('Roles')->updateAll([
+            'is_covered_until' => '2099-01-01',
+        ], ['id' => '22222222-2222-4222-8222-222222222222']);
+
+        $this->get('/roles?status=covered');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Vacant Role');
+        $this->assertResponseContains('Covered');
+    }
+
+    public function testIndexDistinguishesVacantAndRecruitingMultiPersonRoles(): void
+    {
+        $this->fetchTable('Roles')->updateAll([
+            'multi_member_role' => true,
+        ], ['id' => '22222222-2222-4222-8222-222222222222']);
+
+        $this->get('/roles?status=vacant');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Vacant Role');
+
+        $this->get('/roles?status=recruiting');
+
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('Vacant Role');
+    }
+
     /**
      * Test view method
      *
@@ -67,6 +97,8 @@ class RolesControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Digital Lead');
         $this->assertResponseContains('Current holders');
+        $this->assertResponseContains('Trustee Board role');
+        $this->assertResponseContains('/groups/view/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('Grace Hopper');
     }
@@ -95,6 +127,7 @@ class RolesControllerTest extends TestCase
             'is_lead' => true,
         ])->firstOrFail();
         $this->assertTrue($role->multi_member_role);
+        $this->assertFalse($role->is_trustee_role);
     }
 
     public function testAddValidationFailure(): void
@@ -113,6 +146,8 @@ class RolesControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('type="checkbox" name="is_lead"');
         $this->assertResponseContains('type="checkbox" name="multi_member_role"');
+        $this->assertResponseContains('type="checkbox" name="is_trustee_role"');
+        $this->assertResponseContains('type="date" name="is_covered_until"');
     }
 
     /**
@@ -155,6 +190,8 @@ class RolesControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('type="checkbox" name="is_lead"');
         $this->assertResponseContains('type="checkbox" name="multi_member_role"');
+        $this->assertResponseContains('type="checkbox" name="is_trustee_role"');
+        $this->assertResponseContains('type="date" name="is_covered_until"');
     }
 
     /**

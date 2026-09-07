@@ -22,6 +22,7 @@ class AppointmentsControllerTest extends TestCase
      */
     protected array $fixtures = [
         'app.Groups', 'app.Teams',
+        'app.Sections',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
@@ -42,6 +43,25 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('Non-group email');
     }
 
+    public function testIndexCanFilterToNonGroupEmails(): void
+    {
+        $appointments = $this->fetchTable('Appointments');
+        $appointments->saveOrFail($appointments->newEntity([
+            'role_id' => '22222222-2222-4222-8222-222222222222',
+            'member_id' => '33333333-3333-4333-8333-333333333332',
+            'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+            'effective_start_date' => '2020-01-01',
+        ]));
+
+        $this->get('/appointments?email=non-group-emails');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Ada Lovelace');
+        $this->assertResponseNotContains('Grace Hopper');
+        $this->assertResponseContains('name="email"');
+        $this->assertResponseContains('value="non-group-emails" selected="selected"');
+    }
+
     /**
      * Test view method
      *
@@ -50,10 +70,26 @@ class AppointmentsControllerTest extends TestCase
      */
     public function testView(): void
     {
+        $sections = $this->fetchTable('Sections');
+        $section = $sections->saveOrFail($sections->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'section_osm_id' => 456,
+            'section_name' => 'District Explorers',
+            'section_type' => 'explorers',
+        ]));
+        $this->fetchTable('Teams')->updateAll(
+            ['section_id' => $section->id],
+            ['id' => '11111111-1111-4111-8111-111111111112'],
+        );
+
         $this->get('/appointments/view/55555555-5555-4555-8555-555555555551');
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('Non-group email');
+        $this->assertResponseContains('Group, team & section');
+        $this->assertResponseContains('District');
+        $this->assertResponseContains('Digital Team');
+        $this->assertResponseContains('District Explorers');
     }
 
     /**
@@ -91,6 +127,16 @@ class AppointmentsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('The appointment could not be saved');
+    }
+
+    public function testAddDefaultsTheStartDateToToday(): void
+    {
+        $this->get('/appointments/add');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains(
+            'value="' . date('Y-m-d') . '"',
+        );
     }
 
     public function testAddRejectsAnotherMembersContactMethod(): void
@@ -136,8 +182,45 @@ class AppointmentsControllerTest extends TestCase
         $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
 
         $this->assertResponseOk();
+        $this->assertResponseContains(
+            '<option value="33333333-3333-4333-8333-333333333331" selected="selected">Ada Lovelace</option>',
+        );
         $this->assertResponseContains('contactMethods.filter');
         $this->assertResponseNotContains('value="44444444-4444-4444-8444-444444444441"');
+    }
+
+    public function testAppointmentFormsOfferMemberSearch(): void
+    {
+        $this->get('/appointments/add');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('data-member-search-url="/api/member-search"');
+        $this->assertResponseContains('data-member-contact-methods-url="/api/appointment-contact-methods"');
+        $this->assertResponseContains('class="appointment-member-selection"');
+        $this->assertResponseContains('appointment-member-select.js');
+
+        $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('data-member-search-url="/api/member-search"');
+        $this->assertResponseContains('data-member-contact-methods-url="/api/appointment-contact-methods"');
+        $this->assertResponseContains('appointment-member-select.js');
+    }
+
+    public function testAppointmentFormsOfferCascadingRoleSelection(): void
+    {
+        $this->get('/appointments/add');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('id="role-group-id"');
+        $this->assertResponseContains('id="role-section-id"');
+        $this->assertResponseContains('id="role-team-id"');
+        $this->assertResponseContains('appointment-role-selector.js');
+
+        $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('appointment-role-selector.js');
     }
 
     public function testAddRejectsNonGroupEmailContactMethod(): void
@@ -199,6 +282,7 @@ class AppointmentsControllerTest extends TestCase
         $this->assertRedirect('/appointments');
         $appointment = $this->getTableLocator()->get('Appointments')
             ->get('55555555-5555-4555-8555-555555555551');
+        $this->assertSame('33333333-3333-4333-8333-333333333331', $appointment->member_id);
         $this->assertSame('2021-01-01', $appointment->effective_end_date->format('Y-m-d'));
     }
 

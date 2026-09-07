@@ -3,7 +3,7 @@
 .group-detail a:hover { color: #004b3b; text-decoration: underline; }
 .group-detail a:focus-visible { outline: 3px solid #719e37; outline-offset: 4px; border-radius: .3rem; }
 .group-breadcrumb { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 1.3rem; margin: .5rem 0 2rem; color: #637069; }
-.group-hero { background: #006b54; color: #fff; border-radius: 1.8rem; padding: 3.8rem 4rem; }
+.group-hero { align-items: center; background: #006b54; border-radius: 1.8rem; color: #fff; display: flex; gap: 2.4rem; justify-content: space-between; padding: 3.8rem 4rem; }
 .group-eyebrow { margin: 0 0 .8rem; font-size: 1.1rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
 .group-hero h1 { color: #fff; font-size: clamp(3rem, 4vw, 5rem); font-weight: 700; line-height: 1.12; letter-spacing: -.03em; margin: 0 0 1.2rem; overflow-wrap: anywhere; }
 .group-hero-context { margin: 0; }
@@ -12,6 +12,7 @@
 .group-type-group { background: #dff4ec; color: #00523f; }
 .group-hero .group-type-district { background: #bfdbfe; color: #172554; }
 .group-hero .group-type-group { background: #c8e64b; color: #17211b; }
+.group-detail .group-primary-link { background: #c8e64b; border-radius: 999px; color: #17211b; font-weight: 700; padding: 1.2rem 2.2rem; white-space: nowrap; }
 .group-type-unclassified.group-type-detail { background: #fff1d2; color: #815200; }
 .group-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; border: 1px solid #dce5df; background: #dce5df; border-radius: 1.4rem; overflow: hidden; margin: 1.8rem 0 2.4rem; }
 .group-stats > div { padding: 2rem 2.4rem; background: #fff; }
@@ -37,4 +38,4 @@
 .group-metadata dd { margin: .4rem 0 0; font-weight: 500; overflow-wrap: anywhere; }
 .group-domain-list li { margin: .5rem 0; padding: .6rem .8rem; background: #f2f6f4; border-radius: .5rem; font-size: 1.2rem; overflow-wrap: anywhere; }
 @media (max-width: 850px) { .group-detail-grid { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 540px) { .group-hero { padding: 2.6rem; } .group-stats { grid-template-columns: repeat(2, 1fr); } .group-stats > div, .group-panel { padding: 1.6rem 2rem; } .group-section-list li, .group-team-list li { align-items: flex-start; flex-direction: column; gap: .8rem; } }
+@media (max-width: 540px) { .group-hero { align-items: flex-start; flex-direction: column; padding: 2.6rem; } .group-stats { grid-template-columns: repeat(2, 1fr); } .group-stats > div, .group-panel { padding: 1.6rem 2rem; } .group-section-list li, .group-team-list li { align-items: flex-start; flex-direction: column; gap: .8rem; } }

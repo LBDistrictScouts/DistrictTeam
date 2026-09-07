@@ -46,7 +46,7 @@ class StandardGroupTemplateCreator
                         'existing_name' => $this->teamName($existingTeams, $teamId),
                     ];
                 }
-                foreach ($definition['roles'] as [$roleName, $roleTemplate, $isLead, $multiMember]) {
+                foreach ($definition['roles'] as [$roleName, $roleTemplate, $isLead, $multiMember, $isTrusteeRole]) {
                     $roleKey = $this->key((string)$group['id'], $roleTemplate);
                     $role = $this->roleByTemplate($existingRoles, $roleKey);
                     $roleProposal = [
@@ -54,10 +54,14 @@ class StandardGroupTemplateCreator
                         'team_name' => $definition['team_name'], 'group_id' => $group['id'],
                         'group_name' => $group['group_name'], 'role_name' => $roleName, 'template' => $roleTemplate,
                         'is_lead' => $isLead, 'multi_member_role' => $multiMember,
+                        'is_trustee_role' => $isTrusteeRole,
                     ];
                     if ($role === null) {
                         $plan['roles'][] = $roleProposal + ['action' => 'create'];
-                    } elseif ($reviewOverrides && $role['name'] !== $roleName) {
+                    } elseif (
+                        $reviewOverrides
+                        && ($role['name'] !== $roleName || $role['is_trustee_role'] !== $isTrusteeRole)
+                    ) {
                         $plan['roles'][] = $roleProposal + [
                             'action' => 'update',
                             'id' => $role['id'],
@@ -199,6 +203,7 @@ class StandardGroupTemplateCreator
                 if ($role['action'] === 'update') {
                     $entity = $roles->get($role['id']);
                     $entity->name = $selectedRoles[$index]['name'];
+                    $entity->is_trustee_role = $role['is_trustee_role'];
                     $roles->saveOrFail($entity);
                     $result['roles']++;
                     continue;
@@ -214,6 +219,7 @@ class StandardGroupTemplateCreator
                     'name' => $selectedRoles[$index]['name'],
                     'is_lead' => $role['is_lead'],
                     'multi_member_role' => $role['multi_member_role'],
+                    'is_trustee_role' => $role['is_trustee_role'],
                 ]);
                 $entity->template = $role['template'];
                 $roles->saveOrFail($entity);
@@ -406,7 +412,7 @@ class StandardGroupTemplateCreator
             array_map(
                 static fn($role): array => (array)$role,
                 array_values($this->roles()->find()
-                    ->select(['id', 'team_id', 'group_id', 'name', 'is_lead', 'template'])
+                    ->select(['id', 'team_id', 'group_id', 'name', 'is_lead', 'is_trustee_role', 'template'])
                     ->enableHydration(false)
                     ->all()
                     ->toList()),
@@ -430,8 +436,8 @@ class StandardGroupTemplateCreator
             'section_id' => null,
             'section_name' => null,
             'roles' => [
-                ['Group Lead Volunteer', 'group-lead-volunteer', true, false],
-                ['Group Leadership Team Member', 'group-leadership-team-member', false, true],
+                ['Group Lead Volunteer', 'group-lead-volunteer', true, false, true],
+                ['Group Leadership Team Member', 'group-leadership-team-member', false, true, false],
             ],
         ]];
         foreach ($sections as $section) {
@@ -446,8 +452,8 @@ class StandardGroupTemplateCreator
                 'section_id' => $section['id'],
                 'section_name' => $section['section_name'],
                 'roles' => [
-                    [$name . ' Team Leader', $template . '-team-leader', true, false],
-                    [$name . ' Team Member', $template . '-team-member', false, true],
+                    [$name . ' Team Leader', $template . '-team-leader', true, false, false],
+                    [$name . ' Team Member', $template . '-team-member', false, true, false],
                 ],
             ];
         }
@@ -460,9 +466,9 @@ class StandardGroupTemplateCreator
             'section_id' => null,
             'section_name' => null,
             'roles' => [
-                ['Trustee Board Chair', 'trustee-board-chair', true, false],
-                ['Group Treasurer', 'group-treasurer', false, false],
-                ['Trustee Board Member', 'trustee-board-member', false, true],
+                ['Trustee Board Chair', 'trustee-board-chair', true, false, true],
+                ['Group Treasurer', 'group-treasurer', false, false, true],
+                ['Trustee Board Member', 'trustee-board-member', false, true, true],
             ],
         ];
 

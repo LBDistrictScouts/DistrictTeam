@@ -5,7 +5,17 @@
  * @var \Cake\Collection\CollectionInterface|array<string> $roles
  * @var \Cake\Collection\CollectionInterface|array<string> $members
  * @var array<array<string, string>> $memberContactMethods
+ * @var array<string, mixed> $roleSelectorData
  */
+?>
+<?php
+$this->Html->css('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', ['block' => true]);
+$this->Html->css('appointment-member-select', ['block' => true]);
+$this->Html->css('appointment-role-selector', ['block' => true]);
+$this->Html->script('https://code.jquery.com/jquery-3.7.1.min.js', ['block' => true]);
+$this->Html->script('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', ['block' => true]);
+$this->Html->script('appointment-member-select', ['block' => true]);
+$this->Html->script('appointment-role-selector', ['block' => true]);
 ?>
 <div class="workspace-page workspace-form-page">
     <nav class="workspace-breadcrumb" aria-label="<?= __('Breadcrumb') ?>">
@@ -21,12 +31,19 @@
         <fieldset>
             <legend><?= __('Appointment details') ?></legend>
             <?php
-                echo $this->Form->control('role_id', ['options' => $roles]);
-                echo $this->Form->control('member_id', ['options' => $members]);
-                echo $this->Form->control('member_contact_method_id', ['options' => $memberContactMethods]);
+                echo $this->element('Appointments/role_selector', compact('appointment', 'roles', 'roleSelectorData'));
+                echo $this->Form->control('member_id', [
+                    'options' => $members,
+                    'value' => $appointment->member_id,
+                    'data-member-search-url' => $this->Url->build('/api/member-search'),
+                ]);
+                echo $this->Form->control('member_contact_method_id', [
+                    'options' => $memberContactMethods,
+                    'data-member-contact-methods-url' => $this->Url->build('/api/appointment-contact-methods'),
+                ]);
                 echo $this->Form->control('effective_start_date');
                 echo $this->Form->control('effective_end_date', ['empty' => true]);
-            ?>
+                ?>
         </fieldset>
         <div class="workspace-form-footer">
             <?= $this->Form->button(__('Save changes')) ?>

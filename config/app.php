@@ -15,6 +15,15 @@ return [
         'password' => env('DISTRICT_CORE_DATA_PASSWORD', ''),
     ],
 
+    // Minimum number of current appointments expected on a Trustee Board.
+    'TrusteeBoard' => [
+        'targetAppointments' => filter_var(
+            env('TRUSTEE_BOARD_TARGET_APPOINTMENTS', 8),
+            FILTER_VALIDATE_INT,
+            ['options' => ['default' => 8, 'min_range' => 1]],
+        ),
+    ],
+
     /*
      * Debug Level:
      *

@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Service\StandardGroupTemplateCreator;
 use Cake\Http\Response;
+use Cake\I18n\Date;
 use InvalidArgumentException;
 
 /**
@@ -29,7 +30,7 @@ class RolesController extends AppController
         $filters = [
             'q' => $this->indexFilter('q'),
             'group_id' => $this->indexFilter('group_id'),
-            'status' => $this->indexChoice('status', ['filled', 'vacant', 'recruiting']),
+            'status' => $this->indexChoice('status', ['filled', 'vacant', 'covered', 'recruiting']),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . $filters['q'] . '%';
@@ -45,16 +46,36 @@ class RolesController extends AppController
         if ($filters['status'] === 'filled') {
             $query->where(['Roles.multi_member_role' => false, 'Roles.currently_filled' => true]);
         } elseif ($filters['status'] === 'vacant') {
-            $query->where(['Roles.multi_member_role' => false, 'Roles.currently_filled' => false]);
+            $query->where(['OR' => [
+                [
+                    'Roles.multi_member_role' => true,
+                    'Roles.currently_filled' => false,
+                ],
+                [
+                    'Roles.multi_member_role' => false,
+                    'Roles.currently_filled' => false,
+                    'OR' => [
+                        'Roles.is_covered_until IS' => null,
+                        'Roles.is_covered_until <' => Date::today(),
+                    ],
+                ],
+            ]]);
+        } elseif ($filters['status'] === 'covered') {
+            $query->where([
+                'Roles.multi_member_role' => false,
+                'Roles.currently_filled' => false,
+                'Roles.is_covered_until >=' => Date::today(),
+            ]);
         } elseif ($filters['status'] === 'recruiting') {
-            $query->where(['Roles.multi_member_role' => true]);
+            $query->where(['Roles.multi_member_role' => true, 'Roles.currently_filled' => true]);
         }
         $roles = $this->paginate($query);
 
         $filterControls = [
             ['name' => 'group_id', 'label' => __('Group'), 'options' => $groups, 'empty' => __('All groups')],
             ['name' => 'status', 'label' => __('Status'), 'options' => [
-                'filled' => __('Filled'), 'vacant' => __('Vacant'), 'recruiting' => __('Recruiting'),
+                'filled' => __('Filled'), 'vacant' => __('Vacant'), 'covered' => __('Covered'),
+                'recruiting' => __('Recruiting'),
             ], 'empty' => __('All statuses')],
         ];
         $this->set(compact('roles', 'filters', 'filterControls'));

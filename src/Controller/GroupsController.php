@@ -4,9 +4,142 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Enum\GroupType;
+use Cake\Core\Configure;
+use Cake\I18n\Date;
 
 class GroupsController extends AppController
 {
+    /**
+     * Show the group report card for outstanding roles and email addresses.
+     *
+     * @param string|null $id Group id, or null for the district-wide overview.
+     * @return void
+     */
+    public function reportCard(?string $id = null): void
+    {
+        $this->request->allowMethod(['get']);
+
+        $group = $id === null ? null : $this->fetchTable('Groups')->get($id);
+
+        $roles = $this->fetchTable('Roles');
+        $vacantRolesQuery = $roles->find()
+            ->where(['OR' => [
+                [
+                    'Roles.multi_member_role' => true,
+                    'Roles.currently_filled' => false,
+                ],
+                [
+                    'Roles.multi_member_role' => false,
+                    'Roles.currently_filled' => false,
+                    'OR' => [
+                        'Roles.is_covered_until IS' => null,
+                        'Roles.is_covered_until <' => Date::today(),
+                    ],
+                ],
+            ]])
+            ->contain(['Teams', 'Groups'])
+            ->orderByAsc('Groups.sort_order')
+            ->orderByAsc('Groups.group_name')
+            ->orderByAsc('Teams.tree_left')
+            ->orderByAsc('Roles.name');
+        if ($group !== null) {
+            $vacantRolesQuery->where(['Roles.group_id' => $group->id]);
+        }
+        $vacantRoles = $vacantRolesQuery->all()->toList();
+
+        $coveredRolesQuery = $roles->find()
+            ->where([
+                'Roles.currently_filled' => false,
+                'Roles.multi_member_role' => false,
+                'Roles.is_covered_until >=' => Date::today(),
+            ])
+            ->contain(['Teams', 'Groups'])
+            ->orderByAsc('Roles.is_covered_until')
+            ->orderByAsc('Groups.sort_order')
+            ->orderByAsc('Groups.group_name')
+            ->orderByAsc('Teams.tree_left')
+            ->orderByAsc('Roles.name');
+        if ($group !== null) {
+            $coveredRolesQuery->where(['Roles.group_id' => $group->id]);
+        }
+        $coveredRoles = $coveredRolesQuery->all()->toList();
+
+        $trusteeAppointmentsQuery = $this->fetchTable('Appointments')->find('current')
+            ->select(['Appointments.id'])
+            ->innerJoinWith('Roles', function ($query) {
+                return $query->where(['Roles.is_trustee_role' => true]);
+            });
+        if ($group !== null) {
+            $trusteeAppointmentsQuery->where(['Roles.group_id' => $group->id]);
+        }
+        $trusteeAppointmentCount = $trusteeAppointmentsQuery->count();
+        $trusteeBoardTarget = (int)Configure::read('TrusteeBoard.targetAppointments');
+        $trusteeBoardRoles = [];
+        $missingTrusteeRoles = [];
+        $missingTrusteeMemberCount = 0;
+        $showTrusteeBoardGaps = $group !== null && $trusteeAppointmentCount < $trusteeBoardTarget;
+        if ($showTrusteeBoardGaps) {
+            $trusteeBoardRoles = $roles->find()
+                ->where([
+                    'Roles.group_id' => $group->id,
+                    'Roles.is_trustee_role' => true,
+                ])
+                ->contain(['CurrentAppointments.Members'])
+                ->orderByAsc('Roles.name')
+                ->all()
+                ->toList();
+            $rolesByTemplate = [];
+            foreach ($trusteeBoardRoles as $trusteeBoardRole) {
+                $rolesByTemplate[$trusteeBoardRole->template?->value ?? ''] = $trusteeBoardRole;
+            }
+            foreach (
+                [
+                    'group-lead-volunteer' => __('Group Lead Volunteer'),
+                    'trustee-board-chair' => __('Trustee Board Chair'),
+                    'group-treasurer' => __('Group Treasurer'),
+                ] as $template => $roleName
+            ) {
+                $trusteeBoardRole = $rolesByTemplate[$template] ?? null;
+                if ($trusteeBoardRole === null || $trusteeBoardRole->current_appointments === []) {
+                    $missingTrusteeRoles[] = $roleName;
+                }
+            }
+            $missingTrusteeMemberCount = max(
+                0,
+                $trusteeBoardTarget - $trusteeAppointmentCount - count($missingTrusteeRoles),
+            );
+        }
+
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+        $nonGroupEmailsQuery = $contactMethods->find()
+            ->where(['MemberContactMethods.is_non_group_email' => true])
+            ->contain(['Members'])
+            ->orderByAsc('Members.last_name')
+            ->orderByAsc('Members.first_name')
+            ->orderByAsc('MemberContactMethods.contact_method');
+        if ($group !== null) {
+            $memberIds = $this->fetchTable('Appointments')->find()
+                ->select(['Appointments.member_id'])
+                ->innerJoinWith('Roles', function ($query) use ($group) {
+                    return $query->where(['Roles.group_id' => $group->id]);
+                });
+            $nonGroupEmailsQuery->where(['MemberContactMethods.member_id IN' => $memberIds]);
+        }
+        $nonGroupEmails = $nonGroupEmailsQuery->all()->toList();
+
+        $this->set(compact(
+            'group',
+            'vacantRoles',
+            'coveredRoles',
+            'trusteeAppointmentCount',
+            'trusteeBoardRoles',
+            'missingTrusteeRoles',
+            'missingTrusteeMemberCount',
+            'showTrusteeBoardGaps',
+            'nonGroupEmails',
+        ));
+    }
+
     /**
      * List imported groups.
      *
