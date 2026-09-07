@@ -125,9 +125,20 @@ class MemberContactMethodsTableTest extends TestCase
             $this->assertSame('+44 7804 918252', $contact->contact_method);
         }
 
+        foreach (['020 7946 0958', '+44 20 7946 0958'] as $phoneNumber) {
+            $contact = $this->MemberContactMethods->newEntity([
+                'member_id' => '33333333-3333-4333-8333-333333333331',
+                'contact_method' => $phoneNumber,
+                'contact_method_type' => ContactMethodType::PhoneNumber->value,
+            ]);
+
+            $this->assertEmpty($contact->getErrors());
+            $this->assertSame('+44 2079460958', $contact->contact_method);
+        }
+
         $contact = $this->MemberContactMethods->newEntity([
             'member_id' => '33333333-3333-4333-8333-333333333331',
-            'contact_method' => '+44 6804 918252',
+            'contact_method' => '+33 1 42 68 53 00',
             'contact_method_type' => ContactMethodType::PhoneNumber->value,
         ]);
 

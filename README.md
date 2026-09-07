@@ -109,7 +109,8 @@ of service and address columns are not mapped.
 Blank mappings do not overwrite previously saved choices.
 Successful imports remember each explicitly mapped source combination's destination (including Skip)
 in `csv_role_mappings`. These defaults are shared across uploads and sessions and
-remain editable on the mapping screen. Failed imports leave saved mappings unchanged.
+remain editable on the mapping screen. Role choices are saved before the member import begins,
+so they remain available if that import later fails.
 Deleting a destination role clears its saved mappings. Apply the schema change with
 `bin/cake migrations migrate` when deploying this feature.
 

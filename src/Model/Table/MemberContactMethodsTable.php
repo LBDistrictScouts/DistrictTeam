@@ -57,7 +57,7 @@ class MemberContactMethodsTable extends Table
     }
 
     /**
-     * Normalize an accepted UK mobile number for storage.
+     * Normalize an accepted UK phone number for storage.
      *
      * @param string $phoneNumber Phone number supplied by a user or import.
      * @return string|null Normalized number, or null when its format is invalid.
@@ -86,11 +86,15 @@ class MemberContactMethodsTable extends Table
             $digits = '0' . $digits;
         }
 
-        if (!preg_match('/^0(7\d{3})(\d{6})$/D', $digits, $matches)) {
+        if (!preg_match('/^0[1-9]\d{8,9}$/D', $digits)) {
             return null;
         }
 
-        return '+44 ' . $matches[1] . ' ' . $matches[2];
+        if (preg_match('/^0(7\d{3})(\d{6})$/D', $digits, $matches)) {
+            return '+44 ' . $matches[1] . ' ' . $matches[2];
+        }
+
+        return '+44 ' . substr($digits, 1);
     }
 
     /**
@@ -159,7 +163,7 @@ class MemberContactMethodsTable extends Table
 
                 return is_string($value) && self::normalizePhoneNumber($value) !== null;
             },
-            'message' => __('Enter a UK mobile number, for example 07804918252 or +44 7804 918252.'),
+            'message' => __('Enter a UK phone number, for example 020 7946 0958 or +44 7804 918252.'),
         ]);
 
         $validator

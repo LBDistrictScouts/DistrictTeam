@@ -106,15 +106,6 @@ class MemberCsvImporter
         foreach ($this->fetchTable('CsvRoleMappings')->find()->where(['source_key IN' => $keys]) as $saved) {
             $mapping[$saved->source_key] = $saved->role_id ?? 'skip';
         }
-        foreach ($this->sources($rows) as $key => $source) {
-            if (isset($mapping[$key])) {
-                continue;
-            }
-            if (preg_match('/non member|disclosure/i', $source['role'])) {
-                $mapping[$key] = 'skip';
-            }
-        }
-
         return $mapping;
     }
 
@@ -173,12 +164,15 @@ class MemberCsvImporter
         $results = [];
         foreach ($this->sources($rows) as $key => $source) {
             $roleId = $mapping[$key] ?? '';
-            $imported = $roleId !== '' && $roleId !== 'skip';
             $results[] = $source + [
-                'status' => $imported ? 'successful' : 'failed',
+                'status' => match ($roleId) {
+                    '' => 'unmapped',
+                    'skip' => 'skipped',
+                    default => 'successful',
+                },
                 'detail' => match ($roleId) {
                     'skip' => 'Appointment skipped by mapping choice.',
-                    '' => 'No destination role was selected.',
+                    '' => 'Members and contacts imported without an appointment.',
                     default => 'Appointment rows imported successfully.',
                 },
             ];
@@ -327,7 +321,7 @@ class MemberCsvImporter
                         ['Contact number', ContactMethodType::PhoneNumber],
                         ] as [$column, $type]
                     ) {
-                        $value = $row[$column] ?? '';
+                        $value = trim($row[$column] ?? '');
                         if ($value === '') {
                             continue;
                         }
@@ -347,7 +341,7 @@ class MemberCsvImporter
                             $value = MemberContactMethodsTable::normalizePhoneNumber($value);
                             if ($value === null) {
                                 $result['warnings'][] = "Row {$line}: contact number skipped "
-                                    . '(invalid UK mobile number).';
+                                    . '(invalid UK phone number).';
                                 continue;
                             }
                         }
@@ -367,7 +361,6 @@ class MemberCsvImporter
                     }
                     $roleId = $mapping[$this->sourceKey($row)] ?? '';
                     if ($roleId === 'skip' || $roleId === '') {
-                        $result['warnings'][] = "Row {$line}: appointment skipped (unmapped or explicitly skipped).";
                         continue;
                     }
                     $appointments = $this->fetchTable('Appointments');
@@ -402,9 +395,43 @@ class MemberCsvImporter
                     throw new InvalidArgumentException("Row {$line}: " . $exception->getMessage(), 0, $exception);
                 }
             }
+            return $result;
+        };
+
+        $result = $this->fetchTable('Members')->getConnection()->transactional($transaction);
+        $this->saveRoleMappings($rows, $mapping);
+
+        return $result;
+    }
+
+    /**
+     * Save explicit role choices independently of a member import.
+     *
+     * @param array<int, array<string, string>> $rows Parsed CSV rows.
+     * @param array<string, string> $mapping Source keys to existing role IDs or "skip".
+     * @return void
+     */
+    public function saveRoleMappings(array $rows, array $mapping): void
+    {
+        $sources = $this->sources($rows);
+        foreach ($sources as $key => $source) {
+            $roleId = $mapping[$key] ?? '';
+            if ($roleId === '') {
+                continue;
+            }
+            if (
+                !is_string($roleId) || ($roleId !== 'skip'
+                && (!Validation::uuid($roleId) || !$this->fetchTable('Roles')->exists(['id' => $roleId])))
+            ) {
+                throw new InvalidArgumentException('Choose an existing team / role, Skip, or leave the role unmapped.');
+            }
+        }
+
+        $transaction = function () use ($sources, $mapping): void {
             $mappings = $this->fetchTable('CsvRoleMappings');
-            foreach ($this->sources($rows) as $key => $source) {
-                if (($mapping[$key] ?? '') === '') {
+            foreach ($sources as $key => $source) {
+                $choice = $mapping[$key] ?? '';
+                if ($choice === '') {
                     continue;
                 }
                 $saved = $mappings->find()->where(['source_key' => $key])->first();
@@ -415,14 +442,12 @@ class MemberCsvImporter
                     'source_team' => $source['team'],
                     'source_role' => $source['role'],
                     'source_type' => $source['type'],
-                    'role_id' => $mapping[$key] === 'skip' ? null : $mapping[$key],
+                    'role_id' => $choice === 'skip' ? null : $choice,
                 ], $saved);
             }
-
-            return $result;
         };
 
-        return $this->fetchTable('Members')->getConnection()->transactional($transaction);
+        $this->fetchTable('CsvRoleMappings')->getConnection()->transactional($transaction);
     }
 
     /**

@@ -21,7 +21,7 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame(1, $result['members']);
         $this->assertSame(2, $result['contacts']);
         $this->assertSame(6, $result['appointments']);
-        $this->assertCount(1, $result['warnings']);
+        $this->assertCount(0, $result['warnings']);
         $member = $this->fetchTable('Members')->find()->where(['membership_number' => 475931])->firstOrFail();
         $this->assertSame('2024-11-07', $member->join_date->format('Y-m-d'));
         $this->assertTrue($this->fetchTable('MemberContactMethods')->exists([
@@ -117,9 +117,8 @@ class MemberCsvImporterTest extends TestCase
             $this->assertEquals($updated, $importer->savedMappings($rows));
         }
 
-        $roles = $this->fetchTable('Roles');
-        $roles->deleteOrFail($roles->get('22222222-2222-4222-8222-222222222222'));
-        $this->assertSame([], $importer->savedMappings($rows));
+        $importer->import($rows, array_fill_keys(array_keys($updated), 'skip'));
+        $this->assertSame(array_fill_keys(array_keys($updated), 'skip'), $importer->savedMappings($rows));
     }
 
     public function testUnitMappingsPersistForEachUnitAndParentUnit(): void
@@ -140,7 +139,7 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame('Programme Team', $saved->source_parent_unit);
     }
 
-    public function testNonMemberAndDisclosureRolesDefaultToSkip(): void
+    public function testNonMemberAndDisclosureRolesDoNotCreateDefaultMappings(): void
     {
         $importer = new MemberCsvImporter();
         $rows = [
@@ -153,8 +152,7 @@ class MemberCsvImporterTest extends TestCase
         ];
 
         $saved = $importer->savedMappings($rows);
-        $this->assertCount(2, $saved);
-        $this->assertSame(['skip', 'skip'], array_values($saved));
+        $this->assertSame([], $saved);
     }
 
     public function testUnitMappingRejectsSectionFromAnotherGroup(): void
@@ -471,7 +469,7 @@ class MemberCsvImporterTest extends TestCase
         $rows = $importer->read($this->upload(
             "First name,Last name,Membership number,Start date,Communication email,Contact number\n"
             . "No,Phone,9090,01 Aug 2026,no-phone@example.com,\n"
-            . "Invalid,Phone,9091,01 Aug 2026,,+44 6804 918252\n",
+            . "Invalid,Phone,9091,01 Aug 2026,,+33 1 42 68 53 00\n",
         ));
         $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
 
@@ -480,7 +478,7 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame(2, $result['members']);
         $this->assertSame(1, $result['contacts']);
         $this->assertSame(1, $result['appointments']);
-        $this->assertContains('Row 3: contact number skipped (invalid UK mobile number).', $result['warnings']);
+        $this->assertContains('Row 3: contact number skipped (invalid UK phone number).', $result['warnings']);
         $this->assertContains('Row 3: appointment skipped (no usable contact method).', $result['warnings']);
     }
 

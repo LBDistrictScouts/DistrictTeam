@@ -115,6 +115,7 @@ class MembersController extends AppController
                 }
                 $selectedUnits = $this->request->getData('units', []);
                 $rows = $this->selectedRows($pending['rows'], $selectedUnits);
+                $importer->saveRoleMappings($pending['rows'], $mapping);
                 $roleResults = $importer->roleImportResults($rows, $mapping);
                 $result = $importer->import($rows, $mapping);
                 $session->delete('MemberCsvUpload');
@@ -131,7 +132,8 @@ class MembersController extends AppController
         $token = $pending['token'];
         $savedMappings = $importer->savedMappings($pending['rows']);
         $roleOptions = $importer->roleOptionsForSources($pending['rows']);
-        $this->set(compact('sources', 'token', 'savedMappings', 'roleOptions'));
+        $unitFilters = $this->unitFilters($pending['rows'], $importer);
+        $this->set(compact('sources', 'token', 'savedMappings', 'roleOptions', 'unitFilters'));
     }
 
     /** @return array<string, mixed>|null */
@@ -186,6 +188,89 @@ class MembersController extends AppController
         }
 
         return ['options' => $sectionOptions, 'groups' => $sectionGroups];
+    }
+
+    /**
+     * Group CSV units by their saved District, Group, or Section destination.
+     *
+     * @param array<int, array<string, string>> $rows
+     * @return array<string, mixed>
+     */
+    private function unitFilters(array $rows, MemberCsvImporter $importer): array
+    {
+        $filters = ['district' => [], 'district_sections' => [], 'groups' => []];
+        $savedMappings = $importer->savedUnitMappings($rows);
+        $unitMappings = [];
+        foreach ($importer->unitSources($rows) as $key => $source) {
+            $unitMappings[$source['unit'] . "\0" . $source['parent']] = $savedMappings[$key] ?? [];
+        }
+        $groups = [];
+        foreach ($this->fetchTable('Groups')->find()->select(['id', 'group_name', 'type']) as $group) {
+            $groups[$group->id] = $group;
+        }
+        $sections = [];
+        foreach ($this->fetchTable('Sections')->find()->select(['id', 'group_id', 'section_name']) as $section) {
+            $sections[$section->id] = $section;
+        }
+
+        foreach ($importer->sources($rows) as $source) {
+            $unit = $source['unit'];
+            $mapping = $unitMappings[$unit . "\0" . $source['parent']] ?? [];
+            $group = $groups[$mapping['group_id'] ?? ''] ?? null;
+            $section = $sections[$mapping['section_id'] ?? ''] ?? null;
+            $value = 'unit:' . $unit;
+            $label = $unit ?: __('No unit supplied');
+
+            if ($group?->type?->value === 'group') {
+                $filters['groups'][$group->id] ??= [
+                    'label' => $group->group_name,
+                    'units' => [],
+                    'sections' => [],
+                ];
+                if ($section) {
+                    $filters['groups'][$group->id]['sections'][$section->id] ??= [
+                        'label' => $section->section_name,
+                        'units' => [],
+                    ];
+                    $filters['groups'][$group->id]['sections'][$section->id]['units'][$value] = $label;
+                } else {
+                    $filters['groups'][$group->id]['units'][$value] = $label;
+                }
+
+                continue;
+            }
+
+            if ($section) {
+                $filters['district_sections'][$section->id] ??= [
+                    'label' => $section->section_name,
+                    'units' => [],
+                ];
+                $filters['district_sections'][$section->id]['units'][$value] = $label;
+
+                continue;
+            }
+
+            $filters['district'][$value] = $label;
+        }
+
+        natcasesort($filters['district']);
+        uasort($filters['district_sections'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+        uasort($filters['groups'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+        foreach ($filters['district_sections'] as &$section) {
+            natcasesort($section['units']);
+        }
+        unset($section);
+        foreach ($filters['groups'] as &$group) {
+            natcasesort($group['units']);
+            uasort($group['sections'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+            foreach ($group['sections'] as &$section) {
+                natcasesort($section['units']);
+            }
+            unset($section);
+        }
+        unset($group);
+
+        return $filters;
     }
 
     /**

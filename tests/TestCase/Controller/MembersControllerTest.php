@@ -141,6 +141,8 @@ class MembersControllerTest extends TestCase
             '/name="units\[\]" value="unit:Letchworth And Baldock"\s+checked/',
             (string)$this->_response->getBody(),
         );
+        $this->assertResponseContains('data-mapping-state="unmapped"');
+        $this->assertResponseNotContains('data-mapping-state="skipped"');
     }
 
     public function testSavedMappingsArePreselectedOnNextUpload(): void
@@ -171,6 +173,7 @@ class MembersControllerTest extends TestCase
             $html,
         );
         $this->assertSame(count($mapping) - 1, substr_count($html, '<option value="skip" selected="selected">'));
+        $this->assertSame(count($mapping) - 1, substr_count($html, 'data-mapping-state="skipped"'));
     }
 
     public function testSelectedUnitsImportUnmappedMembersOnly(): void
@@ -189,7 +192,7 @@ class MembersControllerTest extends TestCase
         ]);
         $this->assertResponseOk();
         $this->assertResponseContains('CSV imported successfully.');
-        $this->assertResponseContains('Failed');
+        $this->assertResponseContains('Members and contacts only');
         $member = $this->fetchTable('Members')->find()->where(['membership_number' => 9090])->firstOrFail();
         $this->assertTrue($this->fetchTable('MemberContactMethods')->exists(['member_id' => $member->id]));
         $this->assertFalse($this->fetchTable('Members')->exists(['membership_number' => 9091]));
@@ -285,6 +288,27 @@ class MembersControllerTest extends TestCase
         $this->assertSession(null, 'MemberCsvUpload');
         $member = $this->fetchTable('Members')->find()->where(['membership_number' => 9090])->firstOrFail();
         $this->assertTrue($this->fetchTable('Appointments')->exists(['member_id' => $member->id, 'role_id' => $roleId]));
+        $this->assertSame([$key => $roleId], (new MemberCsvImporter())->savedMappings($pending['rows']));
+    }
+
+    public function testRoleMappingsAreSavedBeforeAnImportFails(): void
+    {
+        $pending = ['token' => 'save-before-import', 'rows' => [2 => [
+            'First name' => 'Test', 'Last name' => 'Person', 'Membership number' => '9090',
+            'Start date' => 'invalid', 'Unit name' => 'Unit A',
+        ]]];
+        $key = array_key_first((new MemberCsvImporter())->sources($pending['rows']));
+        $roleId = '22222222-2222-4222-8222-222222222222';
+        $this->session(['MemberCsvUpload' => $pending]);
+        $this->enableCsrfToken();
+        $this->post('/members/map-roles', [
+            'token' => $pending['token'],
+            'units' => ['unit:Unit A'],
+            'mapping' => [$key => $roleId],
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Dates must use the format');
         $this->assertSame([$key => $roleId], (new MemberCsvImporter())->savedMappings($pending['rows']));
     }
 
