@@ -22,6 +22,8 @@ use InvalidArgumentException;
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\TeamsTable> $SubTeams
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\RolesTable> $Roles
  * @property \Cake\ORM\Association\HasOne<\App\Model\Table\RolesTable> $TeamLead
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\SectionsTable> $Sections
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Team> newEntities(array $data, array $options = [])

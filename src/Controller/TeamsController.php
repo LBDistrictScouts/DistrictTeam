@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Section;
 use App\Model\Entity\Team;
 use App\Service\StandardGroupTemplateCreator;
 use Cake\Http\Exception\NotFoundException;
@@ -31,7 +32,10 @@ class TeamsController extends AppController
         $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
         $filters = [
             'q' => $this->indexFilter('q'),
-            'group_id' => $this->indexChoice('group_id', array_keys($groups)),
+            'group_id' => $this->indexChoice(
+                'group_id',
+                array_map(static fn(mixed $id): string => (string)$id, array_keys($groups)),
+            ),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . strtolower($filters['q']) . '%';
@@ -196,6 +200,9 @@ class TeamsController extends AppController
         $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
         $sections = [];
         foreach ($this->Teams->Sections->find()->contain(['Groups'])->orderByAsc('section_name') as $section) {
+            if (!$section instanceof Section || $section->group === null) {
+                continue;
+            }
             $sections[$section->group->group_name][$section->id] = $section->section_name;
         }
         $parents = $this->Teams->find()->orderByAsc('Teams.tree_left');
@@ -207,6 +214,9 @@ class TeamsController extends AppController
         }
         $parentTeam = [];
         foreach ($parents as $parent) {
+            if (!$parent instanceof Team) {
+                continue;
+            }
             $parentTeam[] = [
                 'value' => $parent->id,
                 'text' => str_repeat('>> ', (int)$parent->tree_level) . $parent->team_name,

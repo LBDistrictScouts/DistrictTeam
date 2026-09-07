@@ -7,12 +7,6 @@ parameters:
 			path: src/Controller/Api/AppController.php
 
 		-
-			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Groups\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Controller/Api/TeamsController.php
-
-		-
 			message: '#^Cannot access property \$roles on array\|Cake\\Datasource\\EntityInterface\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -41,12 +35,6 @@ parameters:
 			identifier: missingType.generics
 			count: 1
 			path: src/Controller/Api/TeamsController.php
-
-		-
-			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Controller/GroupsController.php
 
 		-
 			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$sections\.$#'
@@ -85,42 +73,6 @@ parameters:
 			path: src/Controller/MemberContactMethodsController.php
 
 		-
-			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Groups\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Controller/TeamsController.php
-
-		-
-			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Sections\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Controller/TeamsController.php
-
-		-
-			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Controller/TeamsController.php
-
-		-
-			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$team_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Controller/TeamsController.php
-
-		-
-			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$tree_level\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Controller/TeamsController.php
-
-		-
-			message: '#^Access to an undefined property Cake\\ORM\\Association\\BelongsTo\<App\\Model\\Table\\TeamsTable\>\:\:\$Groups\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Model/Table/RolesTable.php
-
-		-
 			message: '#^Cannot access property \$group_id on array\|Cake\\Datasource\\EntityInterface\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -131,18 +83,6 @@ parameters:
 			identifier: method.nonObject
 			count: 1
 			path: src/Model/Table/RolesTable.php
-
-		-
-			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Groups\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Model/Table/TeamsTable.php
-
-		-
-			message: '#^Access to an undefined property App\\Model\\Table\\TeamsTable\:\:\$Sections\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Model/Table/TeamsTable.php
 
 		-
 			message: '#^Call to an undefined method Cake\\ORM\\Behavior\:\:moveUp\(\)\.$#'

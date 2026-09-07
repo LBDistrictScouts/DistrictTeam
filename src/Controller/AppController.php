@@ -56,7 +56,7 @@ class AppController extends Controller
     /**
      * Apply the requested or session-cached page size to directory indexes.
      *
-     * @param \Cake\Event\EventInterface $event Controller beforeFilter event.
+     * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event Controller beforeFilter event.
      * @return void
      */
     public function beforeFilter(EventInterface $event): void

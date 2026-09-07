@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Section;
+use App\Model\Entity\Team;
 use App\Model\Enum\GroupType;
 use Cake\Core\Configure;
 use Cake\I18n\Date;
@@ -22,7 +24,7 @@ class GroupsController extends AppController
         $group = $id === null ? null : $this->fetchTable('Groups')->get($id);
 
         $roles = $this->fetchTable('Roles');
-        $currentAppointmentRoleIds = $roles->Appointments->find('current')->select(['role_id']);
+        $currentAppointmentRoleIds = $this->fetchTable('Appointments')->find('current')->select(['role_id']);
         $vacantRolesQuery = $roles->find()
             ->where(['OR' => [
                 [
@@ -44,7 +46,7 @@ class GroupsController extends AppController
             ->orderByAsc('Teams.tree_left')
             ->orderByAsc('Roles.name');
         if ($group !== null) {
-            $vacantRolesQuery->where(['Roles.group_id' => $group->id]);
+            $vacantRolesQuery->where(['Roles.group_id' => $group->get('id')]);
         }
         $vacantRoles = $vacantRolesQuery->all()->toList();
 
@@ -61,7 +63,7 @@ class GroupsController extends AppController
             ->orderByAsc('Teams.tree_left')
             ->orderByAsc('Roles.name');
         if ($group !== null) {
-            $coveredRolesQuery->where(['Roles.group_id' => $group->id]);
+            $coveredRolesQuery->where(['Roles.group_id' => $group->get('id')]);
         }
         $coveredRoles = $coveredRolesQuery->all()->toList();
 
@@ -71,7 +73,7 @@ class GroupsController extends AppController
                 return $query->where(['Roles.is_trustee_role' => true]);
             });
         if ($group !== null) {
-            $trusteeAppointmentsQuery->where(['Roles.group_id' => $group->id]);
+            $trusteeAppointmentsQuery->where(['Roles.group_id' => $group->get('id')]);
         }
         $trusteeAppointmentCount = $trusteeAppointmentsQuery->count();
         $trusteeBoardTarget = (int)Configure::read('TrusteeBoard.targetAppointments');
@@ -82,7 +84,7 @@ class GroupsController extends AppController
         if ($showTrusteeBoardGaps) {
             $trusteeBoardRoles = $roles->find()
                 ->where([
-                    'Roles.group_id' => $group->id,
+                    'Roles.group_id' => $group->get('id'),
                     'Roles.is_trustee_role' => true,
                 ])
                 ->contain(['CurrentAppointments.Members'])
@@ -91,7 +93,7 @@ class GroupsController extends AppController
                 ->toList();
             $rolesByTemplate = [];
             foreach ($trusteeBoardRoles as $trusteeBoardRole) {
-                $rolesByTemplate[$trusteeBoardRole->template?->value ?? ''] = $trusteeBoardRole;
+                $rolesByTemplate[$trusteeBoardRole->template->value ?? ''] = $trusteeBoardRole;
             }
             foreach (
                 [
@@ -101,7 +103,7 @@ class GroupsController extends AppController
                 ] as $template => $roleName
             ) {
                 $trusteeBoardRole = $rolesByTemplate[$template] ?? null;
-                if ($trusteeBoardRole === null || $trusteeBoardRole->current_appointments === []) {
+                if ($trusteeBoardRole === null || $trusteeBoardRole->get('current_appointments') === []) {
                     $missingTrusteeRoles[] = $roleName;
                 }
             }
@@ -122,7 +124,7 @@ class GroupsController extends AppController
             $memberIds = $this->fetchTable('Appointments')->find()
                 ->select(['Appointments.member_id'])
                 ->innerJoinWith('Roles', function ($query) use ($group) {
-                    return $query->where(['Roles.group_id' => $group->id]);
+                    return $query->where(['Roles.group_id' => $group->get('id')]);
                 });
             $nonGroupEmailsQuery->where(['MemberContactMethods.member_id IN' => $memberIds]);
         }
@@ -190,18 +192,26 @@ class GroupsController extends AppController
         $this->request->allowMethod(['get']);
         $groups = $this->fetchTable('Groups');
         $group = $groups->get($id);
-        $group->sections = $groups->Sections->find()
-            ->where(['Sections.group_id' => $group->id])
+        $sections = $groups->Sections->find()
+            ->where(['Sections.group_id' => $group->get('id')])
             ->orderByAsc('Sections.section_name')
             ->all()
             ->toList();
-        $group->teams = $groups->Teams->find()
-            ->where(['Teams.group_id' => $group->id])
+        $group->sections = array_values(array_filter(
+            $sections,
+            static fn(mixed $section): bool => $section instanceof Section,
+        ));
+        $teams = $groups->Teams->find()
+            ->where(['Teams.group_id' => $group->get('id')])
             ->contain(['Sections', 'Roles'])
             ->orderByAsc('Teams.tree_left')
             ->orderByAsc('Teams.team_name')
             ->all()
             ->toList();
+        $group->teams = array_values(array_filter(
+            $teams,
+            static fn(mixed $team): bool => $team instanceof Team,
+        ));
         $this->set(compact('group'));
     }
 }
