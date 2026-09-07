@@ -76,5 +76,15 @@ class StandardGroupTemplateCreatorTest extends TestCase
         $this->assertSame('Cubs Team Leader', $roleOverrides[0]['existing_name']);
         $creator->createRoles([['role_name' => 'First Scout Group Cubs Team Leader', 'apply' => true]], true);
         $this->assertSame('First Scout Group Cubs Team Leader', $this->fetchTable('Roles')->get($leader->id)->name);
+
+        $leader->is_trustee_role = true;
+        $this->fetchTable('Roles')->saveOrFail($leader);
+        $roleOverrides = (new StandardGroupTemplateCreator())->rolePlan(true);
+        $this->assertCount(1, $roleOverrides);
+        $this->assertSame('First Scout Group Cubs Team Leader', $roleOverrides[0]['role_name']);
+        (new StandardGroupTemplateCreator())->createRoles([
+            ['role_name' => 'First Scout Group Cubs Team Leader', 'apply' => true],
+        ], true);
+        $this->assertFalse($this->fetchTable('Roles')->get($leader->id)->is_trustee_role);
     }
 }

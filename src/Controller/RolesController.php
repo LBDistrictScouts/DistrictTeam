@@ -25,6 +25,7 @@ class RolesController extends AppController
         $query = $this->Roles->find()
             ->orderByAsc('Teams.tree_left')
             ->contain(['Teams']);
+        $currentAppointmentRoleIds = $this->Roles->Appointments->find('current')->select(['role_id']);
         $groups = $this->Roles->Groups->find('list')->orderByAsc('sort_order')
             ->orderByAsc('group_name')->toArray();
         $filters = [
@@ -33,27 +34,27 @@ class RolesController extends AppController
             'status' => $this->indexChoice('status', ['filled', 'vacant', 'covered', 'recruiting']),
         ];
         if ($filters['q'] !== '') {
-            $term = '%' . $filters['q'] . '%';
+            $term = '%' . strtolower($filters['q']) . '%';
             $query->where(['OR' => [
-                'Roles.name LIKE' => $term,
-                'Roles.slug LIKE' => $term,
-                'Teams.team_name LIKE' => $term,
+                'LOWER(Roles.name) LIKE' => $term,
+                'LOWER(Roles.slug) LIKE' => $term,
+                'LOWER(Teams.team_name) LIKE' => $term,
             ]]);
         }
         if ($filters['group_id'] !== '') {
             $query->where(['Roles.group_id' => $filters['group_id']]);
         }
         if ($filters['status'] === 'filled') {
-            $query->where(['Roles.multi_member_role' => false, 'Roles.currently_filled' => true]);
+            $query->where(['Roles.multi_member_role' => false, 'Roles.id IN' => clone $currentAppointmentRoleIds]);
         } elseif ($filters['status'] === 'vacant') {
             $query->where(['OR' => [
                 [
                     'Roles.multi_member_role' => true,
-                    'Roles.currently_filled' => false,
+                    'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
                 ],
                 [
                     'Roles.multi_member_role' => false,
-                    'Roles.currently_filled' => false,
+                    'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
                     'OR' => [
                         'Roles.is_covered_until IS' => null,
                         'Roles.is_covered_until <' => Date::today(),
@@ -63,11 +64,11 @@ class RolesController extends AppController
         } elseif ($filters['status'] === 'covered') {
             $query->where([
                 'Roles.multi_member_role' => false,
-                'Roles.currently_filled' => false,
+                'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
                 'Roles.is_covered_until >=' => Date::today(),
             ]);
         } elseif ($filters['status'] === 'recruiting') {
-            $query->where(['Roles.multi_member_role' => true, 'Roles.currently_filled' => true]);
+            $query->where(['Roles.multi_member_role' => true, 'Roles.id IN' => clone $currentAppointmentRoleIds]);
         }
         $roles = $this->paginate($query);
 

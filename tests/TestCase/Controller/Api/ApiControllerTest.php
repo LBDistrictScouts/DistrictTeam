@@ -59,6 +59,15 @@ class ApiControllerTest extends TestCase
         $this->assertFalse($payload['pagination']['more']);
     }
 
+    public function testMemberSearchMatchesFullNames(): void
+    {
+        $this->get('/api/member-search?q=Ada%20Lovelace');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame('Ada Lovelace', $payload['results'][0]['text']);
+    }
+
     public function testAppointmentViewReturnsRelatedRecords(): void
     {
         $this->get('/api/appointments/55555555-5555-4555-8555-555555555551.json');

@@ -34,8 +34,8 @@ class TeamsController extends AppController
             'group_id' => $this->indexChoice('group_id', array_keys($groups)),
         ];
         if ($filters['q'] !== '') {
-            $term = '%' . $filters['q'] . '%';
-            $query->where(['OR' => ['Teams.team_name LIKE' => $term, 'Teams.slug LIKE' => $term]]);
+            $term = '%' . strtolower($filters['q']) . '%';
+            $query->where(['OR' => ['LOWER(Teams.team_name) LIKE' => $term, 'LOWER(Teams.slug) LIKE' => $term]]);
         }
         if ($filters['group_id'] !== '') {
             $query->where(['Teams.group_id' => $filters['group_id']]);

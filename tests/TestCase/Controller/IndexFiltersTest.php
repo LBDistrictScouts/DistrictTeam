@@ -67,4 +67,23 @@ class IndexFiltersTest extends TestCase
             $this->assertResponseOk();
         }
     }
+
+    public function testIndexSearchesAreCaseInsensitive(): void
+    {
+        foreach (
+            [
+                ['/members?q=ada', 'Ada'],
+                ['/appointments?q=ada', 'Ada Lovelace'],
+                ['/roles?q=digital', 'Digital Lead'],
+                ['/teams?q=digital', 'Digital Team'],
+                ['/groups?q=district', 'District'],
+                ['/sections?q=first', 'First Scout Group'],
+            ] as [$url, $expectedText]
+        ) {
+            $this->get($url);
+
+            $this->assertResponseOk();
+            $this->assertResponseContains($expectedText);
+        }
+    }
 }

@@ -36,12 +36,12 @@ class AppointmentsController extends AppController
             'email' => $this->indexChoice('email', ['non-group-emails']),
         ];
         if ($filters['q'] !== '') {
-            $term = '%' . $filters['q'] . '%';
+            $term = '%' . strtolower($filters['q']) . '%';
             $query->where(['OR' => [
-                'Roles.name LIKE' => $term,
-                'Members.first_name LIKE' => $term,
-                'Members.last_name LIKE' => $term,
-                'MemberContactMethods.contact_method LIKE' => $term,
+                'LOWER(Roles.name) LIKE' => $term,
+                'LOWER(Members.first_name) LIKE' => $term,
+                'LOWER(Members.last_name) LIKE' => $term,
+                'LOWER(MemberContactMethods.contact_method) LIKE' => $term,
             ]]);
         }
         if ($filters['group_id'] !== '') {

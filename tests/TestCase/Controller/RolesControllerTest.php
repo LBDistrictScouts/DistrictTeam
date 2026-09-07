@@ -76,6 +76,18 @@ class RolesControllerTest extends TestCase
         $this->assertResponseNotContains('Vacant Role');
     }
 
+    public function testIndexUsesCurrentAppointmentsInsteadOfStoredOccupancy(): void
+    {
+        $this->fetchTable('Appointments')->updateAll([
+            'effective_start_date' => '2099-01-01',
+        ], ['id' => '55555555-5555-4555-8555-555555555551']);
+
+        $this->get('/roles?status=vacant');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Digital Lead');
+    }
+
     /**
      * Test view method
      *

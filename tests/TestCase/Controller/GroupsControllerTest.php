@@ -52,6 +52,18 @@ class GroupsControllerTest extends TestCase
         $this->assertResponseContains('5 Trustee Board member places need appointments.');
     }
 
+    public function testReportCardUsesCurrentAppointmentsInsteadOfStoredOccupancy(): void
+    {
+        $this->fetchTable('Appointments')->updateAll([
+            'effective_start_date' => '2099-01-01',
+        ], ['id' => '55555555-5555-4555-8555-555555555551']);
+
+        $this->get('/groups/report-card/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Digital Lead');
+    }
+
     public function testGroupReportCardUsesTheConfiguredTrusteeBoardTarget(): void
     {
         $target = Configure::read('TrusteeBoard.targetAppointments');

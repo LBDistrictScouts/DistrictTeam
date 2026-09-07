@@ -22,15 +22,16 @@ class GroupsController extends AppController
         $group = $id === null ? null : $this->fetchTable('Groups')->get($id);
 
         $roles = $this->fetchTable('Roles');
+        $currentAppointmentRoleIds = $roles->Appointments->find('current')->select(['role_id']);
         $vacantRolesQuery = $roles->find()
             ->where(['OR' => [
                 [
                     'Roles.multi_member_role' => true,
-                    'Roles.currently_filled' => false,
+                    'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
                 ],
                 [
                     'Roles.multi_member_role' => false,
-                    'Roles.currently_filled' => false,
+                    'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
                     'OR' => [
                         'Roles.is_covered_until IS' => null,
                         'Roles.is_covered_until <' => Date::today(),
@@ -49,7 +50,7 @@ class GroupsController extends AppController
 
         $coveredRolesQuery = $roles->find()
             ->where([
-                'Roles.currently_filled' => false,
+                'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
                 'Roles.multi_member_role' => false,
                 'Roles.is_covered_until >=' => Date::today(),
             ])
@@ -155,8 +156,8 @@ class GroupsController extends AppController
             'type' => $this->indexChoice('type', ['district', 'group']),
         ];
         if ($filters['q'] !== '') {
-            $term = '%' . $filters['q'] . '%';
-            $conditions = ['Groups.group_name LIKE' => $term];
+            $term = '%' . strtolower($filters['q']) . '%';
+            $conditions = ['LOWER(Groups.group_name) LIKE' => $term];
             if (ctype_digit($filters['q'])) {
                 $conditions['Groups.group_osm_id'] = (int)$filters['q'];
             }

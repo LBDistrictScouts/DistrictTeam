@@ -278,8 +278,16 @@ class StandardGroupTemplateCreator
         }
         $roleNames = [];
         $leadTeams = [];
+        $updatedRoleIds = [];
+        foreach ($plan['roles'] as $index => $role) {
+            if ($role['action'] === 'update' && $roles[$index]['apply']) {
+                $updatedRoleIds[(string)$role['id']] = true;
+            }
+        }
         foreach ($existingRoles as $role) {
-            $roleNames[$this->key((string)$role['group_id'], (string)$role['name'])] = true;
+            if (!isset($updatedRoleIds[(string)$role['id']])) {
+                $roleNames[$this->key((string)$role['group_id'], (string)$role['name'])] = true;
+            }
             if ($role['is_lead']) {
                 $leadTeams[(string)$role['team_id']] = true;
             }

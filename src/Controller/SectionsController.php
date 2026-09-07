@@ -25,10 +25,10 @@ class SectionsController extends AppController
             'section_type' => $this->indexChoice('section_type', array_keys(SectionType::options())),
         ];
         if ($filters['q'] !== '') {
-            $term = '%' . $filters['q'] . '%';
+            $term = '%' . strtolower($filters['q']) . '%';
             $conditions = [
-                'Sections.section_name LIKE' => $term,
-                'Groups.group_name LIKE' => $term,
+                'LOWER(Sections.section_name) LIKE' => $term,
+                'LOWER(Groups.group_name) LIKE' => $term,
             ];
             if (ctype_digit($filters['q'])) {
                 $conditions['Sections.section_osm_id'] = (int)$filters['q'];

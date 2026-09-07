@@ -307,10 +307,10 @@ class MembersController extends AppController
             'status' => $this->indexChoice('status', ['active', 'inactive']),
         ];
         if ($filters['q'] !== '') {
-            $term = '%' . $filters['q'] . '%';
+            $term = '%' . strtolower($filters['q']) . '%';
             $conditions = [
-                'Members.first_name LIKE' => $term,
-                'Members.last_name LIKE' => $term,
+                'LOWER(Members.first_name) LIKE' => $term,
+                'LOWER(Members.last_name) LIKE' => $term,
             ];
             if (ctype_digit($filters['q'])) {
                 $conditions['Members.membership_number'] = (int)$filters['q'];

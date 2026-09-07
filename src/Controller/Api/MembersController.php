@@ -43,10 +43,10 @@ class MembersController extends AppController
         $query = $this->fetchTable('Members')->find()
             ->select(['id', 'first_name', 'last_name'])
             ->orderBy($this->order);
-        if ($term !== '') {
+        foreach (preg_split('/\s+/', $term, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
             $query->where(['OR' => [
-                'LOWER(Members.first_name) LIKE' => '%' . $term . '%',
-                'LOWER(Members.last_name) LIKE' => '%' . $term . '%',
+                'LOWER(Members.first_name) LIKE' => '%' . $word . '%',
+                'LOWER(Members.last_name) LIKE' => '%' . $word . '%',
             ]]);
         }
 
