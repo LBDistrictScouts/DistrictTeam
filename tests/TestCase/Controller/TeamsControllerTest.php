@@ -64,6 +64,7 @@ class TeamsControllerTest extends TestCase
         $this->assertResponseContains('Digital Lead');
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('Vacant Role');
+        $this->assertResponseContains('/groups/view/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
         $this->assertResponseContains('No lead role has been designated');
         $this->assertResponseNotContains('Tree Left');
         $this->assertResponseNotContains('Tree Right');

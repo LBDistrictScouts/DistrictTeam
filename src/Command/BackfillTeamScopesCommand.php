@@ -8,8 +8,10 @@ use Cake\Command\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
+use Cake\Database\Connection;
 use Cake\Datasource\ConnectionManager;
 use Exception;
+use RuntimeException;
 
 class BackfillTeamScopesCommand extends Command
 {
@@ -47,8 +49,12 @@ class BackfillTeamScopesCommand extends Command
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         try {
+            $connection = ConnectionManager::get('default');
+            if (!$connection instanceof Connection) {
+                throw new RuntimeException('The default connection must be a Cake database connection.');
+            }
             $changes = (new TeamScopeBackfill())->run(
-                ConnectionManager::get('default'),
+                $connection,
                 (bool)$args->getOption('dry-run'),
             );
             foreach ($changes as $change) {

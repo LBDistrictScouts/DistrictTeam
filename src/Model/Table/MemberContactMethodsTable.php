@@ -6,9 +6,11 @@ namespace App\Model\Table;
 use App\Model\Enum\ContactMethodType;
 use ArrayObject;
 use Cake\Database\Type\EnumType;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 /**
@@ -31,6 +33,13 @@ use Cake\Validation\Validator;
  */
 class MemberContactMethodsTable extends Table
 {
+    /**
+     * Cached configured group email domains.
+     *
+     * @var list<string>|null
+     */
+    private ?array $cachedGroupDomains = null;
+
     /**
      * Initialize method
      *
@@ -105,6 +114,10 @@ class MemberContactMethodsTable extends Table
      */
     private static function isEmailType(mixed $contactMethodType): bool
     {
+        if ($contactMethodType instanceof ContactMethodType) {
+            $contactMethodType = $contactMethodType->value;
+        }
+
         return in_array((int)$contactMethodType, [
             ContactMethodType::Email->value,
             ContactMethodType::EmailAlias->value,
@@ -135,6 +148,97 @@ class MemberContactMethodsTable extends Table
         } elseif (self::isEmailType($contactMethodType)) {
             $data['contact_method'] = strtolower($data['contact_method']);
         }
+    }
+
+    /**
+     * Mark email contact methods whose domain is not configured by any group.
+     *
+     * The result is stored so appointment views can highlight it without
+     * recalculating the organisation's configured domains for every request.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Event.
+     * @param \Cake\Datasource\EntityInterface $entity Contact method being saved.
+     * @param \ArrayObject<string, mixed> $options Save options.
+     * @return void
+     */
+    public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        $contactMethod = $entity->get('contact_method');
+        if (!self::isEmailType($entity->get('contact_method_type')) || !is_string($contactMethod)) {
+            $entity->set('is_non_group_email', false);
+
+            return;
+        }
+
+        $isNonGroupEmail = !in_array(
+            $this->emailDomain($contactMethod),
+            $this->groupDomains(),
+            true,
+        );
+        $entity->set('is_non_group_email', $isNonGroupEmail);
+    }
+
+    /**
+     * Recalculate email availability after group domains have been synchronized.
+     *
+     * @return int Number of contact methods whose stored flag changed.
+     */
+    public function refreshNonGroupEmailFlags(): int
+    {
+        $this->cachedGroupDomains = null;
+        $groupDomains = $this->groupDomains();
+        $updated = 0;
+        $contactMethods = $this->find()->select([
+            'id',
+            'contact_method',
+            'contact_method_type',
+            'is_non_group_email',
+        ]);
+        foreach ($contactMethods as $contactMethod) {
+            if (!$contactMethod instanceof EntityInterface) {
+                continue;
+            }
+            $value = $contactMethod->get('contact_method');
+            $isNonGroupEmail = self::isEmailType($contactMethod->get('contact_method_type'))
+                && is_string($value)
+                && !in_array($this->emailDomain($value), $groupDomains, true);
+            if ($contactMethod->get('is_non_group_email') === $isNonGroupEmail) {
+                continue;
+            }
+            $this->updateAll(['is_non_group_email' => $isNonGroupEmail], ['id' => $contactMethod->get('id')]);
+            $updated++;
+        }
+
+        return $updated;
+    }
+
+    /**
+     * @return list<string> Lowercase email domains configured by groups.
+     */
+    private function groupDomains(): array
+    {
+        if ($this->cachedGroupDomains !== null) {
+            return $this->cachedGroupDomains;
+        }
+        $groupDomains = [];
+        foreach (TableRegistry::getTableLocator()->get('Groups')->find()->select(['domains']) as $group) {
+            foreach ($group->domains ?? [] as $groupDomain) {
+                if (is_string($groupDomain)) {
+                    $groupDomains[] = strtolower($groupDomain);
+                }
+            }
+        }
+
+        return $this->cachedGroupDomains = array_values(array_unique($groupDomains));
+    }
+
+    /**
+     * @param string $email Email address.
+     * @return string Lowercase domain component.
+     */
+    private function emailDomain(string $email): string
+    {
+        return ltrim(strtolower((string)strrchr($email, '@')), '@');
     }
 
     /**

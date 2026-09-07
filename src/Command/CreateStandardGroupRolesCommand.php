@@ -39,7 +39,10 @@ class CreateStandardGroupRolesCommand extends Command
             $plan = $creator->rolePlan();
             $count = (bool)$args->getOption('dry-run')
                 ? count($plan)
-                : $creator->createRoles(array_map(fn(array $role): array => ['role_name' => $role['role_name']], $plan));
+                : $creator->createRoles(array_map(
+                    fn(array $role): array => ['role_name' => $role['role_name']],
+                    $plan,
+                ));
         } catch (Exception $exception) {
             $io->error($exception->getMessage());
 

@@ -38,6 +38,7 @@
 .team-status-filled { background: #dff4ec; color: #00523f; }
 .team-status-vacant { background: #fff1d2; color: #815200; }
 .team-status-recruiting { background: #dbeafe; color: #1e3a8a; }
+.team-status-covered { background: #e9e2f8; color: #503a78; }
 .team-lead-label { color: #637069; font-size: 1.1rem; display: inline-block; margin-left: .7rem; }
 .team-metadata { margin: 0; }
 .team-metadata dt { color: #637069; font-size: 1.2rem; margin-top: 1.8rem; }

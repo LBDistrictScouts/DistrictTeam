@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Model\Enum\GroupType;
+use App\Model\Table\MemberContactMethodsTable;
 use Cake\Core\Configure;
 use Cake\Http\Client;
 use Cake\ORM\Locator\LocatorAwareTrait;
@@ -103,6 +104,22 @@ class DistrictCoreDataService
 
             return ['groups' => count($groupData), 'sections' => count($sectionData)];
         });
+    }
+
+    /**
+     * Refresh contact-method flags using the domains most recently synchronized
+     * from DistrictCoreData.
+     *
+     * @return int Number of contact methods whose stored flag changed.
+     */
+    public function refreshNonGroupEmailFlags(): int
+    {
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+        if (!$contactMethods instanceof MemberContactMethodsTable) {
+            throw new RuntimeException('Member contact methods table is not configured correctly.');
+        }
+
+        return $contactMethods->refreshNonGroupEmailFlags();
     }
 
     /**

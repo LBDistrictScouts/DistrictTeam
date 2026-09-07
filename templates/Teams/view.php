@@ -28,7 +28,14 @@ $leader = $leadAppointments[0]?->member ?? null;
             <p class="team-eyebrow"><?= __('Team overview') ?></p>
             <h1><?= h($team->team_name) ?></h1>
             <p class="team-hero-context">
-                <?= h($team->group?->group_name ?? __('No group assigned')) ?>
+                <?php if ($team->group) : ?>
+                    <?= $this->Html->link(
+                        $team->group->group_name,
+                        ['controller' => 'Groups', 'action' => 'view', $team->group->id],
+                    ) ?>
+                <?php else : ?>
+                    <?= __('No group assigned') ?>
+                <?php endif; ?>
                 <?php if ($team->section): ?> · <?= h($team->section->section_name) ?><?php endif; ?>
             </p>
         </div>
@@ -142,7 +149,14 @@ $leader = $leadAppointments[0]?->member ?? null;
                 <h2><?= __('Group & section') ?></h2>
                 <dl class="team-metadata">
                     <dt><?= __('Group') ?></dt>
-                    <dd><?= h($team->group?->group_name ?? __('Not assigned')) ?>
+                    <dd><?php if ($team->group) : ?>
+                        <?= $this->Html->link(
+                            $team->group->group_name,
+                            ['controller' => 'Groups', 'action' => 'view', $team->group->id],
+                        ) ?>
+                        <?php else : ?>
+                            <?= __('Not assigned') ?>
+                        <?php endif; ?>
                         <?php if ($team->group?->type): ?><span class="team-type-label"><?= h($team->group->type->label()) ?></span><?php endif; ?>
                     </dd>
                     <?php if ($team->group): ?>

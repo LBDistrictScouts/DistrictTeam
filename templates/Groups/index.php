@@ -8,9 +8,9 @@
     <?= $this->element('Workspace/index_header', [
         'title' => __('Groups'),
         'description' => __('Your district and Scout groups, kept up to date from core data.'),
-        'actions' => [
-        ],
+        'actions' => [],
     ]) ?>
+    <?= $this->element('Workspace/index_filters', compact('filters', 'filterControls')) ?>
     <section class="workspace-table-panel" aria-label="<?= __('Groups') ?>">
     <div class="workspace-table-heading">
         <h2><?= __('Directory') ?></h2>
@@ -46,13 +46,17 @@
                     <td><?= $this->Number->format($item->sections_count) ?></td>
                     <td><?= $this->Number->format($item->teams_count) ?></td>
                     <td><?= $this->Number->format($item->roles_count) ?></td>
-                    <td class="actions"><?= $this->Html->link(__('View'), ['action' => 'view', $item->id]) ?></td>
+                    <td class="actions">
+                        <?= $this->Html->link(__('View'), ['action' => 'view', $item->id]) ?>
+                        <?= $this->Html->link(__('Report Card'), ['action' => 'reportCard', $item->id]) ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
     <div class="paginator">
+        <?= $this->element('Workspace/pagination_limit') ?>
         <ul class="pagination">
             <?= $this->Paginator->first('<< ' . __('first')) ?>
             <?= $this->Paginator->prev('< ' . __('previous')) ?>

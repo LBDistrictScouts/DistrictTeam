@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Section;
 use App\Model\Entity\Team;
 use App\Service\StandardGroupTemplateCreator;
 use Cake\Http\Exception\NotFoundException;
@@ -28,9 +29,27 @@ class TeamsController extends AppController
         $query = $this->Teams->find()
             ->orderByAsc('Teams.tree_left')
             ->contain(['ParentTeam']);
+        $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'group_id' => $this->indexChoice(
+                'group_id',
+                array_map(static fn(mixed $id): string => (string)$id, array_keys($groups)),
+            ),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . strtolower($filters['q']) . '%';
+            $query->where(['OR' => ['LOWER(Teams.team_name) LIKE' => $term, 'LOWER(Teams.slug) LIKE' => $term]]);
+        }
+        if ($filters['group_id'] !== '') {
+            $query->where(['Teams.group_id' => $filters['group_id']]);
+        }
         $teams = $this->paginate($query);
 
-        $this->set(compact('teams'));
+        $filterControls = [[
+            'name' => 'group_id', 'label' => __('Group'), 'options' => $groups, 'empty' => __('All groups'),
+        ]];
+        $this->set(compact('teams', 'filters', 'filterControls'));
     }
 
     /**
@@ -120,7 +139,9 @@ class TeamsController extends AppController
         $this->request->allowMethod(['get', 'post']);
         $creator = new StandardGroupTemplateCreator();
         $reviewOverrides = filter_var(
-            $this->request->is('post') ? $this->request->getData('review_overrides', false) : $this->request->getQuery('review_overrides', false),
+            $this->request->is('post')
+                ? $this->request->getData('review_overrides', false)
+                : $this->request->getQuery('review_overrides', false),
             FILTER_VALIDATE_BOOL,
         );
         $submittedTeams = [];
@@ -131,7 +152,10 @@ class TeamsController extends AppController
                     throw new InvalidArgumentException('Invalid template selection.');
                 }
                 $created = $creator->createTeams(array_values($submittedTeams), $reviewOverrides);
-                $this->Flash->success($reviewOverrides ? __('{0} standard team names applied.', $created) : __('{0} standard teams created.', $created));
+                $message = $reviewOverrides
+                    ? __('{0} standard team names applied.', $created)
+                    : __('{0} standard teams created.', $created);
+                $this->Flash->success($message);
 
                 return $this->redirect(['action' => 'index']);
             } catch (InvalidArgumentException | RuntimeException $exception) {
@@ -176,6 +200,9 @@ class TeamsController extends AppController
         $groups = $this->Teams->Groups->find('list')->orderByAsc('sort_order')->orderByAsc('group_name')->toArray();
         $sections = [];
         foreach ($this->Teams->Sections->find()->contain(['Groups'])->orderByAsc('section_name') as $section) {
+            if (!$section instanceof Section || $section->group === null) {
+                continue;
+            }
             $sections[$section->group->group_name][$section->id] = $section->section_name;
         }
         $parents = $this->Teams->find()->orderByAsc('Teams.tree_left');
@@ -187,6 +214,9 @@ class TeamsController extends AppController
         }
         $parentTeam = [];
         foreach ($parents as $parent) {
+            if (!$parent instanceof Team) {
+                continue;
+            }
             $parentTeam[] = [
                 'value' => $parent->id,
                 'text' => str_repeat('>> ', (int)$parent->tree_level) . $parent->team_name,

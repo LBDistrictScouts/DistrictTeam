@@ -27,6 +27,7 @@ class MemberContactMethodsTableTest extends TestCase
     protected array $fixtures = [
         'app.Members',
         'app.MemberContactMethods',
+        'app.Groups',
     ];
 
     /**
@@ -163,5 +164,33 @@ class MemberContactMethodsTableTest extends TestCase
             $this->assertEmpty($contact->getErrors());
             $this->assertSame('team.lead+alias@example.org', $contact->contact_method);
         }
+    }
+
+    public function testNonGroupEmailFlagIsCalculatedAndPersistedOnSave(): void
+    {
+        $groupEmail = $this->MemberContactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'leader@GROUP.EXAMPLE.ORG',
+            'contact_method_type' => ContactMethodType::Email->value,
+        ]);
+        $this->MemberContactMethods->saveOrFail($groupEmail);
+        $this->assertFalse($groupEmail->is_non_group_email);
+
+        $personalEmail = $this->MemberContactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'leader@example.com',
+            'contact_method_type' => ContactMethodType::EmailAlias->value,
+        ]);
+        $this->MemberContactMethods->saveOrFail($personalEmail);
+        $this->assertTrue($personalEmail->is_non_group_email);
+        $this->assertTrue($this->MemberContactMethods->get($personalEmail->id)->is_non_group_email);
+
+        $phone = $this->MemberContactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333332',
+            'contact_method' => '07804 918252',
+            'contact_method_type' => ContactMethodType::PhoneNumber->value,
+        ]);
+        $this->MemberContactMethods->saveOrFail($phone);
+        $this->assertFalse($phone->is_non_group_email);
     }
 }

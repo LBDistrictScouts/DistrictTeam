@@ -11,6 +11,7 @@ $staffingStatus = $role->staffing_status;
 $staffingStatusLabel = match ($staffingStatus) {
     'recruiting' => __('Recruiting'),
     'filled' => __('Filled'),
+    'covered' => __('Covered'),
     default => __('Vacant'),
 };
 ?>
@@ -53,6 +54,10 @@ $staffingStatusLabel = match ($staffingStatus) {
         <div>
             <strong><?= $role->multi_member_role ? __('Yes') : __('No') ?></strong>
             <span><?= __('Multi Member Role') ?></span>
+        </div>
+        <div>
+            <strong><?= $role->is_trustee_role ? __('Yes') : __('No') ?></strong>
+            <span><?= __('Trustee Board role') ?></span>
         </div>
         <div>
             <strong><?= $this->Number->format(count($appointments)) ?></strong>
@@ -126,7 +131,14 @@ $staffingStatusLabel = match ($staffingStatus) {
                     ) ?>
                     <dl class="role-metadata">
                         <dt><?= __('Group') ?></dt>
-                        <dd><?= h($team->group?->group_name ?? __('Not assigned')) ?></dd>
+                        <dd><?php if ($team->group) : ?>
+                            <?= $this->Html->link(
+                                $team->group->group_name,
+                                ['controller' => 'Groups', 'action' => 'view', $team->group->id],
+                            ) ?>
+                            <?php else : ?>
+                            <?= __('Not assigned') ?>
+                        <?php endif; ?></dd>
                         <?php if ($team->section) : ?>
                         <dt><?= __('Section') ?></dt>
                         <dd><?= h($team->section->section_name) ?></dd>

@@ -140,6 +140,7 @@ Stores a member's email addresses, email aliases or groups, and phone numbers.
 | `member_id` | `uuid` | No | — | Member who owns the contact method. |
 | `contact_method` | `varchar(255)` | No | — | Address, group, alias, or phone number. |
 | `contact_method_type` | `integer` | No | `1` | Enum discriminator described below. |
+| `is_non_group_email` | `boolean` | No | `false` | Whether an email contact method's domain is absent from every group's configured domains. Calculated on save. |
 
 `contact_method_type` values:
 

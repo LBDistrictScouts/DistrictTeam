@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Model\Entity\MemberContactMethod;
+use App\Model\Entity\Role;
+use App\Model\Entity\Section;
 use App\Model\Enum\ContactMethodType;
 use App\Model\Table\MemberContactMethodsTable;
 use Cake\Datasource\EntityInterface;
@@ -20,7 +23,7 @@ class MemberCsvImporter
 
     /**
      * @param \Psr\Http\Message\UploadedFileInterface $upload CSV upload.
-     * @return array<string, mixed>
+     * @return array<int, array<string, string>>
      */
     public function read(UploadedFileInterface $upload): array
     {
@@ -35,12 +38,19 @@ class MemberCsvImporter
             throw new InvalidArgumentException('Please upload a UTF-8 CSV file.');
         }
         $stream = fopen('php://temp', 'r+');
-        fwrite($stream, preg_replace('/^\xEF\xBB\xBF/', '', $contents));
+        if ($stream === false) {
+            throw new InvalidArgumentException('The CSV could not be opened for reading.');
+        }
+        $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents) ?? $contents;
+        fwrite($stream, $contents);
         rewind($stream);
         try {
             $headers = fgetcsv($stream, escape: '');
             $required = ['Membership number', 'First name', 'Last name', 'Start date'];
-            $headers = $headers === false ? [] : array_map('trim', $headers);
+            $headers = $headers === false ? [] : array_map(
+                static fn(mixed $value): string => trim((string)$value),
+                $headers,
+            );
             if (count(array_unique($headers)) !== count($headers) || in_array('', $headers, true)) {
                 throw new InvalidArgumentException('The CSV must have unique, non-empty column headers.');
             }
@@ -58,7 +68,10 @@ class MemberCsvImporter
                 if (count($values) !== count($headers)) {
                     throw new InvalidArgumentException("Row {$line}: column count does not match the header.");
                 }
-                $rows[$line] = array_combine($headers, array_map('trim', $values));
+                $rows[$line] = array_combine(
+                    $headers,
+                    array_map(static fn(mixed $value): string => trim((string)$value), $values),
+                );
             }
         } finally {
             fclose($stream);
@@ -74,7 +87,7 @@ class MemberCsvImporter
      * Group source roles independently of the application's role names.
      *
      * @param array<int, array<string, string>> $rows CSV rows.
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array{unit: string, parent: string, team: string, role: string, type: string, count: int}>
      */
     public function sources(array $rows): array
     {
@@ -158,7 +171,10 @@ class MemberCsvImporter
      *
      * @param array<int, array<string, string>> $rows Parsed CSV rows.
      * @param array<string, string> $mapping Source keys to existing role IDs or "skip".
-     * @return array<int, array{unit: string, parent: string, team: string, role: string, type: string, count: int, status: string, detail: string}>
+     * @return array<int, array{
+     *     unit: string, parent: string, team: string, role: string, type: string,
+     *     count: int, status: string, detail: string
+     * }>
      */
     public function roleImportResults(array $rows, array $mapping): array
     {
@@ -236,7 +252,7 @@ class MemberCsvImporter
         return hash('sha256', json_encode([
             $row['Unit name'] ?? '', $row['Parent Team'] ?? '', $row['Team'] ?? '',
             $row['Role'] ?? '', $row['Roletype'] ?? '',
-        ]));
+        ], JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -245,7 +261,10 @@ class MemberCsvImporter
      */
     private function unitSourceKey(array $row): string
     {
-        return hash('sha256', json_encode([$row['Unit name'] ?? '', $row['Parent Team'] ?? '']));
+        return hash('sha256', json_encode([
+            $row['Unit name'] ?? '',
+            $row['Parent Team'] ?? '',
+        ], JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -315,7 +334,6 @@ class MemberCsvImporter
                             $this->save($members, $changes, $member);
                         }
                     }
-                    $contactId = null;
                     foreach (
                         [
                         ['Communication email', ContactMethodType::Email],
@@ -358,7 +376,6 @@ class MemberCsvImporter
                             ]);
                             $result['contacts']++;
                         }
-                        $contactId ??= $contact->id;
                     }
                     $roleId = $mapping[$this->sourceKey($row)] ?? '';
                     if ($roleId === 'skip' || $roleId === '') {
@@ -367,27 +384,18 @@ class MemberCsvImporter
                     $appointments = $this->fetchTable('Appointments');
                     $key = ['member_id' => $member->id, 'role_id' => $roleId, 'effective_start_date' => $start];
                     $appointment = $appointments->find()->where($key)->first();
-                    if (!$contactId) {
-                        $contactId = $appointment?->member_contact_method_id;
-                        $contactId ??= $this->fetchTable('MemberContactMethods')->find()
-                            ->where([
-                                'member_id' => $member->id,
-                                'contact_method_type IN' => [
-                                    ContactMethodType::Email->value,
-                                    ContactMethodType::PhoneNumber->value,
-                                ],
-                            ])
-                            ->orderBy(['contact_method_type' => 'ASC', 'id' => 'ASC'])
-                            ->first()?->id;
-                    }
-                    if (!$contactId) {
-                        $result['warnings'][] = "Row {$line}: appointment skipped (no usable contact method).";
-                        continue;
-                    }
-                    if (!$appointment) {
+                    if ($appointment) {
+                        $data = $key;
+                    } else {
+                        $contactId = $this->bestAppointmentContactMethod($member->id, $roleId);
+                        if (!$contactId) {
+                            $result['warnings'][] = "Row {$line}: appointment skipped"
+                                . ' (no usable email contact method).';
+                            continue;
+                        }
+                        $data = $key + ['member_contact_method_id' => $contactId];
                         $result['appointments']++;
                     }
-                    $data = $key + ['member_contact_method_id' => $contactId];
                     if (!$appointment || ($appointment->get('effective_end_date') === null && $end !== null)) {
                         $data['effective_end_date'] = $end;
                     }
@@ -480,7 +488,7 @@ class MemberCsvImporter
             if ($sectionId !== '') {
                 $section = $this->fetchTable('Sections')->find()
                     ->select(['group_id'])->where(['id' => $sectionId])->first();
-                if (!$section || $groupId === '' || $section->group_id !== $groupId) {
+                if (!$section instanceof Section || $groupId === '' || $section->group_id !== $groupId) {
                     throw new InvalidArgumentException('The selected section must belong to the selected group.');
                 }
             } elseif ($groupId !== '' && !$this->fetchTable('Groups')->exists(['id' => $groupId])) {
@@ -522,6 +530,64 @@ class MemberCsvImporter
         }
 
         return $date->format('Y-m-d');
+    }
+
+    /**
+     * Find the preferred email for a new appointment without considering phones.
+     *
+     * @param string $memberId Member whose contacts will be considered.
+     * @param string $roleId Role receiving the appointment.
+     * @return string|null Contact method ID, if an email is available.
+     */
+    private function bestAppointmentContactMethod(string $memberId, string $roleId): ?string
+    {
+        $roles = $this->fetchTable('Roles');
+        $role = $roles->find()->select(['group_id'])->where(['id' => $roleId])->first();
+        $groupId = $role instanceof Role ? $role->group_id : null;
+        $groups = $this->fetchTable('Groups');
+        $appointmentGroupDomains = $groupId === null ? [] : $groups->get($groupId)->domains ?? [];
+        $allGroupDomains = [];
+        foreach ($groups->find()->select(['domains']) as $group) {
+            foreach ($group->domains ?? [] as $domain) {
+                if (is_string($domain)) {
+                    $allGroupDomains[] = strtolower($domain);
+                }
+            }
+        }
+        $appointmentGroupDomains = array_map('strtolower', $appointmentGroupDomains);
+
+        $contacts = $this->fetchTable('MemberContactMethods')->find()
+            ->where([
+                'member_id' => $memberId,
+                'is_non_group_email' => false,
+                'contact_method_type IN' => [
+                    ContactMethodType::Email->value,
+                    ContactMethodType::EmailAlias->value,
+                    ContactMethodType::EmailGroup->value,
+                ],
+            ])
+            ->orderBy(['id' => 'ASC']);
+        $bestContact = null;
+        $bestRank = PHP_INT_MAX;
+        foreach ($contacts as $contact) {
+            if (!$contact instanceof MemberContactMethod) {
+                continue;
+            }
+            $domain = strtolower(ltrim((string)strrchr($contact->contact_method, '@'), '@'));
+            $rank = match (true) {
+                in_array($domain, $appointmentGroupDomains, true) => 0,
+                in_array($domain, $allGroupDomains, true) => 1,
+                $contact->contact_method_type === ContactMethodType::Email => 2,
+                $contact->contact_method_type === ContactMethodType::EmailAlias => 3,
+                default => 4,
+            };
+            if ($rank < $bestRank) {
+                $bestContact = $contact;
+                $bestRank = $rank;
+            }
+        }
+
+        return $bestContact?->id;
     }
 
     /**

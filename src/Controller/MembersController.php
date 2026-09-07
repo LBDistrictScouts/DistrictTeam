@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Group;
+use App\Model\Entity\Section;
 use App\Model\Enum\ContactMethodType;
 use App\Service\MemberCsvImporter;
+use Cake\I18n\Date;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
@@ -183,6 +186,9 @@ class MembersController extends AppController
         $sections = $this->fetchTable('Sections')->find()->contain(['Groups'])
             ->orderBy(['Groups.group_name' => 'ASC', 'Sections.section_name' => 'ASC']);
         foreach ($sections as $section) {
+            if (!$section instanceof Section) {
+                continue;
+            }
             $sectionOptions[$section->id] = $section->group->group_name . ' / ' . $section->section_name;
             $sectionGroups[$section->id] = $section->group_id;
         }
@@ -206,10 +212,16 @@ class MembersController extends AppController
         }
         $groups = [];
         foreach ($this->fetchTable('Groups')->find()->select(['id', 'group_name', 'type']) as $group) {
+            if (!$group instanceof Group) {
+                continue;
+            }
             $groups[$group->id] = $group;
         }
         $sections = [];
         foreach ($this->fetchTable('Sections')->find()->select(['id', 'group_id', 'section_name']) as $section) {
+            if (!$section instanceof Section) {
+                continue;
+            }
             $sections[$section->id] = $section;
         }
 
@@ -254,15 +266,24 @@ class MembersController extends AppController
         }
 
         natcasesort($filters['district']);
-        uasort($filters['district_sections'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
-        uasort($filters['groups'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+        uasort(
+            $filters['district_sections'],
+            fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']),
+        );
+        uasort(
+            $filters['groups'],
+            fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']),
+        );
         foreach ($filters['district_sections'] as &$section) {
             natcasesort($section['units']);
         }
         unset($section);
         foreach ($filters['groups'] as &$group) {
             natcasesort($group['units']);
-            uasort($group['sections'], fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
+            uasort(
+                $group['sections'],
+                fn(array $left, array $right): int => strnatcasecmp($left['label'], $right['label']),
+            );
             foreach ($group['sections'] as &$section) {
                 natcasesort($section['units']);
             }
@@ -281,9 +302,41 @@ class MembersController extends AppController
     public function index()
     {
         $query = $this->Members->find();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'status' => $this->indexChoice('status', ['active', 'inactive']),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . strtolower($filters['q']) . '%';
+            $conditions = [
+                'LOWER(Members.first_name) LIKE' => $term,
+                'LOWER(Members.last_name) LIKE' => $term,
+            ];
+            if (ctype_digit($filters['q'])) {
+                $conditions['Members.membership_number'] = (int)$filters['q'];
+            }
+            $query->where(['OR' => $conditions]);
+        }
+        $today = Date::today();
+        if ($filters['status'] === 'active') {
+            $query->where([
+                'Members.join_date <=' => $today,
+                'OR' => ['Members.leave_date IS' => null, 'Members.leave_date >=' => $today],
+            ]);
+        } elseif ($filters['status'] === 'inactive') {
+            $query->where(['OR' => [
+                'Members.join_date >' => $today,
+                'Members.leave_date <' => $today,
+            ]]);
+        }
         $members = $this->paginate($query);
 
-        $this->set(compact('members'));
+        $filterControls = [[
+            'name' => 'status', 'label' => __('Status'),
+            'options' => ['active' => __('Active'), 'inactive' => __('Inactive')],
+            'empty' => __('All members'),
+        ]];
+        $this->set(compact('members', 'filters', 'filterControls'));
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Service\StandardGroupTemplateCreator;
 use Cake\Http\Response;
+use Cake\I18n\Date;
 use InvalidArgumentException;
 
 /**
@@ -24,9 +25,61 @@ class RolesController extends AppController
         $query = $this->Roles->find()
             ->orderByAsc('Teams.tree_left')
             ->contain(['Teams']);
+        $currentAppointmentRoleIds = $this->Roles->Appointments->find('current')->select(['role_id']);
+        $groups = $this->Roles->Groups->find('list')->orderByAsc('sort_order')
+            ->orderByAsc('group_name')->toArray();
+        $filters = [
+            'q' => $this->indexFilter('q'),
+            'group_id' => $this->indexChoice('group_id', array_keys($groups)),
+            'status' => $this->indexChoice('status', ['filled', 'vacant', 'covered', 'recruiting']),
+        ];
+        if ($filters['q'] !== '') {
+            $term = '%' . strtolower($filters['q']) . '%';
+            $query->where(['OR' => [
+                'LOWER(Roles.name) LIKE' => $term,
+                'LOWER(Roles.slug) LIKE' => $term,
+                'LOWER(Teams.team_name) LIKE' => $term,
+            ]]);
+        }
+        if ($filters['group_id'] !== '') {
+            $query->where(['Roles.group_id' => $filters['group_id']]);
+        }
+        if ($filters['status'] === 'filled') {
+            $query->where(['Roles.multi_member_role' => false, 'Roles.id IN' => clone $currentAppointmentRoleIds]);
+        } elseif ($filters['status'] === 'vacant') {
+            $query->where(['OR' => [
+                [
+                    'Roles.multi_member_role' => true,
+                    'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
+                ],
+                [
+                    'Roles.multi_member_role' => false,
+                    'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
+                    'OR' => [
+                        'Roles.is_covered_until IS' => null,
+                        'Roles.is_covered_until <' => Date::today(),
+                    ],
+                ],
+            ]]);
+        } elseif ($filters['status'] === 'covered') {
+            $query->where([
+                'Roles.multi_member_role' => false,
+                'Roles.id NOT IN' => clone $currentAppointmentRoleIds,
+                'Roles.is_covered_until >=' => Date::today(),
+            ]);
+        } elseif ($filters['status'] === 'recruiting') {
+            $query->where(['Roles.multi_member_role' => true, 'Roles.id IN' => clone $currentAppointmentRoleIds]);
+        }
         $roles = $this->paginate($query);
 
-        $this->set(compact('roles'));
+        $filterControls = [
+            ['name' => 'group_id', 'label' => __('Group'), 'options' => $groups, 'empty' => __('All groups')],
+            ['name' => 'status', 'label' => __('Status'), 'options' => [
+                'filled' => __('Filled'), 'vacant' => __('Vacant'), 'covered' => __('Covered'),
+                'recruiting' => __('Recruiting'),
+            ], 'empty' => __('All statuses')],
+        ];
+        $this->set(compact('roles', 'filters', 'filterControls'));
     }
 
     /**
@@ -77,7 +130,9 @@ class RolesController extends AppController
         $this->request->allowMethod(['get', 'post']);
         $creator = new StandardGroupTemplateCreator();
         $reviewOverrides = filter_var(
-            $this->request->is('post') ? $this->request->getData('review_overrides', false) : $this->request->getQuery('review_overrides', false),
+            $this->request->is('post')
+                ? $this->request->getData('review_overrides', false)
+                : $this->request->getQuery('review_overrides', false),
             FILTER_VALIDATE_BOOL,
         );
         $submittedRoles = [];
@@ -88,7 +143,10 @@ class RolesController extends AppController
                     throw new InvalidArgumentException('Invalid template selection.');
                 }
                 $count = $creator->createRoles(array_values($submittedRoles), $reviewOverrides);
-                $this->Flash->success($reviewOverrides ? __('{0} standard role names applied.', $count) : __('{0} standard roles created.', $count));
+                $message = $reviewOverrides
+                    ? __('{0} standard role names applied.', $count)
+                    : __('{0} standard roles created.', $count);
+                $this->Flash->success($message);
 
                 return $this->redirect(['action' => 'index']);
             } catch (InvalidArgumentException $exception) {

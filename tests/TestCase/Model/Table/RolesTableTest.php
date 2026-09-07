@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Model\Table;
 
 use App\Model\Table\RolesTable;
+use Cake\I18n\Date;
 use Cake\TestSuite\TestCase;
 
 /**
@@ -171,10 +172,16 @@ class RolesTableTest extends TestCase
         $this->assertSame('filled', $filledRole->staffing_status);
         $this->assertSame('vacant', $vacantRole->staffing_status);
 
+        $vacantRole->is_covered_until = new Date('2099-01-01');
+        $this->Roles->saveOrFail($vacantRole);
+        $vacantRole = $this->Roles->get($vacantRole->id);
+        $this->assertSame('2099-01-01', $vacantRole->is_covered_until->format('Y-m-d'));
+        $this->assertSame('covered', $vacantRole->staffing_status);
+
         $filledRole->multi_member_role = true;
         $vacantRole->multi_member_role = true;
 
         $this->assertSame('recruiting', $filledRole->staffing_status);
-        $this->assertSame('recruiting', $vacantRole->staffing_status);
+        $this->assertSame('vacant', $vacantRole->staffing_status);
     }
 }

@@ -38,6 +38,7 @@ class SyncDistrictCoreDataCommand extends Command
             $service = new DistrictCoreDataService();
             $data = $service->fetch();
             $counts = $service->sync($data['groups'], $data['sections']);
+            $refreshedContactMethods = $service->refreshNonGroupEmailFlags();
         } catch (Exception $exception) {
             $io->error($exception->getMessage());
 
@@ -45,9 +46,10 @@ class SyncDistrictCoreDataCommand extends Command
         }
 
         $io->success(sprintf(
-            'Synchronised %d groups and %d sections.',
+            'Synchronised %d groups and %d sections; refreshed %d contact methods.',
             $counts['groups'],
             $counts['sections'],
+            $refreshedContactMethods,
         ));
 
         return self::CODE_SUCCESS;

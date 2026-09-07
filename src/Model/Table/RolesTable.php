@@ -109,6 +109,14 @@ class RolesTable extends Table
             ->boolean('multi_member_role')
             ->notEmptyString('multi_member_role');
 
+        $validator
+            ->boolean('is_trustee_role')
+            ->notEmptyString('is_trustee_role');
+
+        $validator
+            ->date('is_covered_until')
+            ->allowEmptyDate('is_covered_until');
+
         return $validator;
     }
 

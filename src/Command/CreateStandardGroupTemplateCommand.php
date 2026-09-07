@@ -51,7 +51,10 @@ class CreateStandardGroupTemplateCommand extends Command
             $plan = $creator->teamPlan();
             $result = $dryRun
                 ? count($plan)
-                : $creator->createTeams(array_map(fn(array $team): array => ['team_name' => $team['team_name']], $plan));
+                : $creator->createTeams(array_map(
+                    fn(array $team): array => ['team_name' => $team['team_name']],
+                    $plan,
+                ));
         } catch (Exception $exception) {
             $io->error($exception->getMessage());
 

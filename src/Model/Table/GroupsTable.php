@@ -11,8 +11,8 @@ use Cake\Validation\Validator;
 /**
  * Groups Model
  *
- * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\HasMany $Teams
- * @property \App\Model\Table\SectionsTable&\Cake\ORM\Association\HasMany $Sections
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\TeamsTable> $Teams
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\SectionsTable> $Sections
  * @method \App\Model\Entity\Group newEmptyEntity()
  * @method \App\Model\Entity\Group newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Group> newEntities(array $data, array $options = [])
