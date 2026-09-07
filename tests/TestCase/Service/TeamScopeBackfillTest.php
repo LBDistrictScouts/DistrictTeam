@@ -10,7 +10,7 @@ use Cake\Database\Connection;
 use Cake\Database\Driver\Sqlite;
 use Cake\TestSuite\TestCase;
 use CreateGroupsAndSections;
-use Migrations\Db\Adapter\SQLiteAdapter;
+use Migrations\Db\Adapter\SqliteAdapter;
 use RequireTeamGroup;
 use RuntimeException;
 
@@ -101,7 +101,7 @@ class TeamScopeBackfillTest extends TestCase
             ->onlyMethods(['fetchCoreData', 'importCoreData'])->getMock();
         $migration->expects($this->once())->method('fetchCoreData')->willReturn(['groups' => [], 'sections' => []]);
         $migration->expects($this->once())->method('importCoreData')->willReturn('g1');
-        $migration->setAdapter(new SQLiteAdapter(['connection' => $db]));
+        $migration->setAdapter(new SqliteAdapter(['connection' => $db]));
         $migration->up();
         $child = $db->execute("SELECT group_id, section_id FROM teams WHERE id = 'child'")->fetch('assoc');
         $this->assertSame(['group_id' => 'g1', 'section_id' => 's1'], $child);
@@ -120,7 +120,7 @@ class TeamScopeBackfillTest extends TestCase
         $db = new Connection(['driver' => Sqlite::class, 'database' => ':memory:']);
         $db->execute('PRAGMA foreign_keys = ON');
         $db->execute('CREATE TABLE teams (id CHAR(36) PRIMARY KEY, team_name TEXT, team_parent_id CHAR(36))');
-        $adapter = new SQLiteAdapter(['connection' => $db]);
+        $adapter = new SqliteAdapter(['connection' => $db]);
         require_once ROOT . '/config/Migrations/20260905010000_CreateGroupsAndSections.php';
         require_once ROOT . '/config/Migrations/20260905030000_AddGroupTypeAndDomains.php';
         require_once ROOT . '/config/Migrations/20260905040000_RequireTeamGroup.php';
