@@ -40,6 +40,10 @@ $this->Html->css('report-card', ['block' => true]);
             <span><?= __n('Vacant role', 'Vacant roles', count($vacantRoles)) ?></span>
         </article>
         <article>
+            <strong><?= $this->Number->format(count($coveredRoles)) ?></strong>
+            <span><?= __n('Covered role', 'Covered roles', count($coveredRoles)) ?></span>
+        </article>
+        <article>
             <strong><?= $this->Number->format(count($nonGroupEmails)) ?></strong>
             <span><?= __n('Non-group email', 'Non-group emails', count($nonGroupEmails)) ?></span>
         </article>

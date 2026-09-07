@@ -33,11 +33,6 @@
 .workspace-index-filter-actions button:hover { background: #004b3b; border-color: #004b3b; }
 .workspace-index-filter-actions .button-outline { background: #fff; border-color: #cad9d0; color: #006b54; }
 .workspace-index-filter-actions .button-outline:hover { background: #edf7f2; border-color: #006b54; color: #004b3b; }
-@media (min-width: 900px) {
-    .appointments .workspace-index-filter-fields { flex-wrap: nowrap; }
-    .appointments .workspace-index-search { flex: 2 1 0; margin: 0; max-width: none; min-width: 0; }
-    .appointments .workspace-index-filter-control { flex: 1 1 0; margin: 0; max-width: none; min-width: 0; }
-}
 .workspace-table-heading { padding: 2.2rem 2.6rem; display: flex; gap: 1rem; justify-content: space-between; align-items: center; }
 .workspace-table-heading h2 { color: #17211b; font-size: 1.8rem; font-weight: 700; margin: 0; }
 .workspace-table-heading > span { color: #637069; font-size: 1.2rem; background: #f0f5f2; border-radius: 999px; padding: .4rem 1rem; }

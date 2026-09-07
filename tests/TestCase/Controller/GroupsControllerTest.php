@@ -77,6 +77,10 @@ class GroupsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('Covered roles');
+        $this->assertMatchesRegularExpression(
+            '/<strong>1<\/strong>\s*<span>Covered role<\/span>/',
+            (string)$this->_response->getBody(),
+        );
         $this->assertResponseContains('Vacant Role');
         $this->assertResponseContains('Covered until 1 January 2099');
         $this->assertResponseContains('/roles?status=covered');
