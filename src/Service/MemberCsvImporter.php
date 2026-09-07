@@ -106,6 +106,7 @@ class MemberCsvImporter
         foreach ($this->fetchTable('CsvRoleMappings')->find()->where(['source_key IN' => $keys]) as $saved) {
             $mapping[$saved->source_key] = $saved->role_id ?? 'skip';
         }
+
         return $mapping;
     }
 
@@ -387,7 +388,7 @@ class MemberCsvImporter
                         $result['appointments']++;
                     }
                     $data = $key + ['member_contact_method_id' => $contactId];
-                    if (array_key_exists('End date', $row) || !$appointment) {
+                    if (!$appointment || ($appointment->get('effective_end_date') === null && $end !== null)) {
                         $data['effective_end_date'] = $end;
                     }
                     $this->save($appointments, $data, $appointment);
@@ -395,6 +396,7 @@ class MemberCsvImporter
                     throw new InvalidArgumentException("Row {$line}: " . $exception->getMessage(), 0, $exception);
                 }
             }
+
             return $result;
         };
 

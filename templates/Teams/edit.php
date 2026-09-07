@@ -19,16 +19,20 @@
         <fieldset>
             <legend><?= __('Team details') ?></legend>
             <?php
+                echo $this->Form->control('team_parent_id', [
+                    'options' => $parentTeam,
+                    'empty' => __('No parent team'),
+                    'aria-describedby' => 'parent-team-help',
+                ]);
                 echo $this->Form->control('team_name');
                 echo $this->Form->control('group_id', ['options' => $groups, 'empty' => __('Choose a group'), 'required' => true]);
                 echo $this->Form->control('section_id', [
                     'options' => $sections,
                     'empty' => 'No section (district or group team)',
                 ]);
-                echo $this->Form->control('team_parent_id', [
-                    'options' => $parentTeam,
-                    'empty' => __('No parent team'),
-                    'aria-describedby' => 'parent-team-help',
+                echo $this->Form->control('template', [
+                    'options' => \App\Model\Enum\TeamTemplate::options(),
+                    'empty' => __('No standard template'),
                 ]);
             ?>
             <p id="parent-team-help" class="team-parent-help" role="status" aria-live="polite"><?= __('Parents match the selected group. Section teams can also belong to a group-level parent.') ?></p>

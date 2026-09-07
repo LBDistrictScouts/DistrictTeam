@@ -80,6 +80,24 @@ existing Group and, where applicable, Section. These choices are remembered in
 `csv_unit_mappings` after a successful import. A selected Section must belong to
 the selected Group.
 
+### Creating the standard Group template
+
+After importing groups, sections, and CSV unit mappings, create the baseline Group
+structure with:
+
+```bash
+bin/cake teams:create_standard_group_template --dry-run
+bin/cake teams:create_standard_group_template
+bin/cake roles:create_standard_group_template --dry-run
+bin/cake roles:create_standard_group_template
+```
+
+For every Group, this creates `{group} Leadership Team` and `Trustee Board`, plus
+`{Group} Squirrels`, `{Group} Beavers`, `{Group} Cubs`, and `{Group} Scouts` only for matching sections in
+the saved CSV unit mappings. Run the roles command after the teams command to create
+the corresponding leadership, section, and trustee roles. Re-running either command
+adds only missing template records.
+
 Select the units to import using the unit checkboxes. Unselected units are excluded
 on the server, including their members, contacts, appointments and mapping changes.
 Click **Import selected units** to create members, contacts and mapped appointments
@@ -95,9 +113,9 @@ are preserved. If a member appears with different names in one file, the last ro
 use `02 Dec 2024`. Contacts are reused by member and contact value; email is
 preferred for appointments. Appointments match by member, mapped role and start
 date; repeat imports update their contact and any supplied end date.
-Start date becomes `effective_start_date`; End date becomes `effective_end_date`.
-An omitted End date column preserves existing dates, whereas a present but blank
-End date clears the date. New appointments without End date are open-ended.
+Start date becomes `effective_start_date`; an imported End date fills an open-ended
+appointment. Existing appointment end dates are preserved, including when the CSV
+has a blank End date. New appointments without End date are open-ended.
 A missing Start date column is rejected with instructions to include it; dates are
 never inferred from relative day counts. Invalid dates and end-before-start fail. Mapping several source
 combinations to the same role can therefore combine matching appointments.

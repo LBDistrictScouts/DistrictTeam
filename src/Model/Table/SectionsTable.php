@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Enum\SectionType;
+use Cake\Database\Type\EnumType;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -20,6 +22,7 @@ class SectionsTable extends Table
         $this->setTable('sections');
         $this->setDisplayField('section_name');
         $this->setPrimaryKey('id');
+        $this->getSchema()->setColumnType('section_type', EnumType::from(SectionType::class));
 
         $this->belongsTo('Groups', [
             'foreignKey' => 'group_id',
@@ -53,7 +56,7 @@ class SectionsTable extends Table
 
         $validator
             ->scalar('section_type')
-            ->inList('section_type', ['earlyyears', 'beavers', 'cubs', 'scouts', 'explorers'])
+            ->inList('section_type', array_map(fn(SectionType $type): string => $type->value, SectionType::cases()))
             ->requirePresence('section_type', 'create')
             ->notEmptyString('section_type');
 

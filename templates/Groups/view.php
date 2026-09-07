@@ -59,7 +59,7 @@ $typeLabel = $group->type?->label() ?? __('Unclassified');
                     <li>
                         <div>
                             <strong><?= h($section->section_name) ?></strong>
-                            <p><?= h(ucfirst($section->section_type)) ?></p>
+                            <p><?= h($section->section_type->label()) ?></p>
                         </div>
                         <?php if ($section->meeting_day || $section->meeting_start_time) : ?>
                         <span class="group-meeting-time">

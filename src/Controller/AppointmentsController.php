@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Enum\ContactMethodType;
+use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
 
 /**
@@ -77,10 +78,13 @@ class AppointmentsController extends AppController
             $contactMethods = $this->Appointments->MemberContactMethods->find()
                 ->where(['member_id IN' => array_keys($members)]);
             foreach ($contactMethods as $contactMethod) {
+                $contactMethod = $contactMethod instanceof EntityInterface
+                    ? $contactMethod->toArray()
+                    : $contactMethod;
                 $memberContactMethods[] = [
-                    'value' => $contactMethod->id,
-                    'text' => $contactMethod->contact_method,
-                    'data-member-id' => $contactMethod->member_id,
+                    'value' => $contactMethod['id'],
+                    'text' => $contactMethod['contact_method'],
+                    'data-member-id' => $contactMethod['member_id'],
                 ];
             }
         }
@@ -178,7 +182,17 @@ class AppointmentsController extends AppController
         }
         $roles = $this->Appointments->Roles->find('list', limit: 200)->all();
         $members = $this->Appointments->Members->find('list', limit: 200)->all();
-        $memberContactMethods = $this->Appointments->MemberContactMethods->find('list', limit: 200)->all();
+        $memberContactMethods = [];
+        foreach ($this->Appointments->MemberContactMethods->find() as $contactMethod) {
+            $contactMethod = $contactMethod instanceof EntityInterface
+                ? $contactMethod->toArray()
+                : $contactMethod;
+            $memberContactMethods[] = [
+                'value' => $contactMethod['id'],
+                'text' => $contactMethod['contact_method'],
+                'data-member-id' => $contactMethod['member_id'],
+            ];
+        }
         $this->set(compact('appointment', 'roles', 'members', 'memberContactMethods'));
     }
 

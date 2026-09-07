@@ -15,6 +15,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Section|null $section
  * @property int $sort_order
  * @property string $team_name
+ * @property \App\Model\Enum\TeamTemplate|null $template
  * @property string|null $slug
  * @property string|null $team_parent_id
  *
@@ -43,6 +44,7 @@ class Team extends Entity
         'tree_right' => false,
         'tree_level' => false,
         'team_name' => true,
+        'template' => true,
         'group_id' => true,
         'section_id' => true,
         'slug' => false,

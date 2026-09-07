@@ -247,7 +247,34 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame('2029-12-03', $appointment->effective_end_date->format('Y-m-d'));
         $rows[2]['End date'] = '';
         $importer->import($rows, $mapping);
-        $this->assertNull($this->fetchTable('Appointments')->get($appointment->id)->effective_end_date);
+        $this->assertSame('2029-12-03', $this->fetchTable('Appointments')->get($appointment->id)->effective_end_date->format('Y-m-d'));
+    }
+
+    /**
+     * REGRESSION GUARD: Do not remove or weaken this test. CSV data must never clear or replace an
+     * existing appointment end date, but an imported end date must fill a blank existing appointment.
+     */
+    public function testCsvEndDateOnlyFillsBlankExistingAppointment(): void
+    {
+        $importer = new MemberCsvImporter();
+        $csv = "First name,Last name,Membership number,Start date,End date,Communication email\n"
+            . "Ada,Lovelace,1001,01 Jan 2020,31 Dec 2026,ada@example.com\n";
+        $rows = $importer->read($this->upload($csv));
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222221'];
+
+        // The fixture appointment begins open-ended; the CSV may fill that blank end date.
+        $importer->import($rows, $mapping);
+        $appointment = $this->fetchTable('Appointments')->get('55555555-5555-4555-8555-555555555551');
+        $this->assertSame('2026-12-31', $appointment->effective_end_date->format('Y-m-d'));
+
+        // A date subsequently set on the record takes priority over a blank CSV date.
+        $appointment->effective_end_date = '2027-12-31';
+        $this->fetchTable('Appointments')->saveOrFail($appointment);
+        $rows[2]['End date'] = '';
+        $importer->import($rows, $mapping);
+
+        $appointment = $this->fetchTable('Appointments')->get($appointment->id);
+        $this->assertSame('2027-12-31', $appointment->effective_end_date->format('Y-m-d'));
     }
 
     public function testPhoneOnlyExportWithoutEndDate(): void

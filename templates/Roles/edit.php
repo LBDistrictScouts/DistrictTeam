@@ -21,6 +21,10 @@
             <?php
                 echo $this->Form->control('team_id', ['options' => $teams]);
                 echo $this->Form->control('name');
+                echo $this->Form->control('template', [
+                    'options' => \App\Model\Enum\RoleTemplate::options(),
+                    'empty' => __('No standard template'),
+                ]);
                 echo $this->Form->control('slug');
                 echo $this->Form->control('description');
                 echo $this->Form->control('is_lead', [

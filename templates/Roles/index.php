@@ -10,6 +10,7 @@
         'description' => __('See the responsibilities across your teams and where help is needed.'),
         'actions' => [
             ['label' => __('New Role'), 'url' => ['action' => 'add'], 'secondary' => false],
+            ['label' => __('Create standard roles'), 'url' => ['action' => 'createStandardGroupTemplate'], 'secondary' => true],
         ],
     ]) ?>
     <section class="workspace-table-panel" aria-label="<?= __('Roles') ?>">

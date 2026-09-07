@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Enum\RoleTemplate;
 use ArrayObject;
+use Cake\Database\Type\EnumType;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
@@ -46,6 +48,7 @@ class RolesTable extends Table
         $this->setTable('roles');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
+        $this->getSchema()->setColumnType('template', EnumType::from(RoleTemplate::class));
 
         $this->belongsTo('Teams', [
             'foreignKey' => 'team_id',
@@ -87,6 +90,8 @@ class RolesTable extends Table
             ->maxLength('slug', 255)
             ->notEmptyString('slug');
 
+        $validator->enum('template', RoleTemplate::class)->allowEmptyString('template');
+
         $validator
             ->scalar('description')
             ->maxLength('description', 255)
@@ -124,6 +129,11 @@ class RolesTable extends Table
         $rules->add($rules->isUnique(['group_id', 'slug']), [
             'errorField' => 'slug',
             'message' => __('This slug is already in use by this group'),
+        ]);
+        $rules->add($rules->isUnique(['group_id', 'template']), [
+            'errorField' => 'template',
+            'message' => __('This template is already in use by this group'),
+            'allowMultipleNulls' => true,
         ]);
         $rules->add(
             fn(EntityInterface $entity): bool => $entity->get('group_id') === null

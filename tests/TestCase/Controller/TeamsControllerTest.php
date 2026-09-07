@@ -28,6 +28,7 @@ class TeamsControllerTest extends TestCase
         'app.Members',
         'app.MemberContactMethods',
         'app.Appointments',
+        'app.CsvUnitMappings',
     ];
 
     /**
@@ -109,6 +110,33 @@ class TeamsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('The team could not be saved');
+    }
+
+    public function testCreateStandardGroupTemplatePreviewsAndCreatesMappedSections(): void
+    {
+        $this->saveCubUnitMapping();
+
+        $this->get('/teams/create-standard-group-template');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Create standard Group template');
+        $this->assertResponseContains('Proposed teams');
+        $this->assertResponseContains('First Scout Group Leadership Team');
+
+        $this->enableCsrfToken();
+        $this->post('/teams/create-standard-group-template', [
+            'teams' => [
+                ['team_name' => 'First Scout Group Leadership Team'],
+                ['team_name' => 'Cubs Team'],
+                ['team_name' => 'Trustee Board'],
+            ],
+        ]);
+        $this->assertRedirect('/teams');
+        $teams = $this->fetchTable('Teams');
+        $this->assertTrue($teams->exists(['team_name' => 'First Scout Group Leadership Team']));
+        $this->assertSame(
+            'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+            $teams->find()->where(['team_name' => 'Cubs Team'])->firstOrFail()->section_id,
+        );
     }
 
     /**
@@ -325,11 +353,26 @@ class TeamsControllerTest extends TestCase
         ]));
         $this->get('/teams/edit/' . $parentId);
         $this->assertResponseOk();
+        $this->assertResponseContains('name="template"');
+        $this->assertResponseContains('value="leadership-team">Leadership Team</option>');
+        $this->assertResponseNotContains('(object)App\\Model\\Enum\\TeamTemplate');
         $this->assertResponseNotContains('<option value="' . $parentId . '"');
         $this->assertResponseNotContains('<option value="' . $childId . '"');
         $this->assertResponseContains('value="' . $candidate->id . '"');
         $this->assertResponseContains('data-group-id="' . $groupId . '"');
         $this->assertResponseContains('data-section-id="cccccccc-cccc-4ccc-8ccc-cccccccccccc"');
         $this->assertResponseContains('team-parent-filter.js');
+    }
+
+    private function saveCubUnitMapping(): void
+    {
+        $unitMappings = $this->fetchTable('CsvUnitMappings');
+        $unitMappings->saveOrFail($unitMappings->newEntity([
+            'source_key' => str_repeat('a', 64),
+            'source_unit' => 'First Cubs',
+            'source_parent_unit' => '',
+            'group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            'section_id' => 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+        ]));
     }
 }

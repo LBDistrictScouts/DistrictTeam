@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Enum\TeamTemplate;
 use ArrayObject;
+use Cake\Database\Type\EnumType;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\ORM\Query\SelectQuery;
@@ -49,6 +51,7 @@ class TeamsTable extends Table
         $this->setTable('teams');
         $this->setDisplayField('team_name');
         $this->setPrimaryKey('id');
+        $this->getSchema()->setColumnType('template', EnumType::from(TeamTemplate::class));
 
         $this->belongsTo('Groups', ['foreignKey' => 'group_id']);
         $this->belongsTo('Sections', ['foreignKey' => 'section_id']);
@@ -190,6 +193,8 @@ class TeamsTable extends Table
             ->requirePresence('team_name', 'create')
             ->notEmptyString('team_name');
 
+        $validator->enum('template', TeamTemplate::class)->allowEmptyString('template');
+
         $validator
             ->uuid('team_parent_id')
             ->allowEmptyString('team_parent_id');
@@ -213,6 +218,11 @@ class TeamsTable extends Table
         $rules->add($rules->isUnique(['group_id', 'team_name']), [
             'errorField' => 'team_name',
             'message' => __('This team name is already in use by this group'),
+        ]);
+        $rules->add($rules->isUnique(['group_id', 'template']), [
+            'errorField' => 'template',
+            'message' => __('This template is already in use by this group'),
+            'allowMultipleNulls' => true,
         ]);
         $rules->add($rules->isUnique(['group_id', 'slug']), [
             'errorField' => 'slug',

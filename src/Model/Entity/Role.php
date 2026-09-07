@@ -13,6 +13,7 @@ use Cake\ORM\Entity;
  * @property string $group_id
  * @property string $name
  * @property string $slug
+ * @property \App\Model\Enum\RoleTemplate|null $template
  * @property string|null $description
  * @property bool $currently_filled
  * @property bool $is_lead
@@ -47,6 +48,7 @@ class Role extends Entity
         'group_id' => false,
         'name' => true,
         'slug' => false,
+        'template' => true,
         'description' => true,
         'currently_filled' => true,
         'is_lead' => true,

@@ -11,7 +11,7 @@ use Cake\ORM\Entity;
  * @property string|null $account_id
  * @property int $section_osm_id
  * @property string $section_name
- * @property string $section_type
+ * @property \App\Model\Enum\SectionType $section_type
  * @property string|null $meeting_start_time
  * @property string|null $meeting_end_time
  * @property string|null $meeting_day

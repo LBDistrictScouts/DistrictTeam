@@ -2,9 +2,9 @@
 /**
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Appointment $appointment
- * @var string[]|\Cake\Collection\CollectionInterface $roles
- * @var string[]|\Cake\Collection\CollectionInterface $members
- * @var string[]|\Cake\Collection\CollectionInterface $memberContactMethods
+ * @var \Cake\Collection\CollectionInterface|array<string> $roles
+ * @var \Cake\Collection\CollectionInterface|array<string> $members
+ * @var array<array<string, string>> $memberContactMethods
  */
 ?>
 <div class="workspace-page workspace-form-page">
@@ -17,7 +17,7 @@
         'actions' => [],
     ]) ?>
     <div class="workspace-form-panel">
-        <?= $this->Form->create($appointment) ?>
+        <?= $this->Form->create($appointment, ['id' => 'appointment-form']) ?>
         <fieldset>
             <legend><?= __('Appointment details') ?></legend>
             <?php
@@ -35,3 +35,28 @@
         <?= $this->Form->end() ?>
     </div>
 </div>
+
+<?php $this->Html->scriptStart(['block' => true]); ?>
+document.addEventListener('DOMContentLoaded', function () {
+    const memberSelect = document.getElementById('member-id');
+    const contactMethodSelect = document.getElementById('member-contact-method-id');
+    const contactMethods = Array.from(contactMethodSelect.options);
+
+    const updateContactMethods = function () {
+        const selectedId = contactMethodSelect.value;
+        const options = contactMethods.filter(function (option) {
+            return option.dataset.memberId === memberSelect.value;
+        });
+        contactMethodSelect.replaceChildren(...options);
+        if (options.some(option => option.value === selectedId)) {
+            contactMethodSelect.value = selectedId;
+        }
+        if (options.length === 0) {
+            contactMethodSelect.add(new Option('<?= h(__('No contact methods available')) ?>', ''));
+        }
+    };
+
+    memberSelect.addEventListener('change', updateContactMethods);
+    updateContactMethods();
+});
+<?php $this->Html->scriptEnd(); ?>

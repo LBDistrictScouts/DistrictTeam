@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\StandardGroupTemplateCreator;
+use Cake\Http\Response;
+use InvalidArgumentException;
+
 /**
  * Roles Controller
  *
@@ -61,6 +65,40 @@ class RolesController extends AppController
         }
         $teams = $this->Roles->Teams->find('treeList', limit: 200, spacer: '>> ')->toArray();
         $this->set(compact('role', 'teams'));
+    }
+
+    /**
+     * Review and create standard roles for already-created standard teams.
+     *
+     * @return \Cake\Http\Response|null
+     */
+    public function createStandardGroupTemplate(): ?Response
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $creator = new StandardGroupTemplateCreator();
+        $reviewOverrides = filter_var(
+            $this->request->is('post') ? $this->request->getData('review_overrides', false) : $this->request->getQuery('review_overrides', false),
+            FILTER_VALIDATE_BOOL,
+        );
+        $submittedRoles = [];
+        if ($this->request->is('post')) {
+            try {
+                $submittedRoles = $this->request->getData('roles', []);
+                if (!is_array($submittedRoles)) {
+                    throw new InvalidArgumentException('Invalid template selection.');
+                }
+                $count = $creator->createRoles(array_values($submittedRoles), $reviewOverrides);
+                $this->Flash->success($reviewOverrides ? __('{0} standard role names applied.', $count) : __('{0} standard roles created.', $count));
+
+                return $this->redirect(['action' => 'index']);
+            } catch (InvalidArgumentException $exception) {
+                $this->Flash->error(__('The standard roles were not created. {0}', $exception->getMessage()));
+            }
+        }
+        $roles = $creator->rolePlan($reviewOverrides);
+        $this->set(compact('roles', 'submittedRoles', 'reviewOverrides'));
+
+        return null;
     }
 
     /**

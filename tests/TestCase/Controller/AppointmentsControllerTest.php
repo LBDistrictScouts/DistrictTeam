@@ -85,6 +85,20 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('The appointment could not be saved');
     }
 
+    public function testAddRejectsAnotherMembersContactMethod(): void
+    {
+        $this->enableCsrfToken();
+        $this->post('/appointments/add', [
+            'role_id' => '22222222-2222-4222-8222-222222222222',
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'member_contact_method_id' => '44444444-4444-4444-8444-444444444442',
+            'effective_start_date' => '2020-01-01',
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('The appointment could not be saved');
+    }
+
     public function testAddPreselectsMemberAndRoleFromQueryString(): void
     {
         $this->get('/appointments/add?member_id=33333333-3333-4333-8333-333333333331&role_id=22222222-2222-4222-8222-222222222221');
@@ -107,6 +121,15 @@ class AppointmentsControllerTest extends TestCase
         $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
         $this->assertResponseOk();
         $this->assertResponseNotContains('name="active"');
+    }
+
+    public function testEditFiltersContactMethodsBySelectedMember(): void
+    {
+        $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('data-member-id="33333333-3333-4333-8333-333333333331"');
+        $this->assertResponseContains('contactMethods.filter');
     }
 
     /**

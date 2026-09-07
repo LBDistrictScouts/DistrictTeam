@@ -4,10 +4,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\Team;
+use App\Service\StandardGroupTemplateCreator;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Validation\Validation;
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Teams Controller
@@ -106,6 +108,38 @@ class TeamsController extends AppController
         }
         $this->setGroupSectionOptions($team);
         $this->set(compact('team'));
+    }
+
+    /**
+     * Preview and create the standard teams and roles for every Scout Group.
+     *
+     * @return \Cake\Http\Response|null|void
+     */
+    public function createStandardGroupTemplate()
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $creator = new StandardGroupTemplateCreator();
+        $reviewOverrides = filter_var(
+            $this->request->is('post') ? $this->request->getData('review_overrides', false) : $this->request->getQuery('review_overrides', false),
+            FILTER_VALIDATE_BOOL,
+        );
+        $submittedTeams = [];
+        if ($this->request->is('post')) {
+            try {
+                $submittedTeams = $this->request->getData('teams', []);
+                if (!is_array($submittedTeams)) {
+                    throw new InvalidArgumentException('Invalid template selection.');
+                }
+                $created = $creator->createTeams(array_values($submittedTeams), $reviewOverrides);
+                $this->Flash->success($reviewOverrides ? __('{0} standard team names applied.', $created) : __('{0} standard teams created.', $created));
+
+                return $this->redirect(['action' => 'index']);
+            } catch (InvalidArgumentException | RuntimeException $exception) {
+                $this->Flash->error(__('The standard template was not created. {0}', $exception->getMessage()));
+            }
+        }
+        $teams = $creator->teamPlan($reviewOverrides);
+        $this->set(compact('teams', 'submittedTeams', 'reviewOverrides'));
     }
 
     /**

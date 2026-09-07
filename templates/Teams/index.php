@@ -10,6 +10,7 @@
         'description' => __('Keep your team structure clear and everyone connected.'),
         'actions' => [
             ['label' => __('New Team'), 'url' => ['action' => 'add'], 'secondary' => false],
+            ['label' => __('Create standard Group template'), 'url' => ['action' => 'createStandardGroupTemplate'], 'secondary' => true],
             ['label' => __('Reorder teams'), 'url' => ['action' => 'reorder'], 'secondary' => true],
         ],
     ]) ?>

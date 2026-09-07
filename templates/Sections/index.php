@@ -37,7 +37,7 @@
                 <tr>
                     <td><?= h($item->section_name) ?></td>
                     <td><?= h($item->group->group_name) ?></td>
-                    <td><?= h($item->section_type) ?></td>
+                    <td><?= h($item->section_type->label()) ?></td>
                     <td><?= h($item->section_osm_id) ?></td>
                     <td><?= h($item->meeting_day) ?></td>
                     <td><?= h($item->meeting_start_time) ?></td>

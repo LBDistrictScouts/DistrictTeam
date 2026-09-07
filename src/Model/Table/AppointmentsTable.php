@@ -192,6 +192,16 @@ class AppointmentsTable extends Table
             $rules->existsIn(['member_contact_method_id'], 'MemberContactMethods'),
             ['errorField' => 'member_contact_method_id'],
         );
+        $rules->add(
+            fn(EntityInterface $entity): bool => $this->MemberContactMethods->exists([
+                'id' => $entity->get('member_contact_method_id'),
+                'member_id' => $entity->get('member_id'),
+            ]),
+            [
+                'errorField' => 'member_contact_method_id',
+                'message' => __('The contact method must belong to the selected member'),
+            ],
+        );
 
         return $rules;
     }

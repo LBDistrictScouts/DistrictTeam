@@ -186,6 +186,15 @@
 .workspace-mapped-grid summary { cursor: pointer; margin: 0; padding: 1.4rem 1.7rem; }
 .workspace-mapped-grid summary span { background: #dff4ec; border-radius: 999px; color: #00523f; display: inline-block; font-family: inherit; font-size: 1.15rem; margin-left: .5rem; min-width: 2.2rem; padding: .2rem .55rem; text-align: center; }
 .workspace-mapped-grid[open] summary { border-bottom: 1px solid #dce5df; }
+.standard-template-group + .standard-template-group { margin-top: 1.6rem; }
+.standard-template-group summary { align-items: center; display: flex; font-size: 1.8rem; gap: .8rem; min-height: 5.8rem; padding-bottom: 1.2rem; padding-top: 1.2rem; }
+.standard-template-group summary .button { font-size: 1rem; height: 2.4rem; letter-spacing: .05rem; line-height: 2.4rem; margin: 0 0 0 auto; padding: 0 1rem; }
+.standard-template-group .table-responsive, .standard-template-group table { margin-top: 0; padding-top: 0; }
+.standard-template-group td, .standard-template-group th { padding-bottom: .6rem; padding-top: .6rem; }
+.standard-template-group .input { margin: 0; }
+.standard-template-group .input label { font-size: 1.3rem; margin: 0; }
+.standard-template-group input[type='text'] { box-sizing: border-box; font-size: 1.3rem; height: 2.6rem; line-height: 1.2; margin: 0; min-height: 0; padding: 0 .7rem; }
+.standard-template-group input[type='checkbox'] { height: 1.5rem; margin: 0; vertical-align: middle; width: 1.5rem; }
 .workspace-mapped-grid .workspace-table-panel { border-radius: 0; }
 .workspace-mapping-table { border-radius: 1rem; }
 .workspace-mapping-table table { font-size: 1.3rem; }
