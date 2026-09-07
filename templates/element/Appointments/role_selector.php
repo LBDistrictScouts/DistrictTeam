@@ -8,16 +8,19 @@
 ?>
 <div class="appointment-role-selector" data-role-selector>
     <?= $this->Form->control('role_group_id', [
+        'type' => 'select',
         'label' => __('Group'),
         'empty' => __('Choose a group'),
         'required' => true,
     ]) ?>
     <?= $this->Form->control('role_section_id', [
+        'type' => 'select',
         'label' => __('Section'),
         'empty' => __('Any section'),
         'disabled' => true,
     ]) ?>
     <?= $this->Form->control('role_team_id', [
+        'type' => 'select',
         'label' => __('Team'),
         'empty' => __('Choose a team'),
         'disabled' => true,

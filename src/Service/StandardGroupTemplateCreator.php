@@ -188,6 +188,19 @@ class StandardGroupTemplateCreator
                 $teamIds[$team['key']] = $saved->id;
                 $result['teams']++;
             }
+            // Free the final names first so selected updates can safely exchange names.
+            foreach ($plan['roles'] as $index => $role) {
+                if (
+                    $role['action'] !== 'update'
+                    || !$selectedRoles[$index]['apply']
+                    || $role['existing_name'] === $selectedRoles[$index]['name']
+                ) {
+                    continue;
+                }
+                $entity = $roles->get($role['id']);
+                $entity->name = '__template-role-' . $role['id'];
+                $roles->saveOrFail($entity);
+            }
             foreach ($plan['roles'] as $index => $role) {
                 $teamIndex = $this->teamIndex($plan['teams'], $role['team_key']);
                 if (!$selectedRoles[$index]['apply']) {

@@ -34,6 +34,13 @@ use Cake\Validation\Validator;
 class MemberContactMethodsTable extends Table
 {
     /**
+     * Cached configured group email domains.
+     *
+     * @var list<string>|null
+     */
+    private ?array $cachedGroupDomains = null;
+
+    /**
      * Initialize method
      *
      * @param array<string, mixed> $config The configuration for the Table.
@@ -178,6 +185,7 @@ class MemberContactMethodsTable extends Table
      */
     public function refreshNonGroupEmailFlags(): int
     {
+        $this->cachedGroupDomains = null;
         $groupDomains = $this->groupDomains();
         $updated = 0;
         $contactMethods = $this->find()->select([
@@ -209,6 +217,9 @@ class MemberContactMethodsTable extends Table
      */
     private function groupDomains(): array
     {
+        if ($this->cachedGroupDomains !== null) {
+            return $this->cachedGroupDomains;
+        }
         $groupDomains = [];
         foreach (TableRegistry::getTableLocator()->get('Groups')->find()->select(['domains']) as $group) {
             foreach ($group->domains ?? [] as $groupDomain) {
@@ -218,7 +229,7 @@ class MemberContactMethodsTable extends Table
             }
         }
 
-        return $groupDomains;
+        return $this->cachedGroupDomains = array_values(array_unique($groupDomains));
     }
 
     /**

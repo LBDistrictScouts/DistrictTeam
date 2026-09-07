@@ -16,6 +16,14 @@ class MemberCsvImporterTest extends TestCase
         'app.Groups', 'app.Sections', 'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
     ];
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->fetchTable('Groups')->updateAll([
+            'domains' => ['district.example.org', 'lbdscouts.org.uk'],
+        ], ['id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']);
+    }
+
     public function testExampleAndRepeatUpload(): void
     {
         $result = $this->importCsv(file_get_contents(CONFIG . 'Examples/directory-example.csv'));
@@ -226,6 +234,9 @@ class MemberCsvImporterTest extends TestCase
 
     public function testOptionalColumnsAndOmittedVersusBlankEndDate(): void
     {
+        $this->fetchTable('Groups')->updateAll([
+            'domains' => ['district.example.org', 'example.com'],
+        ], ['id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']);
         $importer = new MemberCsvImporter();
         // Deliberately reordered, without any source-role columns or phone column.
         $csv = "End date,Last name,Communication email,Start date,Membership number,First name\n"
@@ -352,6 +363,21 @@ class MemberCsvImporterTest extends TestCase
             'role_id' => current($mapping), 'member_id' => $memberId,
         ])->firstOrFail();
         $this->assertSame($otherGroupEmail->id, $appointment->member_contact_method_id);
+    }
+
+    public function testAppointmentSkipsMembersWithOnlyNonGroupEmails(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = [2 => [
+            'First name' => 'Ada', 'Last name' => 'Lovelace', 'Membership number' => '1001',
+            'Start date' => '01 Aug 2026', 'Unit name' => '', 'Parent Team' => '', 'Team' => '', 'Role' => '',
+        ]];
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+
+        $result = $importer->import($rows, $mapping);
+
+        $this->assertSame(0, $result['appointments']);
+        $this->assertContains('Row 2: appointment skipped (no usable email contact method).', $result['warnings']);
     }
 
     public function testCsvEmailIsLowercasedBeforeDuplicateMatching(): void
@@ -564,7 +590,7 @@ class MemberCsvImporterTest extends TestCase
 
         $this->assertSame(2, $result['members']);
         $this->assertSame(1, $result['contacts']);
-        $this->assertSame(1, $result['appointments']);
+        $this->assertSame(0, $result['appointments']);
         $this->assertContains('Row 3: contact number skipped (invalid UK phone number).', $result['warnings']);
         $this->assertContains('Row 3: appointment skipped (no usable email contact method).', $result['warnings']);
     }

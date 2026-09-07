@@ -559,6 +559,7 @@ class MemberCsvImporter
         $contacts = $this->fetchTable('MemberContactMethods')->find()
             ->where([
                 'member_id' => $memberId,
+                'is_non_group_email' => false,
                 'contact_method_type IN' => [
                     ContactMethodType::Email->value,
                     ContactMethodType::EmailAlias->value,

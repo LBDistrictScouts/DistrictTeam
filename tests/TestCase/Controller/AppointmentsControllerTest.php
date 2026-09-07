@@ -242,6 +242,12 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('id="role-group-id"');
         $this->assertResponseContains('id="role-section-id"');
         $this->assertResponseContains('id="role-team-id"');
+        foreach (['role-group-id', 'role-section-id', 'role-team-id'] as $id) {
+            $this->assertMatchesRegularExpression(
+                '/<select[^>]*id="' . $id . '"/',
+                (string)$this->_response->getBody(),
+            );
+        }
         $this->assertResponseContains('appointment-role-selector.js');
 
         $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');

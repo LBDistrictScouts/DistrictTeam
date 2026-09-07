@@ -30,6 +30,14 @@ class MembersControllerTest extends TestCase
         'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
     ];
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->fetchTable('Groups')->updateAll([
+            'domains' => ['district.example.org', 'lbdscouts.org.uk'],
+        ], ['id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']);
+    }
+
     public function testUploadForm(): void
     {
         $this->get('/members/upload');
@@ -264,7 +272,7 @@ class MembersControllerTest extends TestCase
         $pending = ['token' => 'retry-token', 'rows' => [2 => [
             'First name' => 'Test', 'Last name' => 'Person', 'Membership number' => '9090',
             'Start date' => '01 Aug 2026', 'Unit name' => 'Unit A',
-            'Communication email' => 'test@example.com',
+            'Communication email' => 'test@district.example.org',
         ]]];
         $key = array_key_first((new MemberCsvImporter())->sources($pending['rows']));
         $this->session(['MemberCsvUpload' => $pending]);

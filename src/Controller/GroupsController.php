@@ -77,6 +77,12 @@ class GroupsController extends AppController
         }
         $trusteeAppointmentCount = $trusteeAppointmentsQuery->count();
         $trusteeBoardTarget = (int)Configure::read('TrusteeBoard.targetAppointments');
+        if ($group === null) {
+            $trusteeBoardCount = $this->fetchTable('Groups')->find()
+                ->where(['Groups.type' => GroupType::Group->value])
+                ->count();
+            $trusteeBoardTarget *= $trusteeBoardCount;
+        }
         $trusteeBoardRoles = [];
         $missingTrusteeRoles = [];
         $missingTrusteeMemberCount = 0;
@@ -121,7 +127,7 @@ class GroupsController extends AppController
             ->orderByAsc('Members.first_name')
             ->orderByAsc('MemberContactMethods.contact_method');
         if ($group !== null) {
-            $memberIds = $this->fetchTable('Appointments')->find()
+            $memberIds = $this->fetchTable('Appointments')->find('current')
                 ->select(['Appointments.member_id'])
                 ->innerJoinWith('Roles', function ($query) use ($group) {
                     return $query->where(['Roles.group_id' => $group->get('id')]);
