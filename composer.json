@@ -51,11 +51,13 @@
         "check": [
             "@test",
             "@cs-check",
+            "@static-analysis",
             "@openapi-check"
         ],
         "cs-check": "phpcs --colors -p",
         "cs-fix": "phpcbf --colors -p",
         "openapi-check": "npx --yes @redocly/cli@2.53.2 lint config/schema/openapi.json",
+        "static-analysis": "phpstan analyse --memory-limit=1G",
         "test": "phpunit --colors=always"
     }
 }

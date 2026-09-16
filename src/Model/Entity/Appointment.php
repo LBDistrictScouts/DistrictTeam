@@ -69,6 +69,8 @@ class Appointment extends Entity
      */
     protected function _getPublicOptOut(): bool
     {
-        return (bool)($this->member?->public_opt_out ?? false);
+        $member = $this->get('member');
+
+        return $member instanceof Member && $member->public_opt_out;
     }
 }
