@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Model\Enum\GroupType;
+use App\Model\Enum\RoleTemplate;
 use App\Model\Table\RolesTable;
 use App\Model\Table\TeamsTable;
 use BackedEnum;
@@ -38,7 +39,16 @@ class StandardGroupTemplateCreator
                         : $this->key((string)$group['id'], $definition['parent_template']),
                 ];
                 if ($teamId === null) {
-                    $plan['teams'][] = $teamProposal + ['action' => 'create'];
+                    $matchingTeamId = $this->teamIdByName(
+                        $existingTeams,
+                        (string)$group['id'],
+                        $definition['team_name'],
+                    );
+                    if ($matchingTeamId === null) {
+                        $plan['teams'][] = $teamProposal + ['action' => 'create'];
+                    } else {
+                        $teamIds[$teamKey] = $matchingTeamId;
+                    }
                 } elseif ($reviewOverrides && $this->teamName($existingTeams, $teamId) !== $definition['team_name']) {
                     $plan['teams'][] = $teamProposal + [
                         'action' => 'update',
@@ -53,6 +63,7 @@ class StandardGroupTemplateCreator
                         'key' => $this->key($teamKey, $roleTemplate), 'team_key' => $teamKey,
                         'team_name' => $definition['team_name'], 'group_id' => $group['id'],
                         'group_name' => $group['group_name'], 'role_name' => $roleName, 'template' => $roleTemplate,
+                        'team_template' => $definition['template'],
                         'is_lead' => $isLead, 'multi_member_role' => $multiMember,
                         'is_trustee_role' => $isTrusteeRole,
                     ];
@@ -84,17 +95,7 @@ class StandardGroupTemplateCreator
     /** @return list<array<string, mixed>> */
     public function rolePlan(bool $reviewOverrides = false): array
     {
-        $teamTemplates = [];
-        foreach ($this->teams()->find()->select(['group_id', 'template'])->enableHydration(false) as $team) {
-            if ($team['template'] !== null) {
-                $teamTemplates[$this->key((string)$team['group_id'], $this->templateValue($team['template']))] = true;
-            }
-        }
-
-        return array_values(array_filter(
-            $this->plan($reviewOverrides)['roles'],
-            fn(array $role): bool => isset($teamTemplates[$role['team_key']]),
-        ));
+        return $this->plan($reviewOverrides)['roles'];
     }
 
     /** @param list<array{team_name?: mixed, skip?: mixed}> $selections @return int */
@@ -112,11 +113,13 @@ class StandardGroupTemplateCreator
     /** @param list<array{role_name?: mixed, skip?: mixed}> $selections @return int */
     public function createRoles(array $selections, bool $reviewOverrides = false): int
     {
-        if ($this->teamPlan() !== []) {
-            throw new InvalidArgumentException('Create the standard teams before creating standard roles.');
-        }
+        $plan = $this->plan($reviewOverrides);
 
-        return $this->create([], $selections, $reviewOverrides)['roles'];
+        return $this->create(
+            array_map(fn(array $team): array => ['team_name' => $team['team_name']], $plan['teams']),
+            $selections,
+            $reviewOverrides,
+        )['roles'];
     }
 
     /** @return array{teams: int, roles: int} */
@@ -155,6 +158,19 @@ class StandardGroupTemplateCreator
             if ($team['template'] !== null) {
                 $teamKey = $this->key((string)$team['group_id'], $this->templateValue($team['template']));
                 $teamIds[$teamKey] = (string)$team['id'];
+            }
+        }
+        foreach ($plan['roles'] as $role) {
+            if (isset($teamIds[$role['team_key']])) {
+                continue;
+            }
+            $teamId = $this->teamIdByName(
+                $existingTeams,
+                (string)$role['group_id'],
+                (string)$role['team_name'],
+            );
+            if ($teamId !== null) {
+                $teamIds[$role['team_key']] = $teamId;
             }
         }
         $result = ['teams' => 0, 'roles' => 0];
@@ -381,6 +397,18 @@ class StandardGroupTemplateCreator
         throw new InvalidArgumentException('The proposed template has changed. Reload the page and try again.');
     }
 
+    /** @param list<array<string, mixed>> $teams */
+    private function teamIdByName(array $teams, string $groupId, string $name): ?string
+    {
+        foreach ($teams as $team) {
+            if ((string)$team['group_id'] === $groupId && (string)$team['team_name'] === $name) {
+                return (string)$team['id'];
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @param list<array<string, mixed>> $roles
      * @return array<string, mixed>|null
@@ -410,8 +438,8 @@ class StandardGroupTemplateCreator
     private function sourceData(): array
     {
         $groups = $this->fetchTable('Groups')->find()
-            ->select(['id', 'group_name'])
-            ->where(['type' => GroupType::Group->value])
+            ->select(['id', 'group_name', 'type'])
+            ->where(['type IN' => [GroupType::Group->value, GroupType::District->value]])
             ->orderByAsc('sort_order')
             ->orderByAsc('group_name')
             ->enableHydration(false)
@@ -448,6 +476,15 @@ class StandardGroupTemplateCreator
      */
     private function definitions(array $group, array $sections): array
     {
+        $isDistrict = $this->templateValue($group['type']) === GroupType::District->value;
+        $leadVolunteerName = $isDistrict ? 'District Lead Volunteer' : 'Group Lead Volunteer';
+        $leadVolunteerTemplate = RoleTemplate::LeadVolunteer->value;
+        $leadershipTeamMemberName = $isDistrict
+            ? 'District Leadership Team Member'
+            : 'Group Leadership Team Member';
+        $leadershipTeamMemberTemplate = RoleTemplate::LeadershipTeamMember->value;
+        $treasurerName = $isDistrict ? 'District Treasurer' : 'Group Treasurer';
+        $treasurerTemplate = RoleTemplate::Treasurer->value;
         $definitions = [[
             'team_name' => $group['group_name'] . ' Leadership Team',
             'template' => 'leadership-team',
@@ -457,8 +494,8 @@ class StandardGroupTemplateCreator
             'section_id' => null,
             'section_name' => null,
             'roles' => [
-                ['Group Lead Volunteer', 'group-lead-volunteer', true, false, true],
-                ['Group Leadership Team Member', 'group-leadership-team-member', false, true, false],
+                [$leadVolunteerName, $leadVolunteerTemplate, true, false, true],
+                [$leadershipTeamMemberName, $leadershipTeamMemberTemplate, false, true, false],
             ],
         ]];
         foreach ($sections as $section) {
@@ -470,11 +507,11 @@ class StandardGroupTemplateCreator
                 'parent_template' => 'leadership-team',
                 'group_id' => $group['id'],
                 'group_name' => $group['group_name'],
-                'section_id' => $section['id'],
-                'section_name' => $section['section_name'],
-                'roles' => [
-                    [$name . ' Team Leader', $template . '-team-leader', true, false, false],
-                    [$name . ' Team Member', $template . '-team-member', false, true, false],
+            'section_id' => $section['id'],
+            'section_name' => $section['section_name'],
+            'roles' => [
+                [$name . ' Team Leader', $this->sectionRoleTemplate($template, true), true, false, false],
+                [$name . ' Team Member', $this->sectionRoleTemplate($template, false), false, true, false],
                 ],
             ];
         }
@@ -487,9 +524,9 @@ class StandardGroupTemplateCreator
             'section_id' => null,
             'section_name' => null,
             'roles' => [
-                ['Trustee Board Chair', 'trustee-board-chair', true, false, true],
-                ['Group Treasurer', 'group-treasurer', false, false, true],
-                ['Trustee Board Member', 'trustee-board-member', false, true, true],
+                ['Trustee Board Chair', RoleTemplate::TrusteeBoardChair->value, true, false, true],
+                [$treasurerName, $treasurerTemplate, false, false, true],
+                ['Trustee Board Member', RoleTemplate::TrusteeBoardMember->value, false, true, true],
             ],
         ];
 
@@ -570,6 +607,30 @@ class StandardGroupTemplateCreator
             'cubs' => 'cub-section',
             'scouts' => 'scout-section',
             default => throw new InvalidArgumentException("Unsupported section type: {$type}"),
+        };
+    }
+
+    /**
+     * @param string $sectionTemplate Standard section team template.
+     * @param bool $isLead Whether the role leads the section team.
+     * @return string
+     */
+    private function sectionRoleTemplate(string $sectionTemplate, bool $isLead): string
+    {
+        return match ($sectionTemplate) {
+            'squirrel-section' => $isLead
+                ? RoleTemplate::SquirrelSectionTeamLeader->value
+                : RoleTemplate::SquirrelSectionTeamMember->value,
+            'beaver-section' => $isLead
+                ? RoleTemplate::BeaverSectionTeamLeader->value
+                : RoleTemplate::BeaverSectionTeamMember->value,
+            'cub-section' => $isLead
+                ? RoleTemplate::CubSectionTeamLeader->value
+                : RoleTemplate::CubSectionTeamMember->value,
+            'scout-section' => $isLead
+                ? RoleTemplate::ScoutSectionTeamLeader->value
+                : RoleTemplate::ScoutSectionTeamMember->value,
+            default => throw new InvalidArgumentException("Unsupported section template: {$sectionTemplate}"),
         };
     }
 

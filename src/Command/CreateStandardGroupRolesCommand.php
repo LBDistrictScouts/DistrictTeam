@@ -21,7 +21,7 @@ class CreateStandardGroupRolesCommand extends Command
     /** @return string */
     public static function getDescription(): string
     {
-        return 'Create missing standard roles for standard Scout Group teams.';
+        return 'Create missing standard roles for standard Scout Group and District teams.';
     }
 
     /** @return \Cake\Console\ConsoleOptionParser */

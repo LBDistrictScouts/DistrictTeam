@@ -10,8 +10,8 @@ enum RoleTemplate: string implements EnumLabelInterface
 {
     use EnumLabelTrait;
 
-    case GroupLeadVolunteer = 'group-lead-volunteer';
-    case GroupLeadershipTeamMember = 'group-leadership-team-member';
+    case LeadVolunteer = 'lead-volunteer';
+    case LeadershipTeamMember = 'leadership-team-member';
     case SquirrelSectionTeamLeader = 'squirrel-section-team-leader';
     case SquirrelSectionTeamMember = 'squirrel-section-team-member';
     case BeaverSectionTeamLeader = 'beaver-section-team-leader';
@@ -21,7 +21,7 @@ enum RoleTemplate: string implements EnumLabelInterface
     case ScoutSectionTeamLeader = 'scout-section-team-leader';
     case ScoutSectionTeamMember = 'scout-section-team-member';
     case TrusteeBoardChair = 'trustee-board-chair';
-    case GroupTreasurer = 'group-treasurer';
+    case Treasurer = 'treasurer';
     case TrusteeBoardMember = 'trustee-board-member';
 
     /**

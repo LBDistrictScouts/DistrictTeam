@@ -378,6 +378,8 @@ class MembersControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('ada@example.com');
+        $this->assertResponseContains('Non-group email');
+        $this->assertResponseContains('class="member-contact-non-group-email"');
         $this->assertResponseContains('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/44444444-4444-4444-8444-444444444441');
         $this->assertResponseContains('Are you sure you want to delete this contact method?');
     }
@@ -402,6 +404,7 @@ class MembersControllerTest extends TestCase
         $member = $this->getTableLocator()->get('Members')
             ->find()->where(['membership_number' => 3001])->firstOrFail();
         $this->assertTrue($member->active);
+        $this->assertFalse($member->public_opt_out);
     }
 
     public function testAddValidationFailure(): void
@@ -413,15 +416,17 @@ class MembersControllerTest extends TestCase
         $this->assertResponseContains('The member could not be saved');
     }
 
-    public function testMemberFormsDoNotOfferAnActiveControl(): void
+    public function testMemberFormsOfferPublicOptOutButNotAnActiveControl(): void
     {
         $this->get('/members/add');
         $this->assertResponseOk();
         $this->assertResponseNotContains('name="active"');
+        $this->assertResponseContains('name="public_opt_out"');
 
         $this->get('/members/edit/33333333-3333-4333-8333-333333333331');
         $this->assertResponseOk();
         $this->assertResponseNotContains('name="active"');
+        $this->assertResponseContains('name="public_opt_out"');
     }
 
     /**
@@ -438,12 +443,14 @@ class MembersControllerTest extends TestCase
             'last_name' => 'Lovelace',
             'membership_number' => 1001,
             'join_date' => '2020-01-01',
+            'public_opt_out' => true,
         ]);
 
         $this->assertRedirect('/members');
         $member = $this->getTableLocator()->get('Members')
             ->get('33333333-3333-4333-8333-333333333331');
         $this->assertSame('Augusta Ada', $member->first_name);
+        $this->assertTrue($member->public_opt_out);
     }
 
     public function testEditValidationFailure(): void

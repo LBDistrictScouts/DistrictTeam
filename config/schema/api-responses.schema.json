@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://district-team.example/schema/api-responses.schema.json",
+  "title": "District Team API responses",
+  "description": "Response signatures for the read-only /api endpoints.",
+  "definitions": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pagination": {
+      "type": "object",
+      "required": ["page", "page_count", "per_page", "total"],
+      "properties": {
+        "page": {"type": "integer", "minimum": 1},
+        "page_count": {"type": "integer", "minimum": 0},
+        "per_page": {"type": "integer", "minimum": 1},
+        "total": {"type": "integer", "minimum": 0}
+      }
+    },
+    "group": {
+      "type": "object",
+      "required": ["id", "group_name", "type", "domains"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "group_name": {"type": "string"},
+        "group_osm_id": {"type": ["integer", "null"]},
+        "sort_order": {"type": ["integer", "null"]},
+        "type": {"type": ["string", "null"], "enum": ["district", "group", null]},
+        "domains": {"type": ["array", "null"], "items": {"type": "string"}}
+      }
+    },
+    "section": {
+      "type": "object",
+      "required": ["id", "group_id", "section_osm_id", "section_name", "section_type"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "group_id": {"$ref": "#/definitions/uuid"},
+        "section_osm_id": {"type": "integer"},
+        "section_name": {"type": "string"},
+        "section_type": {"type": "string"},
+        "meeting_start_time": {"type": ["string", "null"]},
+        "meeting_end_time": {"type": ["string", "null"]},
+        "meeting_day": {"type": ["string", "null"]}
+      }
+    },
+    "member": {
+      "type": "object",
+      "required": ["id", "first_name", "last_name", "public_opt_out", "full_name", "active"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "first_name": {"type": "string"},
+        "last_name": {"type": "string"},
+        "join_date": {"type": "string", "format": "date"},
+        "leave_date": {"type": ["string", "null"], "format": "date"},
+        "public_opt_out": {"type": "boolean"},
+        "full_name": {"type": "string"},
+        "active": {"type": "boolean"},
+        "member_contact_methods": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/member_contact_method"}
+        }
+      }
+    },
+    "member_contact_method": {
+      "type": "object",
+      "required": ["id", "member_id", "contact_method", "contact_method_type", "is_non_group_email"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "member_id": {"$ref": "#/definitions/uuid"},
+        "contact_method": {"type": "string"},
+        "contact_method_type": {"type": "string"},
+        "is_non_group_email": {"type": "boolean"},
+        "member": {"$ref": "#/definitions/member"}
+      }
+    },
+    "appointment": {
+      "type": "object",
+      "required": ["id", "role_id", "member_id", "public_opt_out", "active"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "role_id": {"$ref": "#/definitions/uuid"},
+        "member_id": {"$ref": "#/definitions/uuid"},
+        "member_contact_method_id": {"$ref": "#/definitions/uuid"},
+        "effective_start_date": {"type": "string", "format": "date"},
+        "effective_end_date": {"type": ["string", "null"], "format": "date"},
+        "public_opt_out": {"type": "boolean"},
+        "active": {"type": "boolean"},
+        "member": {"$ref": "#/definitions/member"},
+        "member_contact_method": {"$ref": "#/definitions/member_contact_method"}
+      }
+    },
+    "role": {
+      "type": "object",
+      "required": ["id", "team_id", "name", "slug", "currently_filled", "is_lead", "multi_member_role", "staffing_status"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "team_id": {"$ref": "#/definitions/uuid"},
+        "group_id": {"$ref": "#/definitions/uuid"},
+        "name": {"type": "string"},
+        "slug": {"type": "string"},
+        "description": {"type": ["string", "null"]},
+        "currently_filled": {"type": "boolean"},
+        "is_lead": {"type": "boolean"},
+        "multi_member_role": {"type": "boolean"},
+        "is_trustee_role": {"type": "boolean"},
+        "is_covered_until": {"type": ["string", "null"], "format": "date"},
+        "staffing_status": {"type": "string", "enum": ["vacant", "covered", "filled", "recruiting"]},
+        "team": {"$ref": "#/definitions/team"},
+        "current_appointments": {"type": "array", "items": {"$ref": "#/definitions/appointment"}}
+      }
+    },
+    "team": {
+      "type": "object",
+      "required": ["id", "group_id", "section_id", "team_name", "sort_order"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "group_id": {"$ref": "#/definitions/uuid"},
+        "section_id": {"type": ["string", "null"], "format": "uuid"},
+        "team_name": {"type": "string"},
+        "template": {"type": ["string", "null"]},
+        "slug": {"type": ["string", "null"]},
+        "team_parent_id": {"type": ["string", "null"], "format": "uuid"},
+        "sort_order": {"type": "integer"},
+        "group": {"$ref": "#/definitions/group"},
+        "section": {"anyOf": [{"$ref": "#/definitions/section"}, {"type": "null"}]},
+        "parent_team": {"anyOf": [{"$ref": "#/definitions/team"}, {"type": "null"}]},
+        "sub_teams": {"type": "array", "items": {"$ref": "#/definitions/team"}},
+        "team_lead": {"anyOf": [{"$ref": "#/definitions/role"}, {"type": "null"}]},
+        "roles": {"type": "array", "items": {"$ref": "#/definitions/role"}}
+      }
+    },
+    "team_response": {
+      "allOf": [
+        {"$ref": "#/definitions/team"},
+        {
+          "required": ["group", "section", "sub_teams"],
+          "properties": {
+            "group": {"$ref": "#/definitions/group"},
+            "section": {"anyOf": [{"$ref": "#/definitions/section"}, {"type": "null"}]},
+            "sub_teams": {"type": "array", "items": {"$ref": "#/definitions/team"}}
+          }
+        }
+      ]
+    },
+    "collection": {
+      "type": "object",
+      "required": ["data", "pagination"],
+      "properties": {
+        "data": {"type": "array"},
+        "pagination": {"$ref": "#/definitions/pagination"}
+      }
+    },
+    "teams_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/team_response"}}}}
+      ]
+    },
+    "roles_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/role"}}}}
+      ]
+    },
+    "members_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/member"}}}}
+      ]
+    },
+    "appointments_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/appointment"}}}}
+      ]
+    },
+    "member_contact_methods_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/member_contact_method"}}}}
+      ]
+    },
+    "record": {
+      "type": "object",
+      "required": ["data"],
+      "properties": {"data": {"type": "object"}}
+    },
+    "team_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/team_response"}}}]},
+    "role_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/role"}}}]},
+    "member_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member"}}}]},
+    "appointment_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/appointment"}}}]},
+    "member_contact_method_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member_contact_method"}}}]},
+    "member_search": {
+      "type": "object",
+      "required": ["results", "pagination"],
+      "properties": {
+        "results": {"type": "array", "items": {"type": "object", "required": ["id", "text"], "properties": {"id": {"$ref": "#/definitions/uuid"}, "text": {"type": "string"}}}},
+        "pagination": {"type": "object", "required": ["more"], "properties": {"more": {"type": "boolean"}}}
+      }
+    },
+    "appointment_contact_methods": {
+      "type": "object",
+      "required": ["results"],
+      "properties": {
+        "results": {"type": "array", "items": {"type": "object", "required": ["id", "text"], "properties": {"id": {"$ref": "#/definitions/uuid"}, "text": {"type": "string"}}}}
+      }
+    }
+  }
+}

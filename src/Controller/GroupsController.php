@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Section;
 use App\Model\Entity\Team;
 use App\Model\Enum\GroupType;
+use App\Model\Enum\RoleTemplate;
 use Cake\Core\Configure;
 use Cake\I18n\Date;
 
@@ -101,13 +102,18 @@ class GroupsController extends AppController
             foreach ($trusteeBoardRoles as $trusteeBoardRole) {
                 $rolesByTemplate[$trusteeBoardRole->template->value ?? ''] = $trusteeBoardRole;
             }
-            foreach (
-                [
-                    'group-lead-volunteer' => __('Group Lead Volunteer'),
-                    'trustee-board-chair' => __('Trustee Board Chair'),
-                    'group-treasurer' => __('Group Treasurer'),
-                ] as $template => $roleName
-            ) {
+            $standardTrusteeRoles = $group->get('type') === GroupType::District
+                ? [
+                    RoleTemplate::LeadVolunteer->value => __('District Lead Volunteer'),
+                    RoleTemplate::TrusteeBoardChair->value => __('Trustee Board Chair'),
+                    RoleTemplate::Treasurer->value => __('District Treasurer'),
+                ]
+                : [
+                    RoleTemplate::LeadVolunteer->value => __('Group Lead Volunteer'),
+                    RoleTemplate::TrusteeBoardChair->value => __('Trustee Board Chair'),
+                    RoleTemplate::Treasurer->value => __('Group Treasurer'),
+                ];
+            foreach ($standardTrusteeRoles as $template => $roleName) {
                 $trusteeBoardRole = $rolesByTemplate[$template] ?? null;
                 if ($trusteeBoardRole === null || $trusteeBoardRole->get('current_appointments') === []) {
                     $missingTrusteeRoles[] = $roleName;

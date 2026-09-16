@@ -31,7 +31,7 @@ class StandardGroupTemplateCreatorTest extends TestCase
 
         $result = (new StandardGroupTemplateCreator())->run();
 
-        $this->assertSame(['teams' => 4, 'roles' => 9], $result);
+        $this->assertSame(['teams' => 6, 'roles' => 14], $result);
         $teams = $this->fetchTable('Teams');
         $leadership = $teams->find()->where(['team_name' => 'First Scout Group Leadership Team'])->firstOrFail();
         $cubs = $teams->find()->where(['team_name' => 'First Scout Group Cubs'])->firstOrFail();
@@ -39,15 +39,30 @@ class StandardGroupTemplateCreatorTest extends TestCase
         $this->assertSame('cccccccc-cccc-4ccc-8ccc-cccccccccccc', $cubs->section_id);
         $this->assertSame($leadership->id, $cubs->team_parent_id);
         $this->assertTrue($teams->exists(['team_name' => 'First Scout Group Squirrels', 'template' => 'squirrel-section']));
-        $trusteeBoard = $teams->find()->where(['team_name' => 'Trustee Board'])->firstOrFail();
+        $trusteeBoard = $teams->find()->where([
+            'group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            'team_name' => 'Trustee Board',
+        ])->firstOrFail();
         $this->assertSame($leadership->id, $trusteeBoard->team_parent_id);
         $this->assertTrue($this->fetchTable('Roles')->exists(['team_id' => $cubs->id, 'name' => 'First Scout Group Cubs Team Leader', 'is_lead' => true]));
         $this->assertTrue($this->fetchTable('Roles')->exists(['team_id' => $cubs->id, 'name' => 'First Scout Group Cubs Team Member', 'multi_member_role' => true]));
         $this->assertTrue($this->fetchTable('Roles')->exists([
-            'name' => 'Group Lead Volunteer', 'is_trustee_role' => true,
+            'name' => 'Group Lead Volunteer', 'template' => 'lead-volunteer', 'is_trustee_role' => true,
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'name' => 'Group Leadership Team Member', 'template' => 'leadership-team-member',
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'name' => 'District Lead Volunteer',
+            'template' => 'lead-volunteer',
+            'is_trustee_role' => true,
         ]));
         $this->assertTrue($this->fetchTable('Roles')->exists([
             'name' => 'Trustee Board Chair', 'is_trustee_role' => true,
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'name' => 'Group Treasurer', 'template' => 'treasurer', 'is_trustee_role' => true,
         ]));
         $this->assertFalse($this->fetchTable('Roles')->exists([
             'name' => 'First Scout Group Cubs Team Leader', 'is_trustee_role' => true,
@@ -86,5 +101,58 @@ class StandardGroupTemplateCreatorTest extends TestCase
             ['role_name' => 'First Scout Group Cubs Team Leader', 'apply' => true],
         ], true);
         $this->assertFalse($this->fetchTable('Roles')->get($leader->id)->is_trustee_role);
+    }
+
+    public function testCreateRolesCreatesMissingDistrictTeamsAndRoles(): void
+    {
+        $teams = $this->fetchTable('Teams');
+        $districtLeadershipTeam = $teams->saveOrFail($teams->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_name' => 'District Leadership Team',
+        ]));
+        $creator = new StandardGroupTemplateCreator();
+        $roles = $creator->rolePlan();
+        $districtRoles = array_values(array_filter(
+            $roles,
+            static fn(array $role): bool => $role['group_id'] === 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        ));
+
+        $this->assertCount(5, $districtRoles);
+        $this->assertSame([
+            'District Lead Volunteer',
+            'District Leadership Team Member',
+            'Trustee Board Chair',
+            'District Treasurer',
+            'Trustee Board Member',
+        ], array_column($districtRoles, 'role_name'));
+
+        $created = $creator->createRoles(array_map(
+            static fn(array $role): array => ['role_name' => $role['role_name']],
+            $roles,
+        ));
+
+        $this->assertSame(10, $created);
+        $this->assertTrue($teams->exists([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'team_name' => 'District Leadership Team',
+        ]));
+        $this->assertTrue($teams->exists([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'team_name' => 'Trustee Board',
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_id' => $districtLeadershipTeam->id,
+            'name' => 'District Lead Volunteer',
+            'template' => 'lead-volunteer',
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'name' => 'Trustee Board Chair',
+            'template' => 'trustee-board-chair',
+        ]));
+        $this->assertTrue($this->fetchTable('Roles')->exists([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'name' => 'Trustee Board Member',
+            'template' => 'trustee-board-member',
+        ]));
     }
 }

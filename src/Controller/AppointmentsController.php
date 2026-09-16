@@ -122,6 +122,7 @@ class AppointmentsController extends AppController
         }
         $roles = $this->Appointments->Roles->find('list')->orderByAsc('name')->all();
         $roleSelectorData = $this->roleSelectorData();
+        $teamSelectorData = $this->teamSelectorData();
         $members = $this->selectedMemberOptions($appointment);
         $memberContactMethods = [];
         if ($members) {
@@ -147,13 +148,16 @@ class AppointmentsController extends AppController
             }
         }
         $contactMethodTypes = $this->contactMethodTypes();
+        $appointmentContactMethodTypes = $this->appointmentContactMethodTypes();
         $this->set(compact(
             'appointment',
             'roles',
             'roleSelectorData',
+            'teamSelectorData',
             'members',
             'memberContactMethods',
             'contactMethodTypes',
+            'appointmentContactMethodTypes',
         ));
     }
 
@@ -243,6 +247,7 @@ class AppointmentsController extends AppController
         }
         $roles = $this->Appointments->Roles->find('list')->orderByAsc('name')->all();
         $roleSelectorData = $this->roleSelectorData();
+        $teamSelectorData = $this->teamSelectorData();
         $members = $this->selectedMemberOptions($appointment);
         $memberContactMethods = [];
         $contactMethodConditions = [
@@ -269,7 +274,16 @@ class AppointmentsController extends AppController
                 'data-member-id' => $contactMethod['member_id'],
             ];
         }
-        $this->set(compact('appointment', 'roles', 'roleSelectorData', 'members', 'memberContactMethods'));
+        $appointmentContactMethodTypes = $this->appointmentContactMethodTypes();
+        $this->set(compact(
+            'appointment',
+            'roles',
+            'roleSelectorData',
+            'teamSelectorData',
+            'members',
+            'memberContactMethods',
+            'appointmentContactMethodTypes',
+        ));
     }
 
     /**
@@ -307,6 +321,16 @@ class AppointmentsController extends AppController
         return $contactMethodTypes;
     }
 
+    /** @return array<int, string> */
+    private function appointmentContactMethodTypes(): array
+    {
+        return array_intersect_key($this->contactMethodTypes(), array_flip([
+            ContactMethodType::Email->value,
+            ContactMethodType::EmailAlias->value,
+            ContactMethodType::EmailGroup->value,
+        ]));
+    }
+
     /** @return array<string, string> */
     private function selectedMemberOptions(Appointment $appointment): array
     {
@@ -326,57 +350,18 @@ class AppointmentsController extends AppController
     }
 
     /**
-     * Return the group, section, team and role relationships used by the
-     * cascading role selector on appointment forms.
+     * Return the role relationships used by the cascading role selector on appointment forms.
      *
-     * @return array{groups: list<array{id: string, text: string}>, sections: list<array{id: string, groupId: string, text: string}>, teams: list<array{id: string, groupId: string, sectionId: string, text: string}>, roles: list<array{id: string, teamId: string, text: string}>}
+     * @return array{roles: list<array{id: string, teamId: string, text: string}>}
      */
     private function roleSelectorData(): array
     {
         $roles = $this->Appointments->Roles;
-        $groups = $roles->Groups->find()
-            ->select(['id', 'group_name'])
-            ->orderByAsc('sort_order')
-            ->orderByAsc('group_name');
-        $sections = $roles->Groups->Sections->find()
-            ->select(['id', 'group_id', 'section_name'])
-            ->orderByAsc('section_name');
-        $teams = $roles->Teams->find()
-            ->select(['id', 'group_id', 'section_id', 'team_name'])
-            ->orderByAsc('tree_left')
-            ->orderByAsc('team_name');
         $roleList = $roles->find()
             ->select(['id', 'team_id', 'name'])
             ->orderByAsc('name');
 
-        $data = ['groups' => [], 'sections' => [], 'teams' => [], 'roles' => []];
-        foreach ($groups->all() as $group) {
-            if ($group instanceof EntityInterface) {
-                $data['groups'][] = [
-                    'id' => (string)$group->get('id'),
-                    'text' => (string)$group->get('group_name'),
-                ];
-            }
-        }
-        foreach ($sections->all() as $section) {
-            if ($section instanceof EntityInterface) {
-                $data['sections'][] = [
-                    'id' => (string)$section->get('id'),
-                    'groupId' => (string)$section->get('group_id'),
-                    'text' => (string)$section->get('section_name'),
-                ];
-            }
-        }
-        foreach ($teams->all() as $team) {
-            if ($team instanceof EntityInterface) {
-                $data['teams'][] = [
-                    'id' => (string)$team->get('id'),
-                    'groupId' => (string)$team->get('group_id'),
-                    'sectionId' => (string)($team->get('section_id') ?? ''),
-                    'text' => (string)$team->get('team_name'),
-                ];
-            }
-        }
+        $data = ['roles' => []];
         foreach ($roleList->all() as $role) {
             if ($role instanceof EntityInterface) {
                 $data['roles'][] = [

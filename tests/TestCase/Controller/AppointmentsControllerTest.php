@@ -223,8 +223,12 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('data-member-search-url="/api/member-search"');
         $this->assertResponseContains('data-member-contact-methods-url="/api/appointment-contact-methods"');
-        $this->assertResponseContains('class="appointment-member-selection"');
+        $this->assertResponseContains('class="appointment-selection-action"');
         $this->assertResponseContains('appointment-member-select.js');
+        $this->assertResponseContains('New Contact Method');
+        $this->assertResponseContains('id="contact-method-modal"');
+        $this->assertResponseContains('contact-method-form.js');
+        $this->assertResponseContains('contact-method-modal.js');
 
         $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
 
@@ -232,6 +236,10 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('data-member-search-url="/api/member-search"');
         $this->assertResponseContains('data-member-contact-methods-url="/api/appointment-contact-methods"');
         $this->assertResponseContains('appointment-member-select.js');
+        $this->assertResponseContains('New Contact Method');
+        $this->assertResponseContains('id="contact-method-modal"');
+        $this->assertResponseContains('contact-method-form.js');
+        $this->assertResponseContains('contact-method-modal.js');
     }
 
     public function testAppointmentFormsOfferCascadingRoleSelection(): void
@@ -249,11 +257,18 @@ class AppointmentsControllerTest extends TestCase
             );
         }
         $this->assertResponseContains('appointment-role-selector.js');
+        $this->assertResponseContains('team-selector.js');
+        $this->assertResponseContains('data-team-selector');
+        $this->assertResponseContains('class="team-selector-flow"');
 
         $this->get('/appointments/edit/55555555-5555-4555-8555-555555555551');
 
         $this->assertResponseOk();
         $this->assertResponseContains('appointment-role-selector.js');
+        $this->assertResponseContains('team-selector.js');
+        $this->assertResponseContains('data-team-selector');
+        $this->assertResponseContains('class="team-selector-flow"');
+        $this->assertResponseContains('data-selected-team-id="11111111-1111-4111-8111-111111111112"');
     }
 
     public function testAddRejectsNonGroupEmailContactMethod(): void

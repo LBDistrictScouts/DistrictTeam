@@ -1,0 +1,15 @@
+.contact-method-modal { width: min(64rem, calc(100vw - 3.2rem)); max-height: calc(100dvh - 4rem); padding: 2.8rem; border: 1px solid #dce5df; border-radius: 1.6rem; box-shadow: 0 1.5rem 6rem #17211b30; overflow-y: auto; }
+.contact-method-modal::backdrop { background: #17211b80; }
+.contact-method-modal h2 { color: #17211b; font-family: "Raleway", sans-serif; font-size: 2.2rem; }
+.contact-method-modal form { margin: 0; }
+.contact-method-modal fieldset { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; padding: 0; margin: 0 0 1.6rem; border: 0; }
+.contact-method-modal .input { min-width: 0; margin: 0; }
+.workspace-form-panel .contact-method-modal .input.select { grid-column: auto; }
+.contact-method-modal label { color: #365347; font-size: 1.3rem; font-weight: 600; }
+.contact-method-modal input, .contact-method-modal select { width: 100%; min-height: 4.5rem; padding: 1rem 1.2rem; margin-bottom: 0; color: #17211b; border: 1px solid #cad9d0; border-radius: .8rem; background: #fafcfb; }
+.contact-method-modal-actions { display: flex; gap: 1rem; margin-top: 1.6rem; }
+.contact-method-modal-actions button { height: auto; min-height: 4.2rem; padding: 1.1rem 2rem; margin: 0; color: #fff; border-color: #006b54; border-radius: .8rem; background: #006b54; font-size: 1.3rem; line-height: 1.5; letter-spacing: 0; text-transform: none; }
+.contact-method-modal-actions button:hover { border-color: #004b3b; background: #004b3b; }
+.contact-method-modal-actions .button-clear { color: #006b54; border-color: #cad9d0; background: #fff; }
+.contact-method-modal-actions .button-clear:hover { color: #004b3b; border-color: #006b54; background: #edf7f2; }
+@media (max-width: 540px) { .contact-method-modal { padding: 2rem; }.contact-method-modal fieldset { grid-template-columns: 1fr; } }

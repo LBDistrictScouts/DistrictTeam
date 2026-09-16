@@ -535,6 +535,9 @@ class MemberCsvImporter
     /**
      * Find the preferred email for a new appointment without considering phones.
      *
+     * Non-group email addresses remain eligible so imports retain appointments
+     * while report cards highlight the source data that needs correction.
+     *
      * @param string $memberId Member whose contacts will be considered.
      * @param string $roleId Role receiving the appointment.
      * @return string|null Contact method ID, if an email is available.
@@ -559,7 +562,6 @@ class MemberCsvImporter
         $contacts = $this->fetchTable('MemberContactMethods')->find()
             ->where([
                 'member_id' => $memberId,
-                'is_non_group_email' => false,
                 'contact_method_type IN' => [
                     ContactMethodType::Email->value,
                     ContactMethodType::EmailAlias->value,

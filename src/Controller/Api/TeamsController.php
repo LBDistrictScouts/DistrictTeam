@@ -65,6 +65,7 @@ class TeamsController extends AppController
                 'Members.id',
                 'Members.first_name',
                 'Members.last_name',
+                'Members.public_opt_out',
             ],
         ],
     ];
@@ -134,6 +135,7 @@ class TeamsController extends AppController
                             'Members.id',
                             'Members.first_name',
                             'Members.last_name',
+                            'Members.public_opt_out',
                         ],
                     ],
                 ])

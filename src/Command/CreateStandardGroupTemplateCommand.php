@@ -25,7 +25,7 @@ class CreateStandardGroupTemplateCommand extends Command
      */
     public static function getDescription(): string
     {
-        return 'Create missing standard Scout Group teams.';
+        return 'Create missing standard Scout Group and District teams.';
     }
 
     /**

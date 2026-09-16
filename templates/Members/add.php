@@ -23,7 +23,15 @@
                 echo $this->Form->control('membership_number');
                 echo $this->Form->control('join_date');
                 echo $this->Form->control('leave_date', ['empty' => true]);
-            ?>
+                echo $this->Form->control(
+                    'public_opt_out',
+                    [
+                        'type' => 'checkbox',
+                        'label' => __('Public Opt Out'),
+                        'help' => __('Hide this member’s name on public district sites.'),
+                    ],
+                );
+                ?>
         </fieldset>
         <div class="workspace-form-footer">
             <?= $this->Form->button(__('Create member')) ?>

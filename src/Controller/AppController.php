@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 
 /**
@@ -111,5 +112,53 @@ class AppController extends Controller
         $value = $this->indexFilter($name);
 
         return in_array($value, $allowed, true) ? $value : '';
+    }
+
+    /**
+     * Return the group, section and team relationships used by cascading team selectors.
+     *
+     * @return array{groups: list<array{id: string, text: string}>, sections: list<array{id: string, groupId: string, text: string}>, teams: list<array{id: string, groupId: string, sectionId: string, text: string}>}
+     */
+    protected function teamSelectorData(): array
+    {
+        $groups = $this->fetchTable('Groups')->find()
+            ->select(['id', 'group_name'])
+            ->orderByAsc('sort_order')
+            ->orderByAsc('group_name');
+        $sections = $this->fetchTable('Sections')->find()
+            ->select(['id', 'group_id', 'section_name'])
+            ->orderByAsc('section_name');
+        $teams = $this->fetchTable('Teams')->find()
+            ->select(['id', 'group_id', 'section_id', 'team_name', 'tree_level'])
+            ->orderByAsc('tree_left')
+            ->orderByAsc('team_name');
+
+        $data = ['groups' => [], 'sections' => [], 'teams' => []];
+        foreach ($groups->all() as $group) {
+            if ($group instanceof EntityInterface) {
+                $data['groups'][] = ['id' => (string)$group->get('id'), 'text' => (string)$group->get('group_name')];
+            }
+        }
+        foreach ($sections->all() as $section) {
+            if ($section instanceof EntityInterface) {
+                $data['sections'][] = [
+                    'id' => (string)$section->get('id'),
+                    'groupId' => (string)$section->get('group_id'),
+                    'text' => (string)$section->get('section_name'),
+                ];
+            }
+        }
+        foreach ($teams->all() as $team) {
+            if ($team instanceof EntityInterface) {
+                $data['teams'][] = [
+                    'id' => (string)$team->get('id'),
+                    'groupId' => (string)$team->get('group_id'),
+                    'sectionId' => (string)($team->get('section_id') ?? ''),
+                    'text' => str_repeat('>> ', (int)$team->get('tree_level')) . (string)$team->get('team_name'),
+                ];
+            }
+        }
+
+        return $data;
     }
 }

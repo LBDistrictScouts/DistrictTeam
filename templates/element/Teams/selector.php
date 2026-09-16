@@ -1,0 +1,28 @@
+<?php
+/**
+ * @var \App\View\AppView $this
+ * @var string $teamField
+ * @var string $fieldPrefix
+ * @var string $selectedTeamId
+ * @var array<string, mixed> $teamSelectorData
+ */
+$teamField ??= 'team_id';
+$fieldPrefix ??= 'team_';
+$selectedTeamId ??= '';
+?>
+<div class="team-selector" data-team-selector data-team-field="<?= h($teamField) ?>"
+    data-selected-team-id="<?= h($selectedTeamId) ?>">
+    <?= $this->Form->control($fieldPrefix . 'group_id', [
+        'type' => 'select', 'label' => __('Group'), 'empty' => __('Choose a group'), 'required' => true,
+    ]) ?>
+    <?= $this->Form->control($fieldPrefix . 'section_id', [
+        'type' => 'select', 'label' => __('Section'), 'empty' => __('Any section'), 'disabled' => true,
+    ]) ?>
+    <?= $this->Form->control($teamField, [
+        'type' => 'select', 'label' => __('Team'), 'empty' => __('Choose a team'),
+        'disabled' => true, 'required' => true,
+    ]) ?>
+    <script type="application/json" data-team-selector-data><?=
+        json_encode($teamSelectorData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+    ?></script>
+</div>

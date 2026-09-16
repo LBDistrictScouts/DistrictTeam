@@ -23,6 +23,7 @@
         <table class="roles-table">
             <thead>
                 <tr>
+                    <th><?= $this->Paginator->sort('group_id', __('Group')) ?></th>
                     <th><?= $this->Paginator->sort('team_id') ?></th>
                     <th><?= $this->Paginator->sort('name') ?></th>
                     <th><?= $this->Paginator->sort('slug') ?></th>
@@ -32,10 +33,16 @@
             </thead>
             <tbody>
                 <?php if (count($roles) === 0): ?>
-                <tr><td colspan="5" class="workspace-empty"><?= __('No records to display yet.') ?></td></tr>
+                <tr><td colspan="6" class="workspace-empty"><?= __('No records to display yet.') ?></td></tr>
                 <?php endif; ?>
                 <?php foreach ($roles as $role): ?>
                 <tr>
+                    <td class="roles-identity"><?= $role->hasValue('group')
+                        ? $this->Html->link(
+                            $role->group->group_name,
+                            ['controller' => 'Groups', 'action' => 'view', $role->group->id],
+                        )
+                        : '' ?></td>
                     <td class="roles-identity"><?= $role->hasValue('team') ? str_repeat('>> ', $role->team->tree_level) . $this->Html->link($role->team->team_name, ['controller' => 'Teams', 'action' => 'view', $role->team->id]) : '' ?></td>
                     <td class="roles-identity"><?= h($role->name) ?></td>
                     <td class="roles-identity"><?= h($role->slug) ?></td>

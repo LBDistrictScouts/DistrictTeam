@@ -15,6 +15,7 @@ use Cake\ORM\Entity;
  * @property int $membership_number
  * @property \Cake\I18n\Date $join_date
  * @property \Cake\I18n\Date|null $leave_date
+ * @property bool $public_opt_out
  * @property bool $active
  * @property-read string $full_name
  * @property array<\App\Model\Entity\Appointment> $appointments
@@ -56,6 +57,7 @@ class Member extends Entity
         'membership_number' => true,
         'join_date' => true,
         'leave_date' => true,
+        'public_opt_out' => true,
         'member_contact_methods' => true,
     ];
 

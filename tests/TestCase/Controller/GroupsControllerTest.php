@@ -47,7 +47,7 @@ class GroupsControllerTest extends TestCase
         $this->assertResponseContains('ada@example.com');
         $this->assertResponseNotContains('First Scout Group');
         $this->assertResponseContains('Trustee Board appointments');
-        $this->assertResponseContains('Group Lead Volunteer');
+        $this->assertResponseContains('District Lead Volunteer');
         $this->assertResponseContains('This Trustee Board role needs an appointment.');
         $this->assertResponseContains('5 Trustee Board member places need appointments.');
     }
@@ -152,7 +152,7 @@ class GroupsControllerTest extends TestCase
     {
         $this->fetchTable('Roles')->updateAll([
             'is_trustee_role' => true,
-            'template' => 'group-lead-volunteer',
+            'template' => 'lead-volunteer',
         ], ['id' => '22222222-2222-4222-8222-222222222221']);
         $roles = $this->fetchTable('Roles');
         $additionalTrusteeRole = $roles->saveOrFail($roles->newEntity([
