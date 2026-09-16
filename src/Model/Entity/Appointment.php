@@ -15,6 +15,7 @@ use Cake\ORM\Entity;
  * @property string $member_contact_method_id
  * @property \Cake\I18n\Date $effective_start_date
  * @property \Cake\I18n\Date|null $effective_end_date
+ * @property-read bool $public_opt_out
  * @property bool $active
  *
  * @property \App\Model\Entity\Role $role
@@ -26,7 +27,7 @@ class Appointment extends Entity
     /**
      * @var list<string>
      */
-    protected array $_virtual = ['active'];
+    protected array $_virtual = ['active', 'public_opt_out'];
 
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -59,5 +60,15 @@ class Appointment extends Entity
 
         return $this->effective_start_date <= $today
             && ($this->effective_end_date === null || $this->effective_end_date >= $today);
+    }
+
+    /**
+     * Determine whether the appointed member has opted out of public display.
+     *
+     * @return bool
+     */
+    protected function _getPublicOptOut(): bool
+    {
+        return (bool)($this->member?->public_opt_out ?? false);
     }
 }

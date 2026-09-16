@@ -5,6 +5,7 @@ namespace App\Test\TestCase\Controller\Api;
 
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use JsonSchema\Validator;
 
 class ApiControllerTest extends TestCase
 {
@@ -47,6 +48,61 @@ class ApiControllerTest extends TestCase
         $this->assertSame(2, $payload['pagination']['total']);
     }
 
+    public function testApiResponsesMatchPublishedJsonSchemas(): void
+    {
+        $responses = [
+            '/api/teams.json' => 'teams_collection',
+            '/api/teams/11111111-1111-4111-8111-111111111111.json' => 'team_record',
+            '/api/group-teams/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.json' => 'teams_collection',
+            '/api/roles.json' => 'roles_collection',
+            '/api/roles/22222222-2222-4222-8222-222222222221.json' => 'role_record',
+            '/api/group-roles/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.json' => 'roles_collection',
+            '/api/members.json' => 'members_collection',
+            '/api/members/33333333-3333-4333-8333-333333333331.json' => 'member_record',
+            '/api/member-contact-methods.json' => 'member_contact_methods_collection',
+            '/api/member-contact-methods/44444444-4444-4444-8444-444444444441.json' => 'member_contact_method_record',
+            '/api/appointments.json' => 'appointments_collection',
+            '/api/appointments/55555555-5555-4555-8555-555555555551.json' => 'appointment_record',
+            '/api/member-search?q=ada' => 'member_search',
+            '/api/appointment-contact-methods?member_id=33333333-3333-4333-8333-333333333331' => 'appointment_contact_methods',
+        ];
+
+        foreach ($responses as $url => $schema) {
+            $this->get($url);
+            $this->assertResponseOk($url);
+            $this->assertResponseMatchesSchema($schema);
+        }
+    }
+
+    public function testOpenApiSpecificationCoversEveryApiRouteAndResponseSchema(): void
+    {
+        $openApi = json_decode(
+            (string)file_get_contents(ROOT . '/config/schema/openapi.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        $responseSchemas = json_decode(
+            (string)file_get_contents(ROOT . '/config/schema/api-responses.schema.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        $paths = [
+            '/api/teams', '/api/teams/{id}', '/api/group-teams/{groupUUID}',
+            '/api/roles', '/api/roles/{id}', '/api/group-roles/{groupUUID}',
+            '/api/members', '/api/members/{id}', '/api/member-contact-methods',
+            '/api/member-contact-methods/{id}', '/api/appointments', '/api/appointments/{id}',
+            '/api/member-search', '/api/appointment-contact-methods',
+        ];
+
+        $this->assertSame('3.2.0', $openApi['openapi']);
+        $this->assertSame($paths, array_keys($openApi['paths']));
+        foreach ($openApi['components']['responses'] as $response) {
+            $reference = $response['content']['application/json']['schema']['$ref'];
+            $definition = basename($reference);
+            $this->assertArrayHasKey($definition, $responseSchemas['definitions']);
+        }
+    }
+
     public function testMemberSearchReturnsSelect2Results(): void
     {
         $this->get('/api/member-search?q=ada');
@@ -78,6 +134,8 @@ class ApiControllerTest extends TestCase
         $this->assertArrayHasKey('role', $payload['data']);
         $this->assertArrayHasKey('member', $payload['data']);
         $this->assertArrayNotHasKey('membership_number', $payload['data']['member']);
+        $this->assertTrue($payload['data']['member']['public_opt_out']);
+        $this->assertTrue($payload['data']['public_opt_out']);
         $this->assertArrayHasKey('member_contact_method', $payload['data']);
         $this->assertSame(
             'Email',
@@ -125,10 +183,12 @@ class ApiControllerTest extends TestCase
         $this->assertTrue($filledRole['multi_member_role']);
         $this->assertSame('recruiting', $filledRole['staffing_status']);
         $this->assertSame(
-            ['id', 'role_id', 'member_id', 'member', 'active'],
+            ['id', 'role_id', 'member_id', 'member', 'active', 'public_opt_out'],
             array_keys($filledRole['current_appointments'][0]),
         );
         $this->assertSame('Ada Lovelace', $filledRole['current_appointments'][0]['member']['full_name']);
+        $this->assertTrue($filledRole['current_appointments'][0]['member']['public_opt_out']);
+        $this->assertTrue($filledRole['current_appointments'][0]['public_opt_out']);
         $this->assertArrayNotHasKey('member_contact_method', $filledRole['current_appointments'][0]);
         $this->assertArrayNotHasKey('effective_start_date', $filledRole['current_appointments'][0]);
         $this->assertTrue($filledRole['current_appointments'][0]['active']);
@@ -164,6 +224,8 @@ class ApiControllerTest extends TestCase
             'membership_number',
             $payload['data']['current_appointments'][0]['member'],
         );
+        $this->assertTrue($payload['data']['current_appointments'][0]['member']['public_opt_out']);
+        $this->assertTrue($payload['data']['current_appointments'][0]['public_opt_out']);
         $this->assertArrayHasKey(
             'member_contact_method',
             $payload['data']['current_appointments'][0],
@@ -515,5 +577,16 @@ class ApiControllerTest extends TestCase
         $this->enableCsrfToken();
         $this->post('/api/group-roles/' . $groupId . '.json', []);
         $this->assertResponseCode(404);
+    }
+
+    private function assertResponseMatchesSchema(string $definition): void
+    {
+        $data = json_decode((string)$this->_response->getBody());
+        $validator = new Validator();
+        $validator->validate($data, (object)[
+            '$ref' => 'file://' . ROOT . '/config/schema/api-responses.schema.json#/definitions/' . $definition,
+        ]);
+
+        $this->assertTrue($validator->isValid(), json_encode($validator->getErrors(), JSON_THROW_ON_ERROR));
     }
 }

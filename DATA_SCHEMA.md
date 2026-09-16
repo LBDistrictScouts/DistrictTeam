@@ -121,7 +121,7 @@ Stores the people who can hold roles.
 | `membership_number` | `integer` | No | — | Unique external or organisational membership number. |
 | `join_date` | `date` | No | — | Date membership began. |
 | `leave_date` | `date` | Yes | `NULL` | Date membership ended. |
-| `active` | `boolean` | No | `true` | Cached membership status. |
+| `public_opt_out` | `boolean` | No | `false` | Whether the member’s name must be hidden on public district sites. |
 
 Constraints and behavior:
 

@@ -87,6 +87,9 @@ class MembersTable extends Table
             ->date('leave_date')
             ->allowEmptyDate('leave_date');
 
+        $validator
+            ->boolean('public_opt_out');
+
         return $validator;
     }
 

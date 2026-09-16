@@ -90,6 +90,17 @@ jobs:
       - name: Run browser script tests
         run: node --test tests/js/*.test.cjs
 
+  openapi:
+    name: Validate OpenAPI Specification
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Lint OpenAPI specification
+        run: npx --yes @redocly/cli@2.53.2 lint config/schema/openapi.json
+
   manifests:
     name: Validate Kubernetes Manifests
     runs-on: ubuntu-24.04
@@ -110,7 +121,7 @@ jobs:
 
   docker-smoke-test:
     name: Smoke Test Docker Image
-    needs: [php-tests, javascript-tests, manifests]
+    needs: [php-tests, javascript-tests, openapi, manifests]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7

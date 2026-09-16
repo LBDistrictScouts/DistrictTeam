@@ -63,6 +63,14 @@ IDs and related objects. District and group teams can have a `group_id` with
 
 ## Endpoints
 
+## JSON Schemas
+
+The [OpenAPI 3.2 specification](config/schema/openapi.json) defines every route,
+parameter, and response. It references the response signatures in
+[`config/schema/api-responses.schema.json`](config/schema/api-responses.schema.json),
+using JSON Schema draft-07. The API controller test validates every endpoint
+against its matching response definition.
+
 | Resource | Collection | Individual record |
 | --- | --- | --- |
 | Teams | `GET /api/teams` | `GET /api/teams/{uuid}` |
@@ -123,6 +131,11 @@ Individual responses contain the record in `data`:
 ```
 
 Use `?page=2&limit=10` to paginate a collection. CakePHP caps `limit` at 100 by default. Related records are embedded where useful: teams include their parent and children; roles include their team and current active appointment; members include contact methods; contact methods include their member; and appointments include their role, member, and contact method. A role's `current_appointment` also embeds its member and contact method, and is `null` when no appointment is active and effective today.
+
+Members expose a boolean `public_opt_out`. Appointments also expose this field,
+copied from their member, including appointments embedded in role and team responses.
+Public clients can use it to hide the member's name while authenticated member
+areas continue to display it.
 
 Unknown UUIDs and unregistered write routes return `404 Not Found`.
 

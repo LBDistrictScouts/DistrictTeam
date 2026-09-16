@@ -1,0 +1,49 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "District Team API",
+    "version": "1.0.0",
+    "description": "Read-only API for district teams, roles, members, contact methods, and appointments.",
+    "license": {"name": "MIT", "identifier": "MIT"}
+  },
+  "servers": [{"url": "/", "description": "The current District Team deployment."}],
+  "security": [],
+  "paths": {
+    "/api/teams": {"get": {"operationId": "listTeams", "summary": "List district teams", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/TeamsCollection"}}}},
+    "/api/teams/{id}": {"get": {"operationId": "getTeam", "summary": "Get a district team", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/TeamRecord"}, "404": {"description": "Team not found or not in a district group."}}}},
+    "/api/group-teams/{groupUUID}": {"get": {"operationId": "listGroupTeams", "summary": "List teams in a group", "parameters": [{"$ref": "#/components/parameters/GroupUUID"}, {"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/TeamsCollection"}, "404": {"description": "Group not found."}}}},
+    "/api/roles": {"get": {"operationId": "listRoles", "summary": "List roles", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/RolesCollection"}}}},
+    "/api/roles/{id}": {"get": {"operationId": "getRole", "summary": "Get a role", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/RoleRecord"}, "404": {"description": "Role not found."}}}},
+    "/api/group-roles/{groupUUID}": {"get": {"operationId": "listGroupRoles", "summary": "List roles in a group", "parameters": [{"$ref": "#/components/parameters/GroupUUID"}, {"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/RolesCollection"}, "404": {"description": "Group not found."}}}},
+    "/api/members": {"get": {"operationId": "listMembers", "summary": "List members", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/MembersCollection"}}}},
+    "/api/members/{id}": {"get": {"operationId": "getMember", "summary": "Get a member", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/MemberRecord"}, "404": {"description": "Member not found."}}}},
+    "/api/member-contact-methods": {"get": {"operationId": "listMemberContactMethods", "summary": "List member contact methods", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/MemberContactMethodsCollection"}}}},
+    "/api/member-contact-methods/{id}": {"get": {"operationId": "getMemberContactMethod", "summary": "Get a member contact method", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/MemberContactMethodRecord"}, "404": {"description": "Contact method not found."}}}},
+    "/api/appointments": {"get": {"operationId": "listAppointments", "summary": "List appointments", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/AppointmentsCollection"}}}},
+    "/api/appointments/{id}": {"get": {"operationId": "getAppointment", "summary": "Get an appointment", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/AppointmentRecord"}, "404": {"description": "Appointment not found."}}}},
+    "/api/member-search": {"get": {"operationId": "searchMembers", "summary": "Search members for appointment selection", "parameters": [{"name": "q", "in": "query", "required": false, "schema": {"type": "string"}}, {"name": "page", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1}}], "responses": {"200": {"$ref": "#/components/responses/MemberSearch"}}}},
+    "/api/appointment-contact-methods": {"get": {"operationId": "listAppointmentContactMethods", "summary": "List eligible email contact methods", "parameters": [{"name": "member_id", "in": "query", "required": true, "schema": {"type": "string", "format": "uuid"}}], "responses": {"200": {"$ref": "#/components/responses/AppointmentContactMethods"}}}}
+  },
+  "components": {
+    "parameters": {
+      "Id": {"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+      "GroupUUID": {"name": "groupUUID", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+      "Page": {"name": "page", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1}},
+      "Limit": {"name": "limit", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1, "maximum": 100}}
+    },
+    "responses": {
+      "TeamsCollection": {"description": "A paginated team collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/teams_collection"}}}},
+      "TeamRecord": {"description": "A team record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/team_record"}}}},
+      "RolesCollection": {"description": "A paginated role collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/roles_collection"}}}},
+      "RoleRecord": {"description": "A role record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/role_record"}}}},
+      "MembersCollection": {"description": "A paginated member collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/members_collection"}}}},
+      "MemberRecord": {"description": "A member record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_record"}}}},
+      "MemberContactMethodsCollection": {"description": "A paginated contact-method collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_contact_methods_collection"}}}},
+      "MemberContactMethodRecord": {"description": "A member contact-method record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_contact_method_record"}}}},
+      "AppointmentsCollection": {"description": "A paginated appointment collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/appointments_collection"}}}},
+      "AppointmentRecord": {"description": "An appointment record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/appointment_record"}}}},
+      "MemberSearch": {"description": "Select2-compatible member search results.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_search"}}}},
+      "AppointmentContactMethods": {"description": "Eligible appointment email contacts.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/appointment_contact_methods"}}}}
+    }
+  }
+}
