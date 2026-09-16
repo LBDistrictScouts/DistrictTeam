@@ -1,0 +1,11 @@
+.workspace-form-panel .team-selector,
+.workspace-form-panel .team-selector-flow {
+    display: block;
+    grid-column: 1 / -1;
+}
+
+.workspace-form-panel .team-selector > .input,
+.workspace-form-panel .team-selector-flow > .input {
+    grid-column: 1 / -1;
+    margin-bottom: 1.6rem;
+}

@@ -4,27 +4,22 @@
  * @var \App\Model\Entity\Appointment $appointment
  * @var \Cake\Collection\CollectionInterface|array<string> $roles
  * @var array<string, mixed> $roleSelectorData
+ * @var array<string, mixed> $teamSelectorData
  */
+$selectedTeamId = '';
+foreach ($roleSelectorData['roles'] as $roleData) {
+    if ($roleData['id'] === $appointment->role_id) {
+        $selectedTeamId = $roleData['teamId'];
+        break;
+    }
+}
 ?>
-<div class="appointment-role-selector" data-role-selector>
-    <?= $this->Form->control('role_group_id', [
-        'type' => 'select',
-        'label' => __('Group'),
-        'empty' => __('Choose a group'),
-        'required' => true,
-    ]) ?>
-    <?= $this->Form->control('role_section_id', [
-        'type' => 'select',
-        'label' => __('Section'),
-        'empty' => __('Any section'),
-        'disabled' => true,
-    ]) ?>
-    <?= $this->Form->control('role_team_id', [
-        'type' => 'select',
-        'label' => __('Team'),
-        'empty' => __('Choose a team'),
-        'disabled' => true,
-        'required' => true,
+<div class="team-selector-flow" data-role-selector>
+    <?= $this->element('Teams/selector', [
+        'teamField' => 'role_team_id',
+        'fieldPrefix' => 'role_',
+        'selectedTeamId' => $selectedTeamId,
+        'teamSelectorData' => $teamSelectorData,
     ]) ?>
     <?= $this->Form->control('role_id', [
         'label' => __('Role'),

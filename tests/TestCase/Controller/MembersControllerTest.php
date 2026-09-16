@@ -378,6 +378,8 @@ class MembersControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('ada@example.com');
+        $this->assertResponseContains('Non-group email');
+        $this->assertResponseContains('class="member-contact-non-group-email"');
         $this->assertResponseContains('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/44444444-4444-4444-8444-444444444441');
         $this->assertResponseContains('Are you sure you want to delete this contact method?');
     }

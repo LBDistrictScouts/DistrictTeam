@@ -365,7 +365,7 @@ class MemberCsvImporterTest extends TestCase
         $this->assertSame($otherGroupEmail->id, $appointment->member_contact_method_id);
     }
 
-    public function testAppointmentSkipsMembersWithOnlyNonGroupEmails(): void
+    public function testAppointmentUsesNonGroupEmailWhenItIsTheOnlyEmail(): void
     {
         $importer = new MemberCsvImporter();
         $rows = [2 => [
@@ -376,8 +376,13 @@ class MemberCsvImporterTest extends TestCase
 
         $result = $importer->import($rows, $mapping);
 
-        $this->assertSame(0, $result['appointments']);
-        $this->assertContains('Row 2: appointment skipped (no usable email contact method).', $result['warnings']);
+        $this->assertSame(1, $result['appointments']);
+        $this->assertSame([], $result['warnings']);
+        $appointment = $this->fetchTable('Appointments')->find()->where([
+            'role_id' => current($mapping),
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+        ])->firstOrFail();
+        $this->assertSame('44444444-4444-4444-8444-444444444441', $appointment->member_contact_method_id);
     }
 
     public function testCsvEmailIsLowercasedBeforeDuplicateMatching(): void
@@ -590,9 +595,8 @@ class MemberCsvImporterTest extends TestCase
 
         $this->assertSame(2, $result['members']);
         $this->assertSame(1, $result['contacts']);
-        $this->assertSame(0, $result['appointments']);
+        $this->assertSame(1, $result['appointments']);
         $this->assertContains('Row 3: contact number skipped (invalid UK phone number).', $result['warnings']);
-        $this->assertContains('Row 3: appointment skipped (no usable email contact method).', $result['warnings']);
     }
 
     public function testPreferredNameForNewAndExistingMembersWithFallback(): void

@@ -6,15 +6,20 @@
  * @var \Cake\Collection\CollectionInterface|array<string> $members
  * @var array<array<string, string>> $memberContactMethods
  * @var array<string, mixed> $roleSelectorData
+ * @var array<int, string> $appointmentContactMethodTypes
  */
 ?>
 <?php
 $this->Html->css('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', ['block' => true]);
 $this->Html->css('appointment-member-select', ['block' => true]);
-$this->Html->css('appointment-role-selector', ['block' => true]);
+$this->Html->css('contact-method-modal', ['block' => true]);
+$this->Html->css('team-selector', ['block' => true]);
 $this->Html->script('https://code.jquery.com/jquery-3.7.1.min.js', ['block' => true]);
 $this->Html->script('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', ['block' => true]);
 $this->Html->script('appointment-member-select', ['block' => true]);
+$this->Html->script('contact-method-form', ['block' => true]);
+$this->Html->script('contact-method-modal', ['block' => true]);
+$this->Html->script('team-selector', ['block' => true]);
 $this->Html->script('appointment-role-selector', ['block' => true]);
 ?>
 <div class="workspace-page workspace-form-page">
@@ -32,15 +37,20 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
             <legend><?= __('Appointment details') ?></legend>
             <?php
                 echo $this->element('Appointments/role_selector', compact('appointment', 'roles', 'roleSelectorData'));
+                ?><div class="appointment-selection-action"><?php
                 echo $this->Form->control('member_id', [
                     'options' => $members,
                     'value' => $appointment->member_id,
                     'data-member-search-url' => $this->Url->build('/api/member-search'),
                 ]);
+                ?></div><?php
+                ?><div class="appointment-selection-action"><?php
                 echo $this->Form->control('member_contact_method_id', [
                     'options' => $memberContactMethods,
                     'data-member-contact-methods-url' => $this->Url->build('/api/appointment-contact-methods'),
                 ]);
+                echo $this->element('Members/contact_method_button', ['modalId' => 'contact-method-modal']);
+                ?></div><?php
                 echo $this->Form->control('effective_start_date');
                 echo $this->Form->control('effective_end_date', ['empty' => true]);
                 ?>
@@ -52,6 +62,16 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
         <?= $this->Form->end() ?>
     </div>
 </div>
+<?= $this->element('Members/contact_method_modal', [
+    'modalId' => 'contact-method-modal',
+    'formId' => 'add-appointment-contact-method-form',
+    'url' => null,
+    'urlBase' => $this->Url->build('/member-contact-methods/add-for-member/'),
+    'memberSelectId' => 'member-id',
+    'contactMethodSelectId' => 'member-contact-method-id',
+    'contactMethodTypes' => $appointmentContactMethodTypes,
+    'statusId' => 'appointment-contact-method-status',
+]) ?>
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
 document.addEventListener('DOMContentLoaded', function () {

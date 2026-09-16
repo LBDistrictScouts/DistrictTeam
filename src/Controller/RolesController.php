@@ -24,7 +24,7 @@ class RolesController extends AppController
     {
         $query = $this->Roles->find()
             ->orderByAsc('Teams.tree_left')
-            ->contain(['Teams']);
+            ->contain(['Teams', 'Groups']);
         $currentAppointmentRoleIds = $this->Roles->Appointments->find('current')->select(['role_id']);
         $groups = $this->Roles->Groups->find('list')->orderByAsc('sort_order')
             ->orderByAsc('group_name')->toArray();
@@ -116,8 +116,8 @@ class RolesController extends AppController
             }
             $this->Flash->error(__('The role could not be saved. Please, try again.'));
         }
-        $teams = $this->Roles->Teams->find('treeList', limit: 200, spacer: '>> ')->toArray();
-        $this->set(compact('role', 'teams'));
+        $teamSelectorData = $this->teamSelectorData();
+        $this->set(compact('role', 'teamSelectorData'));
     }
 
     /**
@@ -178,8 +178,8 @@ class RolesController extends AppController
             }
             $this->Flash->error(__('The role could not be saved. Please, try again.'));
         }
-        $teams = $this->Roles->Teams->find('list', limit: 200)->all();
-        $this->set(compact('role', 'teams'));
+        $teamSelectorData = $this->teamSelectorData();
+        $this->set(compact('role', 'teamSelectorData'));
     }
 
     /**

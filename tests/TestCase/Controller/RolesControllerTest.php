@@ -42,7 +42,10 @@ class RolesControllerTest extends TestCase
         )->multi_member_role);
         $this->get('/roles');
         $this->assertResponseOk();
+        $this->assertResponseContains('>Group</a>');
+        $this->assertResponseContains('>District</a>');
         $this->assertResponseContains('Digital Lead');
+        $this->assertResponseContains('<td class="roles-identity">digital-lead</td>');
         $this->assertResponseContains('Recruiting');
     }
 
@@ -88,6 +91,19 @@ class RolesControllerTest extends TestCase
         $this->assertResponseContains('Digital Lead');
     }
 
+    public function testCreateStandardRolesListsDistrictRolesWithoutStandardTeams(): void
+    {
+        $this->get('/roles/create-standard-group-template');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('District Lead Volunteer');
+        $this->assertResponseContains('District Leadership Team Member');
+        $this->assertResponseContains('Trustee Board Chair');
+        $this->assertResponseContains('District Treasurer');
+        $this->assertResponseContains('Trustee Board Member');
+        $this->assertResponseContains('Missing standard teams will be created automatically.');
+    }
+
     /**
      * Test view method
      *
@@ -96,6 +112,9 @@ class RolesControllerTest extends TestCase
      */
     public function testView(): void
     {
+        $this->fetchTable('Roles')->updateAll([
+            'template' => 'lead-volunteer',
+        ], ['id' => '22222222-2222-4222-8222-222222222221']);
         $this->fetchTable('Appointments')->saveOrFail(
             $this->fetchTable('Appointments')->newEntity([
                 'role_id' => '22222222-2222-4222-8222-222222222221',
@@ -110,6 +129,8 @@ class RolesControllerTest extends TestCase
         $this->assertResponseContains('Digital Lead');
         $this->assertResponseContains('Current holders');
         $this->assertResponseContains('Trustee Board role');
+        $this->assertResponseContains('Standard template');
+        $this->assertResponseContains('<code>lead-volunteer</code>');
         $this->assertResponseContains('/groups/view/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
         $this->assertResponseContains('Ada Lovelace');
         $this->assertResponseContains('Grace Hopper');
@@ -160,6 +181,12 @@ class RolesControllerTest extends TestCase
         $this->assertResponseContains('type="checkbox" name="multi_member_role"');
         $this->assertResponseContains('type="checkbox" name="is_trustee_role"');
         $this->assertResponseContains('type="date" name="is_covered_until"');
+        $this->assertResponseContains('data-team-selector');
+        $this->assertResponseContains('id="team-group-id"');
+        $this->assertResponseContains('id="team-section-id"');
+        $this->assertResponseContains('id="team-id"');
+        $this->assertResponseContains('\\u003E\\u003E ');
+        $this->assertResponseContains('team-selector.js');
     }
 
     /**
@@ -204,6 +231,12 @@ class RolesControllerTest extends TestCase
         $this->assertResponseContains('type="checkbox" name="multi_member_role"');
         $this->assertResponseContains('type="checkbox" name="is_trustee_role"');
         $this->assertResponseContains('type="date" name="is_covered_until"');
+        $this->assertResponseContains('data-team-selector');
+        $this->assertResponseContains('id="team-group-id"');
+        $this->assertResponseContains('id="team-section-id"');
+        $this->assertResponseContains('id="team-id"');
+        $this->assertResponseContains('data-selected-team-id="11111111-1111-4111-8111-111111111111"');
+        $this->assertResponseContains('team-selector.js');
     }
 
     /**

@@ -2,7 +2,7 @@
 /**
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Role $role
- * @var string[]|\Cake\Collection\CollectionInterface $teams
+ * @var array<string, mixed> $teamSelectorData
  */
 ?>
 <div class="workspace-page workspace-form-page">
@@ -19,7 +19,10 @@
         <fieldset>
             <legend><?= __('Role details') ?></legend>
             <?php
-                echo $this->Form->control('team_id', ['options' => $teams]);
+                echo $this->element('Teams/selector', [
+                    'selectedTeamId' => $role->team_id,
+                    'teamSelectorData' => $teamSelectorData,
+                ]);
                 echo $this->Form->control('name');
                 echo $this->Form->control('template', [
                     'options' => \App\Model\Enum\RoleTemplate::options(),
@@ -54,3 +57,5 @@
         <?= $this->Form->end() ?>
     </div>
 </div>
+<?= $this->Html->css('team-selector') ?>
+<?= $this->Html->script('team-selector') ?>

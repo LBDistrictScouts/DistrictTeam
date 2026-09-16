@@ -10,9 +10,9 @@
         <?= $this->Form->control('review_overrides', ['type' => 'checkbox', 'label' => __('Review name overrides'), 'checked' => $reviewOverrides, 'value' => '1', 'onchange' => 'this.form.submit()']) ?>
         <?= $this->Form->end() ?>
         <?php if ($roles === []) : ?>
-            <p><?= $reviewOverrides ? __('No name overrides need review.') : __('No standard roles are waiting to be created. Create standard teams first, if needed.') ?></p>
+            <p><?= $reviewOverrides ? __('No name overrides need review.') : __('All standard roles already exist.') ?></p>
         <?php else : ?>
-            <p><?= $reviewOverrides ? __('Select overridden names to restore their standard template name.') : __('Change names or skip any roles that should not be created.') ?></p>
+            <p><?= $reviewOverrides ? __('Select overridden names to restore their standard template name.') : __('Change names or skip any roles that should not be created. Missing standard teams will be created automatically.') ?></p>
             <?= $this->Form->create(null) ?>
             <?= $this->Form->hidden('review_overrides', ['value' => $reviewOverrides ? '1' : '0']) ?>
             <?php $groupedRoles = []; foreach ($roles as $index => $role) { $groupedRoles[$role['group_id']]['name'] = $role['group_name']; $groupedRoles[$role['group_id']]['items'][] = [$index, $role]; } foreach ($groupedRoles as $group) :

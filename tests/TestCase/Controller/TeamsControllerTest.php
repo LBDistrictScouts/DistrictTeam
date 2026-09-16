@@ -119,13 +119,15 @@ class TeamsControllerTest extends TestCase
 
         $this->get('/teams/create-standard-group-template');
         $this->assertResponseOk();
-        $this->assertResponseContains('Create standard Group template');
+        $this->assertResponseContains('Create standard template');
         $this->assertResponseContains('Proposed teams');
         $this->assertResponseContains('First Scout Group Leadership Team');
 
         $this->enableCsrfToken();
         $this->post('/teams/create-standard-group-template', [
             'teams' => [
+                ['team_name' => 'District Leadership Team'],
+                ['team_name' => 'Trustee Board'],
                 ['team_name' => 'First Scout Group Leadership Team'],
                 ['team_name' => 'Cubs Team'],
                 ['team_name' => 'Trustee Board'],
@@ -134,6 +136,7 @@ class TeamsControllerTest extends TestCase
         $this->assertRedirect('/teams');
         $teams = $this->fetchTable('Teams');
         $this->assertTrue($teams->exists(['team_name' => 'First Scout Group Leadership Team']));
+        $this->assertTrue($teams->exists(['team_name' => 'District Leadership Team']));
         $this->assertSame(
             'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
             $teams->find()->where(['team_name' => 'Cubs Team'])->firstOrFail()->section_id,

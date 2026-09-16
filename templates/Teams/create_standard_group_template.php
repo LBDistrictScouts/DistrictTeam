@@ -3,7 +3,7 @@
 ?>
 <div class="teams create-standard-group-template workspace-page workspace-form-page">
     <nav class="workspace-breadcrumb" aria-label="<?= __('Breadcrumb') ?>"><?= $this->Html->link(__('Back to teams'), ['action' => 'index']) ?></nav>
-    <?= $this->element('Workspace/index_header', ['title' => __('Create standard Group template'), 'description' => __('Review the baseline Group leadership, section, and trustee structure.'), 'actions' => []]) ?>
+    <?= $this->element('Workspace/index_header', ['title' => __('Create standard template'), 'description' => __('Review the baseline leadership, section, and trustee structure.'), 'actions' => []]) ?>
     <section class="workspace-form-panel" aria-labelledby="standard-template-title">
         <h2 id="standard-template-title"><?= __('Proposed teams') ?></h2>
         <?= $this->Form->create(null, ['type' => 'get', 'class' => 'standard-template-review-toggle']) ?>

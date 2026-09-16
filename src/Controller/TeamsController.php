@@ -130,7 +130,7 @@ class TeamsController extends AppController
     }
 
     /**
-     * Preview and create the standard teams and roles for every Scout Group.
+     * Preview and create the standard teams and roles for every Scout Group and District.
      *
      * @return \Cake\Http\Response|null|void
      */

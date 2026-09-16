@@ -73,11 +73,12 @@
 .workspace-page tbody tr.appointment-non-group-email:hover { background: #fff0ed; }
 .roles-table { table-layout: fixed; }
 .roles-table th, .roles-table td { box-sizing: border-box; }
-.roles-table th:nth-child(1) { width: 30%; }
-.roles-table th:nth-child(2) { width: 22%; }
-.roles-table th:nth-child(3) { width: 19%; }
-.roles-table th:nth-child(4) { width: 13%; }
-.roles-table th:nth-child(5) { width: 16%; }
+.roles-table th:nth-child(1) { width: 15%; }
+.roles-table th:nth-child(2) { width: 18%; }
+.roles-table th:nth-child(3) { width: 24%; }
+.roles-table th:nth-child(4) { width: 14%; }
+.roles-table th:nth-child(5) { width: 15%; }
+.roles-table th:nth-child(6) { width: 14%; }
 .roles-table th:nth-child(n + 4), .roles-table td:nth-child(n + 4) { padding-left: .7rem; padding-right: .7rem; }
 .roles-table th:first-child, .roles-table td:first-child { padding-left: 2rem; }
 .roles-table th:last-child, .roles-table td:last-child { padding-right: 2rem; }

@@ -4,6 +4,9 @@
 /** @var array<int, string> $contactMethodTypes */
 $this->assign('title', $member->full_name);
 $this->Html->css('member-view', ['block' => true]);
+$this->Html->css('contact-method-modal', ['block' => true]);
+$this->Html->script('contact-method-form', ['block' => true]);
+$this->Html->script('contact-method-modal', ['block' => true]);
 $appointments = $member->appointments ?? [];
 $currentAppointments = array_filter($appointments, fn($appointment) => $appointment->active);
 $joinDate = $this->Time->format($member->join_date, 'd MMMM yyyy');
@@ -37,15 +40,8 @@ $deleteContactMethodIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
                 </ul><?php else : ?><p class="member-empty"><?= __('This member does not have any appointments yet.') ?></p><?php endif; ?>
             </section>
             <section class="member-panel" aria-labelledby="member-contact-heading">
-                <h2 id="member-contact-heading"><?= __('Contact methods') ?></h2>
-                <?php if ($member->member_contact_methods) : ?><ul class="member-contact-list" id="contact-methods"><?php foreach ($member->member_contact_methods as $memberContactMethod) : ?><li><span><?= h($memberContactMethod->contact_method_type->label()) ?></span><strong><?= h($memberContactMethod->contact_method) ?></strong><?= $this->Form->postLink($deleteContactMethodIcon, ['controller' => 'MemberContactMethods', 'action' => 'deleteForMember', $member->id, $memberContactMethod->id], ['class' => 'member-contact-delete', 'escape' => false, 'title' => __('Delete contact method'), 'aria-label' => __('Delete {0}', $memberContactMethod->contact_method), 'confirm' => __('Are you sure you want to delete this contact method?')]) ?></li><?php endforeach; ?></ul><?php else : ?><p class="member-empty" id="contact-methods-empty"><?= __('No contact methods have been added yet.') ?></p><?php endif; ?>
-            </section>
-            <section class="member-panel member-add-contact-panel" aria-labelledby="add-contact-heading">
-                <h2 id="add-contact-heading"><?= __('Add contact method') ?></h2>
-                <?= $this->Form->create(null, ['id' => 'add-contact-method', 'url' => ['controller' => 'MemberContactMethods', 'action' => 'addForMember', $member->id]]) ?>
-                <fieldset><?= $this->Form->control('contact_method_type', ['options' => $contactMethodTypes]) ?><?= $this->Form->control('contact_method') ?></fieldset>
-                <?= $this->Form->button(__('Add contact method')) ?><?= $this->Form->end() ?>
-                <p id="contact-method-status" role="status" aria-live="polite"></p>
+                <div class="member-panel-heading"><h2 id="member-contact-heading"><?= __('Contact methods') ?></h2><?= $this->element('Members/contact_method_button', ['modalId' => 'member-contact-method-modal', 'class' => 'member-contact-add']) ?></div>
+                <?php if ($member->member_contact_methods) : ?><ul class="member-contact-list" id="contact-methods"><?php foreach ($member->member_contact_methods as $memberContactMethod) : ?><li<?= $memberContactMethod->is_non_group_email ? ' class="member-contact-non-group-email"' : '' ?>><span class="member-contact-type"><?= h($memberContactMethod->contact_method_type->label()) ?><?php if ($memberContactMethod->is_non_group_email) : ?><span class="member-contact-warning"><?= __('Non-group email') ?></span><?php endif; ?></span><strong><?= h($memberContactMethod->contact_method) ?></strong><?= $this->Form->postLink($deleteContactMethodIcon, ['controller' => 'MemberContactMethods', 'action' => 'deleteForMember', $member->id, $memberContactMethod->id], ['class' => 'member-contact-delete', 'escape' => false, 'title' => __('Delete contact method'), 'aria-label' => __('Delete {0}', $memberContactMethod->contact_method), 'confirm' => __('Are you sure you want to delete this contact method?')]) ?></li><?php endforeach; ?></ul><?php else : ?><p class="member-empty" id="contact-methods-empty"><?= __('No contact methods have been added yet.') ?></p><?php endif; ?>
             </section>
         </div>
         <aside class="member-context-panels" aria-label="<?= __('Member details') ?>">
@@ -54,25 +50,12 @@ $deleteContactMethodIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
         </aside>
     </div>
 </div>
-
-<?php $this->Html->scriptStart(['block' => true]); ?>
-document.addEventListener('DOMContentLoaded', function () {
-const form = document.getElementById('add-contact-method');
-form.addEventListener('submit', async function (event) {
-    event.preventDefault();
-    const status = document.getElementById('contact-method-status');
-    const button = form.querySelector('button[type="submit"]');
-    button.disabled = true; status.textContent = '<?= h(__('Saving…')) ?>';
-    try {
-        const response = await fetch(form.action, {method: 'POST', body: new FormData(form), headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}});
-        const result = await response.json();
-        if (!response.ok) { const messages = Object.values(result.errors ?? {}).flatMap((errors) => Object.values(errors)); throw new Error(messages.join(' ') || '<?= h(__('Unable to save the contact method.')) ?>'); }
-        const row = document.createElement('li'); const type = document.createElement('span'); const method = document.createElement('strong');
-        type.textContent = result.contactMethod.contact_method_type; method.textContent = result.contactMethod.contact_method; row.append(type, method);
-        let list = document.getElementById('contact-methods');
-        if (!list) { list = document.createElement('ul'); list.id = 'contact-methods'; list.className = 'member-contact-list'; document.getElementById('contact-methods-empty').replaceWith(list); }
-        list.append(row); form.reset(); status.textContent = '<?= h(__('Contact method added.')) ?>';
-    } catch (error) { status.textContent = error.message; } finally { button.disabled = false; }
-});
-});
-<?php $this->Html->scriptEnd(); ?>
+<?= $this->element('Members/contact_method_modal', [
+    'modalId' => 'member-contact-method-modal',
+    'formId' => 'add-contact-method',
+    'url' => ['controller' => 'MemberContactMethods', 'action' => 'addForMember', $member->id],
+    'contactMethodTypes' => $contactMethodTypes,
+    'statusId' => 'contact-method-status',
+    'contactMethodListId' => 'contact-methods',
+    'contactMethodEmptyId' => 'contact-methods-empty',
+]) ?>

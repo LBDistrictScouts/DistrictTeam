@@ -154,6 +154,12 @@ $staffingStatusLabel = match ($staffingStatus) {
                 <dl class="role-metadata">
                     <dt><?= __('Role UUID') ?></dt><dd><code><?= h($role->id) ?></code></dd>
                     <dt><?= __('Slug') ?></dt><dd><code><?= h($role->slug) ?></code></dd>
+                    <dt><?= __('Standard template') ?></dt>
+                    <dd><?php if ($role->template !== null) : ?>
+                        <code><?= h($role->template->value) ?></code>
+                        <?php else : ?>
+                        <?= __('Not assigned') ?>
+                        <?php endif; ?></dd>
                 </dl>
             </section>
         </aside>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Http\Response;
+use Cake\Routing\Router;
 
 /**
  * MemberContactMethods Controller
@@ -32,6 +33,13 @@ class MemberContactMethodsController extends AppController
                     'id' => $memberContactMethod->id,
                     'contact_method' => $memberContactMethod->contact_method,
                     'contact_method_type' => $memberContactMethod->contact_method_type->label(),
+                    'is_non_group_email' => $memberContactMethod->is_non_group_email,
+                    'delete_url' => Router::url([
+                        'controller' => 'MemberContactMethods',
+                        'action' => 'deleteForMember',
+                        $memberId,
+                        $memberContactMethod->id,
+                    ]),
                 ],
             ];
 
