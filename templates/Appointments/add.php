@@ -80,6 +80,7 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
             'contactMethodSelectId' => 'member-contact-method-id',
             'contactMethodTypes' => $appointmentContactMethodTypes,
             'statusId' => 'appointment-contact-method-status',
+            'appointmentEmailOnly' => true,
         ]) ?>
         <dialog id="member-modal">
             <?= $this->Form->create(null, [

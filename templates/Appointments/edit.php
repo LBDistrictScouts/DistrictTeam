@@ -71,6 +71,7 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
     'contactMethodSelectId' => 'member-contact-method-id',
     'contactMethodTypes' => $appointmentContactMethodTypes,
     'statusId' => 'appointment-contact-method-status',
+    'appointmentEmailOnly' => true,
 ]) ?>
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
