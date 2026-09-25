@@ -31,7 +31,7 @@ $appointmentEmailOnly ??= false;
     'data-contact-method-list-id' => $contactMethodListId,
     'data-contact-method-empty-id' => $contactMethodEmptyId,
     'data-contact-method-status-id' => $statusId,
-    'data-appointment-email-only' => $appointmentEmailOnly,
+    'data-appointment-email-only' => $appointmentEmailOnly ? 'true' : 'false',
 ]) ?>
 <fieldset>
     <?= $this->Form->control('contact_method_type', ['options' => $contactMethodTypes]) ?>

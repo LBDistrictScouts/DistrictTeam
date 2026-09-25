@@ -63,6 +63,40 @@ class EmailGroupsTableTest extends TestCase
         $this->assertArrayHasKey('email_address', $emailGroup->getErrors());
     }
 
+    public function testEmailGroupTeamMustBelongToSelectedSection(): void
+    {
+        $sections = $this->fetchTable('Sections');
+        $firstSection = $sections->saveOrFail($sections->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'section_osm_id' => 124,
+            'section_name' => 'District Cubs',
+            'section_type' => 'cubs',
+        ]));
+        $secondSection = $sections->saveOrFail($sections->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'section_osm_id' => 125,
+            'section_name' => 'District Scouts',
+            'section_type' => 'scouts',
+        ]));
+        $teams = $this->fetchTable('Teams');
+        $team = $teams->saveOrFail($teams->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'section_id' => $firstSection->id,
+            'team_name' => 'Cubs Leadership',
+        ]));
+
+        $emailGroup = $this->fetchTable('EmailGroups')->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_id' => $team->id,
+            'section_id' => $secondSection->id,
+            'email_group_name' => 'Invalid Scoped Group',
+            'email_address' => 'invalid-scoped-group@district.example.org',
+        ]);
+
+        $this->assertFalse($this->fetchTable('EmailGroups')->save($emailGroup));
+        $this->assertArrayHasKey('team_id', $emailGroup->getErrors());
+    }
+
     public function testEmailAddressMustUseTheSelectedGroupsDomain(): void
     {
         $emailGroup = $this->fetchTable('EmailGroups')->newEntity([

@@ -126,6 +126,16 @@ class EmailGroupsTable extends Table
             'sectionBelongsToGroup',
             ['errorField' => 'section_id', 'message' => 'Choose a section belonging to the selected group.'],
         );
+        $rules->add(
+            fn(EntityInterface $emailGroup): bool => in_array($emailGroup->get('team_id'), [null, ''], true)
+                || in_array($emailGroup->get('section_id'), [null, ''], true)
+                || $this->Teams->exists([
+                    'id' => $emailGroup->get('team_id'),
+                    'section_id' => $emailGroup->get('section_id'),
+                ]),
+            'teamMatchesSection',
+            ['errorField' => 'team_id', 'message' => 'Choose a team belonging to the selected section.'],
+        );
 
         return $rules;
     }

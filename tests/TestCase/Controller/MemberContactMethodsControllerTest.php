@@ -67,6 +67,7 @@ class MemberContactMethodsControllerTest extends TestCase
         $this->assertTrue($payload['success']);
         $this->assertSame('Email', $payload['contactMethod']['contact_method_type']);
         $this->assertTrue($payload['contactMethod']['is_non_group_email']);
+        $this->assertTrue($payload['contactMethod']['is_appointment_email']);
         $this->assertSame(
             '/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/' . $payload['contactMethod']['id'],
             $payload['contactMethod']['delete_url'],
