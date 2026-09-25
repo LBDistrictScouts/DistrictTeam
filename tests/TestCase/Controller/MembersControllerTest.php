@@ -27,7 +27,7 @@ class MembersControllerTest extends TestCase
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
-        'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
+        'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
     ];
 
     protected function setUp(): void

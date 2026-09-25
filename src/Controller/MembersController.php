@@ -34,7 +34,11 @@ class MembersController extends AppController
                 if (!$file instanceof UploadedFileInterface) {
                     throw new InvalidArgumentException('Please select a CSV file.');
                 }
-                $pending = ['token' => bin2hex(random_bytes(24)), 'rows' => $importer->read($file)];
+                $pending = [
+                    'token' => bin2hex(random_bytes(24)),
+                    'filename' => $file->getClientFilename() ?: 'CSV import',
+                    'rows' => $importer->read($file),
+                ];
                 $session->write('MemberCsvUpload', $pending);
 
                 $this->redirect(['action' => 'mapUnits']);
@@ -120,7 +124,13 @@ class MembersController extends AppController
                 $rows = $this->selectedRows($pending['rows'], $selectedUnits);
                 $importer->saveRoleMappings($pending['rows'], $mapping);
                 $roleResults = $importer->roleImportResults($rows, $mapping);
-                $result = $importer->import($rows, $mapping);
+                $result = $importer->import(
+                    $rows,
+                    $mapping,
+                    is_string($pending['filename'] ?? null) ? $pending['filename'] : 'CSV import',
+                    count($pending['rows']),
+                    array_diff_key($pending['rows'], $rows),
+                );
                 $session->delete('MemberCsvUpload');
                 $this->set(compact('result', 'roleResults'));
                 $this->Flash->success(__('CSV imported successfully.'));

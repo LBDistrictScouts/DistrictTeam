@@ -46,6 +46,7 @@ $cakeDescription = 'District Team';
             <?= $this->Html->link(__('Members'), ['controller' => 'Members', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Roles'), ['controller' => 'Roles', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Appointments'), ['controller' => 'Appointments', 'action' => 'index']) ?>
+            <?= $this->Html->link(__('Imports'), ['controller' => 'Imports', 'action' => 'index']) ?>
         </div>
     </nav>
     <main class="main">
