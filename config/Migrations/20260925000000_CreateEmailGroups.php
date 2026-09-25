@@ -19,7 +19,10 @@ class CreateEmailGroups extends BaseMigration
             ->addIndex(['team_id'])
             ->addIndex(['group_id', 'email_group_name'], ['unique' => true])
             ->addForeignKey('group_id', 'groups', 'id', ['update' => 'CASCADE', 'delete' => 'RESTRICT'])
-            ->addForeignKey('team_id', 'teams', 'id', ['update' => 'CASCADE', 'delete' => 'RESTRICT'])
+            ->addForeignKey(['team_id', 'group_id'], 'teams', ['id', 'group_id'], [
+                'update' => 'CASCADE',
+                'delete' => 'RESTRICT',
+            ])
             ->create();
 
         $this->table('member_contact_methods')
