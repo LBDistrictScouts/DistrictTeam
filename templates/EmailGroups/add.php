@@ -25,6 +25,7 @@
                     'selectedGroupId' => $emailGroup->group_id,
                     'selectedSectionId' => $emailGroup->section_id,
                     'deriveSectionFromTeam' => false,
+                    'disableEmptyControls' => false,
                     'fieldPrefix' => '',
                     'teamRequired' => false,
                     'teamEmpty' => __('No team (group-wide or section-wide)'),

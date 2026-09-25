@@ -53,7 +53,25 @@ class EmailGroupsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('data-team-selector');
         $this->assertResponseContains('data-derive-section-from-team="false"');
+        $this->assertResponseContains('data-disable-empty-controls="false"');
         $this->assertResponseContains('team-selector.js');
+    }
+
+    public function testEditClearsOptionalScope(): void
+    {
+        $this->enableCsrfToken();
+        $this->post('/email-groups/edit/66666666-6666-4666-8666-666666666661', [
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_id' => '',
+            'section_id' => '',
+            'email_group_name' => 'Digital Team Leaders',
+            'email_address' => 'digital-leaders@district.example.org',
+        ]);
+
+        $this->assertRedirect('/email-groups');
+        $emailGroup = $this->fetchTable('EmailGroups')->get('66666666-6666-4666-8666-666666666661');
+        $this->assertNull($emailGroup->team_id);
+        $this->assertNull($emailGroup->section_id);
     }
 
     public function testDeleteRemovesAnEmailGroup(): void

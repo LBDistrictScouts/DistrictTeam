@@ -27,13 +27,13 @@
             function updateTeams(selectedId = '') {
                 const teams = data.teams.filter(item => item.groupId === group.value && (section.value === '' || item.sectionId === section.value));
                 replaceOptions(team, teamEmpty, teams, selectedId);
-                team.disabled = teams.length === 0;
+                team.disabled = teams.length === 0 && selector.dataset.disableEmptyControls !== 'false';
                 notify();
             }
             function updateSections(selectedId = '', selectedTeamId = '') {
                 const sections = data.sections.filter(item => item.groupId === group.value);
                 replaceOptions(section, 'Any section', sections, selectedId);
-                section.disabled = sections.length === 0;
+                section.disabled = sections.length === 0 && selector.dataset.disableEmptyControls !== 'false';
                 updateTeams(selectedTeamId);
             }
 
