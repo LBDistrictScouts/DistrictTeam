@@ -157,6 +157,11 @@ class ApiControllerTest extends TestCase
         foreach ($payload['data'] as $team) {
             $this->assertArrayNotHasKey('roles', $team);
         }
+
+        $teams = array_column($payload['data'], null, 'id');
+        $this->assertSame(0, $teams['11111111-1111-4111-8111-111111111111']['TeamDepth']);
+        $this->assertSame(1, $teams['11111111-1111-4111-8111-111111111112']['TeamDepth']);
+        $this->assertSame(1, $teams['11111111-1111-4111-8111-111111111111']['sub_teams'][0]['TeamDepth']);
     }
 
     public function testTeamViewReturnsSlimRolesWithCurrentAppointments(): void
@@ -279,6 +284,7 @@ class ApiControllerTest extends TestCase
             [],
             $roles['22222222-2222-4222-8222-222222222222']['current_appointments'],
         );
+        $this->assertSame(0, $roles['22222222-2222-4222-8222-222222222222']['team']['TeamDepth']);
     }
 
     public function testApiRoutesAreReadOnly(): void

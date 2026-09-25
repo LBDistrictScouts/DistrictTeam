@@ -112,7 +112,7 @@
     },
     "team": {
       "type": "object",
-      "required": ["id", "group_id", "section_id", "team_name", "sort_order"],
+      "required": ["id", "group_id", "section_id", "team_name", "sort_order", "TeamDepth"],
       "properties": {
         "id": {"$ref": "#/definitions/uuid"},
         "group_id": {"$ref": "#/definitions/uuid"},
@@ -122,6 +122,7 @@
         "slug": {"type": ["string", "null"]},
         "team_parent_id": {"type": ["string", "null"], "format": "uuid"},
         "sort_order": {"type": "integer"},
+        "TeamDepth": {"type": ["integer", "null"]},
         "group": {"$ref": "#/definitions/group"},
         "section": {"anyOf": [{"$ref": "#/definitions/section"}, {"type": "null"}]},
         "parent_team": {"anyOf": [{"$ref": "#/definitions/team"}, {"type": "null"}]},
