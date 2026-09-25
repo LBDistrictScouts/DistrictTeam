@@ -299,6 +299,25 @@ class MemberContactMethodsTable extends Table
         );
         $rules->add($rules->existsIn(['member_id'], 'Members'), ['errorField' => 'member_id']);
         $rules->add($rules->existsIn(['email_group_id'], 'EmailGroups'), ['errorField' => 'email_group_id']);
+        $rules->add(
+            function (EntityInterface $contactMethod): bool {
+                $emailGroupId = $contactMethod->get('email_group_id');
+                if (in_array($emailGroupId, [null, ''], true)) {
+                    return true;
+                }
+
+                $contactMethodType = $contactMethod->get('contact_method_type');
+
+                return $contactMethodType instanceof ContactMethodType
+                    ? $contactMethodType === ContactMethodType::EmailGroup
+                    : (int)$contactMethodType === ContactMethodType::EmailGroup->value;
+            },
+            'emailGroupReferenceRequiresEmailGroupType',
+            [
+                'errorField' => 'email_group_id',
+                'message' => __('Only email group contact methods can reference an email group.'),
+            ],
+        );
 
         return $rules;
     }

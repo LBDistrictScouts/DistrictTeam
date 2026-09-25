@@ -15,6 +15,7 @@ use Cake\Validation\Validator;
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\TeamsTable> $Teams
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\SectionsTable> $Sections
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\MemberContactMethodsTable> $MemberContactMethods
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\MembersTable> $Members
  */
 class EmailGroupsTable extends Table
 {
@@ -34,6 +35,12 @@ class EmailGroupsTable extends Table
         $this->belongsTo('Teams', ['foreignKey' => 'team_id']);
         $this->belongsTo('Sections', ['foreignKey' => 'section_id']);
         $this->hasMany('MemberContactMethods', ['foreignKey' => 'email_group_id']);
+        $this->belongsToMany('Members', [
+            'through' => 'MemberContactMethods',
+            'foreignKey' => 'email_group_id',
+            'targetForeignKey' => 'member_id',
+            'strategy' => 'select',
+        ]);
     }
 
     /**

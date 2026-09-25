@@ -19,6 +19,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Team|null $team
  * @property \App\Model\Entity\Section|null $section
  * @property array<\App\Model\Entity\MemberContactMethod> $member_contact_methods
+ * @property array<\App\Model\Entity\Member> $members
  */
 class EmailGroup extends Entity
 {
@@ -35,6 +36,7 @@ class EmailGroup extends Entity
         'team' => true,
         'section' => true,
         'member_contact_methods' => true,
+        'members' => true,
     ];
 
     /**

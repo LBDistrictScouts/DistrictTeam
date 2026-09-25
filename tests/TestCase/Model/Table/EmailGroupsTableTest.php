@@ -10,7 +10,38 @@ class EmailGroupsTableTest extends TestCase
     /**
      * @var array<string>
      */
-    protected array $fixtures = ['app.Groups', 'app.Sections', 'app.Teams', 'app.EmailGroups'];
+    protected array $fixtures = [
+        'app.Groups',
+        'app.Sections',
+        'app.Teams',
+        'app.EmailGroups',
+        'app.Members',
+        'app.MemberContactMethods',
+    ];
+
+    public function testMembersAssociationUsesMemberContactMethods(): void
+    {
+        $association = $this->fetchTable('EmailGroups')->getAssociation('Members');
+
+        $this->assertSame('email_group_id', $association->getForeignKey());
+        $this->assertSame('member_id', $association->getTargetForeignKey());
+        $this->assertSame('MemberContactMethods', $association->getThrough());
+
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+        $contactMethods->saveOrFail($contactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'digital-leaders@district.example.org',
+            'contact_method_type' => 3,
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+        ]));
+        $emailGroup = $this->fetchTable('EmailGroups')->find()
+            ->contain(['Members'])
+            ->where(['EmailGroups.id' => '66666666-6666-4666-8666-666666666661'])
+            ->firstOrFail();
+
+        $this->assertCount(1, $emailGroup->members);
+        $this->assertSame('33333333-3333-4333-8333-333333333331', $emailGroup->members[0]->id);
+    }
 
     public function testEmailGroupRequiresAnExistingGroupAndMatchingTeam(): void
     {

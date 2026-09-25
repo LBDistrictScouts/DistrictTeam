@@ -25,6 +25,23 @@ class MemberContactMethodsController extends AppController
         $this->request->allowMethod(['post']);
 
         $data = ['member_id' => $memberId] + $this->request->getData();
+        if ((int)($data['contact_method_type'] ?? 0) === ContactMethodType::EmailGroup->value) {
+            $payload = [
+                'success' => false,
+                'errors' => [
+                    'contact_method_type' => [
+                        'emailGroupManagedByEmailGroups' => __(
+                            'Email group contact methods are managed from email groups.',
+                        ),
+                    ],
+                ],
+            ];
+
+            return $this->response
+                ->withStatus(422)
+                ->withType('application/json')
+                ->withStringBody((string)json_encode($payload));
+        }
         $memberContactMethod = $this->MemberContactMethods->newEntity($data);
 
         if ($this->MemberContactMethods->save($memberContactMethod)) {

@@ -364,6 +364,9 @@ class MembersController extends AppController
         ]);
         $contactMethodTypes = [];
         foreach (ContactMethodType::cases() as $contactMethodType) {
+            if ($contactMethodType === ContactMethodType::EmailGroup) {
+                continue;
+            }
             $contactMethodTypes[$contactMethodType->value] = $contactMethodType->label();
         }
 

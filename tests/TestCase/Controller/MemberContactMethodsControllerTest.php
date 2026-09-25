@@ -86,6 +86,23 @@ class MemberContactMethodsControllerTest extends TestCase
         $this->assertResponseCode(422);
     }
 
+    public function testAddForMemberDoesNotAllowEmailGroupContactMethods(): void
+    {
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->post(
+            '/member-contact-methods/add-for-member/33333333-3333-4333-8333-333333333331',
+            ['contact_method' => 'digital-leaders@district.example.org', 'contact_method_type' => 3],
+        );
+
+        $this->assertResponseCode(422);
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame(
+            'Email group contact methods are managed from email groups.',
+            $payload['errors']['contact_method_type']['emailGroupManagedByEmailGroups'],
+        );
+    }
+
     public function testDeleteForMemberDeletesUnusedContactMethod(): void
     {
         $this->enableCsrfToken();
