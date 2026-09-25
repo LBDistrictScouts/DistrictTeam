@@ -14,8 +14,10 @@ use Cake\ORM\Entity;
  * @property string $contact_method
  * @property \App\Model\Enum\ContactMethodType $contact_method_type
  * @property bool $is_non_group_email
+ * @property string|null $email_group_id
  *
  * @property \App\Model\Entity\Member $member
+ * @property \App\Model\Entity\EmailGroup|null $email_group
  */
 class MemberContactMethod extends Entity
 {
@@ -32,8 +34,10 @@ class MemberContactMethod extends Entity
         'member_id' => true,
         'contact_method' => true,
         'contact_method_type' => true,
+        'email_group_id' => true,
         'is_non_group_email' => false,
         'member' => true,
+        'email_group' => true,
     ];
 
     /**

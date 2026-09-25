@@ -13,7 +13,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 class MemberCsvImporterTest extends TestCase
 {
     protected array $fixtures = [
-        'app.Groups', 'app.Sections', 'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
+        'app.Groups', 'app.Sections', 'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
     ];
 
     protected function setUp(): void
@@ -401,6 +401,55 @@ class MemberCsvImporterTest extends TestCase
         ]));
     }
 
+    public function testImportStoresFileAndEntitySnapshots(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(
+            "First name,Last name,Membership number,Start date,Communication email\n"
+            . "Audit,Person,9093,01 Aug 2026,audit@example.org\n",
+        ));
+        $mapping = [array_key_first($importer->sources($rows)) => '22222222-2222-4222-8222-222222222222'];
+
+        $importer->import($rows, $mapping, 'membership-export.csv', 12);
+
+        $file = $this->fetchTable('ImportFiles')->find()->firstOrFail();
+        $this->assertSame('membership-export.csv', $file->filename);
+        $this->assertSame(12, $file->source_record_count);
+        $this->assertSame(1, $file->record_count);
+        $records = $this->fetchTable('ImportRecords')->find()
+            ->where(['import_file_id' => $file->id])->orderByAsc('entity_type')->all()->toList();
+        $this->assertCount(2, $records);
+        $this->assertSame('appointment', $records[0]->entity_type);
+        $this->assertSame('created', $records[0]->action);
+        $this->assertSame('Audit', $records[0]->source_data['First name']);
+        $this->assertSame('22222222-2222-4222-8222-222222222222', $records[0]->entity_data['role_id']);
+        $this->assertSame('member', $records[1]->entity_type);
+        $this->assertSame(9093, $records[1]->entity_data['membership_number']);
+    }
+
+    public function testImportAuditsSourceRowsThatAreNotImported(): void
+    {
+        $importer = new MemberCsvImporter();
+        $rows = $importer->read($this->upload(
+            "First name,Last name,Membership number,Start date,Unit name\n"
+            . "Selected,Person,9094,01 Aug 2026,Selected Unit\n"
+            . "Excluded,Person,9095,01 Aug 2026,Excluded Unit\n",
+        ));
+        $selectedRows = [2 => $rows[2]];
+        $mapping = [array_key_first($importer->sources($selectedRows)) => 'skip'];
+
+        $importer->import($selectedRows, $mapping, 'membership-export.csv', count($rows), [3 => $rows[3]]);
+
+        $records = $this->fetchTable('ImportRecords')->find()
+            ->orderBy(['source_line' => 'ASC', 'entity_type' => 'ASC'])->all()->toList();
+        $this->assertCount(3, $records);
+        $this->assertSame('Appointment skipped by mapping choice.', $records[0]->reason);
+        $this->assertSame('not_imported', $records[0]->action);
+        $this->assertSame('Unit was not selected for import.', $records[2]->reason);
+        $this->assertSame('source', $records[2]->entity_type);
+        $this->assertSame('Excluded', $records[2]->source_data['First name']);
+    }
+
     public function testMissingStartDateGivesActionableError(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -444,6 +493,13 @@ class MemberCsvImporterTest extends TestCase
         $appointment = $this->fetchTable('Appointments')->get('55555555-5555-4555-8555-555555555551');
         $this->assertSame($memberId, $appointment->member_id);
         $this->assertSame('44444444-4444-4444-8444-444444444441', $appointment->member_contact_method_id);
+        $audit = $this->fetchTable('ImportRecords')->find()
+            ->where(['entity_type' => 'member', 'member_id' => $memberId])->firstOrFail();
+        $this->assertSame(['first_name', 'last_name'], $audit->entity_data['_audit']['dirty_fields']);
+        $this->assertEquals(
+            ['first_name' => 'Ada', 'last_name' => 'Lovelace'],
+            $audit->entity_data['_audit']['original_values'],
+        );
     }
 
     public function testFailedImportRollsBackNameUpdate(): void

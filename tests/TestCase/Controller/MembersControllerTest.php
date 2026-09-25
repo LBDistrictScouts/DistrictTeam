@@ -27,7 +27,7 @@ class MembersControllerTest extends TestCase
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
-        'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings',
+        'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
     ];
 
     protected function setUp(): void
@@ -364,6 +364,17 @@ class MembersControllerTest extends TestCase
         $this->get('/members');
         $this->assertResponseOk();
         $this->assertResponseContains('Ada');
+        $this->assertSame(1, substr_count((string)$this->_response->getBody(), '>Non-public</span>'));
+
+        $this->get('/members?public_visibility=non-public');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Ada');
+        $this->assertResponseNotContains('Grace');
+
+        $this->get('/members?public_visibility=public');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Grace');
+        $this->assertResponseNotContains('Ada');
     }
 
     /**
@@ -377,11 +388,13 @@ class MembersControllerTest extends TestCase
         $this->get('/members/view/33333333-3333-4333-8333-333333333331');
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
+        $this->assertResponseContains('member-non-public-indicator');
         $this->assertResponseContains('ada@example.com');
         $this->assertResponseContains('Non-group email');
         $this->assertResponseContains('class="member-contact-non-group-email"');
         $this->assertResponseContains('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/44444444-4444-4444-8444-444444444441');
         $this->assertResponseContains('Are you sure you want to delete this contact method?');
+        $this->assertResponseNotContains('<option value="3">Email Group</option>');
     }
 
     /**

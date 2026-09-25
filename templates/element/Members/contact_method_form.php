@@ -11,6 +11,7 @@
  * @var string|null $contactMethodEmptyId
  * @var string $statusId
  * @var bool $showSubmit
+ * @var bool $appointmentEmailOnly
  */
 $urlBase ??= null;
 $memberSelectId ??= null;
@@ -18,6 +19,7 @@ $contactMethodSelectId ??= null;
 $contactMethodListId ??= null;
 $contactMethodEmptyId ??= null;
 $showSubmit ??= true;
+$appointmentEmailOnly ??= false;
 ?>
 <?= $this->Form->create(null, [
     'id' => $formId,
@@ -29,6 +31,7 @@ $showSubmit ??= true;
     'data-contact-method-list-id' => $contactMethodListId,
     'data-contact-method-empty-id' => $contactMethodEmptyId,
     'data-contact-method-status-id' => $statusId,
+    'data-appointment-email-only' => $appointmentEmailOnly ? 'true' : 'false',
 ]) ?>
 <fieldset>
     <?= $this->Form->control('contact_method_type', ['options' => $contactMethodTypes]) ?>

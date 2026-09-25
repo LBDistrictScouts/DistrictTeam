@@ -48,6 +48,13 @@
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(messages(result.errors).join(' ') || 'Unable to save the contact method.');
+                    if (
+                        form.dataset.appointmentEmailOnly === 'true'
+                        && (result.contactMethod.is_non_group_email || !result.contactMethod.is_appointment_email)
+                    ) {
+                        status.textContent = 'Only group email contact methods can be used for an appointment. Add one to continue.';
+                        return;
+                    }
                     if (contactSelect) {
                         contactSelect.add(new Option(result.contactMethod.contact_method, result.contactMethod.id, true, true));
                         contactSelect.dispatchEvent(new Event('change', {bubbles: true}));

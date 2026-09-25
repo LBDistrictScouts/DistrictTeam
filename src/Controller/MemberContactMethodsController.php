@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Enum\ContactMethodType;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
@@ -24,6 +25,23 @@ class MemberContactMethodsController extends AppController
         $this->request->allowMethod(['post']);
 
         $data = ['member_id' => $memberId] + $this->request->getData();
+        if ((int)($data['contact_method_type'] ?? 0) === ContactMethodType::EmailGroup->value) {
+            $payload = [
+                'success' => false,
+                'errors' => [
+                    'contact_method_type' => [
+                        'emailGroupManagedByEmailGroups' => __(
+                            'Email group contact methods are managed from email groups.',
+                        ),
+                    ],
+                ],
+            ];
+
+            return $this->response
+                ->withStatus(422)
+                ->withType('application/json')
+                ->withStringBody((string)json_encode($payload));
+        }
         $memberContactMethod = $this->MemberContactMethods->newEntity($data);
 
         if ($this->MemberContactMethods->save($memberContactMethod)) {
@@ -34,6 +52,7 @@ class MemberContactMethodsController extends AppController
                     'contact_method' => $memberContactMethod->contact_method,
                     'contact_method_type' => $memberContactMethod->contact_method_type->label(),
                     'is_non_group_email' => $memberContactMethod->is_non_group_email,
+                    'is_appointment_email' => $this->isAppointmentEmail($memberContactMethod->contact_method_type),
                     'delete_url' => Router::url([
                         'controller' => 'MemberContactMethods',
                         'action' => 'deleteForMember',
@@ -83,5 +102,18 @@ class MemberContactMethodsController extends AppController
         }
 
         return $this->redirect(['controller' => 'Members', 'action' => 'view', $memberId]);
+    }
+
+    /**
+     * @param \App\Model\Enum\ContactMethodType $contactMethodType Contact method type.
+     * @return bool Whether the type represents an email address.
+     */
+    private function isAppointmentEmail(ContactMethodType $contactMethodType): bool
+    {
+        return in_array($contactMethodType, [
+            ContactMethodType::Email,
+            ContactMethodType::EmailAlias,
+            ContactMethodType::EmailGroup,
+        ], true);
     }
 }

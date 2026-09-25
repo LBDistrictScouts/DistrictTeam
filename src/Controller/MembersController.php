@@ -34,7 +34,11 @@ class MembersController extends AppController
                 if (!$file instanceof UploadedFileInterface) {
                     throw new InvalidArgumentException('Please select a CSV file.');
                 }
-                $pending = ['token' => bin2hex(random_bytes(24)), 'rows' => $importer->read($file)];
+                $pending = [
+                    'token' => bin2hex(random_bytes(24)),
+                    'filename' => $file->getClientFilename() ?: 'CSV import',
+                    'rows' => $importer->read($file),
+                ];
                 $session->write('MemberCsvUpload', $pending);
 
                 $this->redirect(['action' => 'mapUnits']);
@@ -120,7 +124,13 @@ class MembersController extends AppController
                 $rows = $this->selectedRows($pending['rows'], $selectedUnits);
                 $importer->saveRoleMappings($pending['rows'], $mapping);
                 $roleResults = $importer->roleImportResults($rows, $mapping);
-                $result = $importer->import($rows, $mapping);
+                $result = $importer->import(
+                    $rows,
+                    $mapping,
+                    is_string($pending['filename'] ?? null) ? $pending['filename'] : 'CSV import',
+                    count($pending['rows']),
+                    array_diff_key($pending['rows'], $rows),
+                );
                 $session->delete('MemberCsvUpload');
                 $this->set(compact('result', 'roleResults'));
                 $this->Flash->success(__('CSV imported successfully.'));
@@ -305,6 +315,7 @@ class MembersController extends AppController
         $filters = [
             'q' => $this->indexFilter('q'),
             'status' => $this->indexChoice('status', ['active', 'inactive']),
+            'public_visibility' => $this->indexChoice('public_visibility', ['public', 'non-public']),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . strtolower($filters['q']) . '%';
@@ -329,12 +340,21 @@ class MembersController extends AppController
                 'Members.leave_date <' => $today,
             ]]);
         }
+        if ($filters['public_visibility'] === 'public') {
+            $query->where(['Members.public_opt_out' => false]);
+        } elseif ($filters['public_visibility'] === 'non-public') {
+            $query->where(['Members.public_opt_out' => true]);
+        }
         $members = $this->paginate($query);
 
         $filterControls = [[
             'name' => 'status', 'label' => __('Status'),
             'options' => ['active' => __('Active'), 'inactive' => __('Inactive')],
             'empty' => __('All members'),
+        ], [
+            'name' => 'public_visibility', 'label' => __('Public visibility'),
+            'options' => ['public' => __('Public'), 'non-public' => __('Non-public')],
+            'empty' => __('All visibility'),
         ]];
         $this->set(compact('members', 'filters', 'filterControls'));
     }
@@ -354,6 +374,9 @@ class MembersController extends AppController
         ]);
         $contactMethodTypes = [];
         foreach (ContactMethodType::cases() as $contactMethodType) {
+            if ($contactMethodType === ContactMethodType::EmailGroup) {
+                continue;
+            }
             $contactMethodTypes[$contactMethodType->value] = $contactMethodType->label();
         }
 
