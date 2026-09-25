@@ -52,6 +52,7 @@ class EmailGroupsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('data-team-selector');
+        $this->assertResponseContains('data-derive-section-from-team="false"');
         $this->assertResponseContains('team-selector.js');
     }
 

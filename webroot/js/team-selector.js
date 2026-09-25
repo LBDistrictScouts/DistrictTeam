@@ -16,7 +16,9 @@
             const selectedTeamId = selector.dataset.selectedTeamId || team.value;
             const initialTeam = data.teams.find(item => item.id === selectedTeamId);
             const selectedGroupId = initialTeam ? initialTeam.groupId : (selector.dataset.selectedGroupId || '');
-            const selectedSectionId = initialTeam ? initialTeam.sectionId : (selector.dataset.selectedSectionId || '');
+            const selectedSectionId = selector.dataset.deriveSectionFromTeam === 'false'
+                ? (selector.dataset.selectedSectionId || '')
+                : (initialTeam ? initialTeam.sectionId : (selector.dataset.selectedSectionId || ''));
             const teamEmpty = selector.dataset.teamEmpty || 'Choose a team';
 
             function notify() {

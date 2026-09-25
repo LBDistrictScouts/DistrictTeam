@@ -6,6 +6,7 @@
  * @var string $selectedTeamId
  * @var string $selectedGroupId
  * @var string $selectedSectionId
+ * @var bool $deriveSectionFromTeam
  * @var bool $teamRequired
  * @var string $teamEmpty
  * @var array<string, mixed> $teamSelectorData
@@ -15,6 +16,7 @@ $fieldPrefix ??= 'team_';
 $selectedTeamId ??= '';
 $selectedGroupId ??= '';
 $selectedSectionId ??= '';
+$deriveSectionFromTeam ??= true;
 $teamRequired ??= true;
 $teamEmpty ??= __('Choose a team');
 ?>
@@ -22,6 +24,7 @@ $teamEmpty ??= __('Choose a team');
     data-selected-team-id="<?= h($selectedTeamId) ?>"
     data-selected-group-id="<?= h($selectedGroupId) ?>"
     data-selected-section-id="<?= h($selectedSectionId) ?>"
+    data-derive-section-from-team="<?= $deriveSectionFromTeam ? 'true' : 'false' ?>"
     data-team-empty="<?= h($teamEmpty) ?>">
     <?= $this->Form->control($fieldPrefix . 'group_id', [
         'type' => 'select', 'label' => __('Group'), 'empty' => __('Choose a group'), 'required' => true,
