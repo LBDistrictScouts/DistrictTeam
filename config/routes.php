@@ -64,7 +64,7 @@ return function (RouteBuilder $routes): void {
             'action' => 'appointmentContactMethods',
         ])->setMethods(['GET']);
 
-        foreach (['Teams', 'Roles', 'Members', 'MemberContactMethods', 'Appointments'] as $resource) {
+        foreach (['Teams', 'Roles', 'Members', 'MemberContactMethods', 'EmailGroups', 'Appointments'] as $resource) {
             $builder->resources($resource, ['only' => ['index', 'view']]);
         }
     });

@@ -24,6 +24,7 @@ use InvalidArgumentException;
  * @property \Cake\ORM\Association\HasOne<\App\Model\Table\RolesTable> $TeamLead
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\SectionsTable> $Sections
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Team> newEntities(array $data, array $options = [])
@@ -84,6 +85,7 @@ class TeamsTable extends Table
             'foreignKey' => 'team_id',
             'strategy' => 'select',
         ]);
+        $this->hasMany('EmailGroups', ['foreignKey' => 'team_id']);
 
         $this->hasOne('TeamLead', [
             'className' => 'Roles',

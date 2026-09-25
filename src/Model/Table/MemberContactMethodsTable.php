@@ -17,6 +17,7 @@ use Cake\Validation\Validator;
  * MemberContactMethods Model
  *
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MembersTable> $Members
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\EmailGroupsTable> $EmailGroups
  * @method \App\Model\Entity\MemberContactMethod newEmptyEntity()
  * @method \App\Model\Entity\MemberContactMethod newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\MemberContactMethod> newEntities(array $data, array $options = [])
@@ -63,6 +64,7 @@ class MemberContactMethodsTable extends Table
             'foreignKey' => 'member_id',
             'joinType' => 'INNER',
         ]);
+        $this->belongsTo('EmailGroups', ['foreignKey' => 'email_group_id']);
     }
 
     /**
@@ -253,6 +255,8 @@ class MemberContactMethodsTable extends Table
             ->uuid('member_id')
             ->notEmptyString('member_id');
 
+        $validator->uuid('email_group_id')->allowEmptyString('email_group_id');
+
         $validator
             ->scalar('contact_method')
             ->maxLength('contact_method', 255)
@@ -294,6 +298,7 @@ class MemberContactMethodsTable extends Table
             ],
         );
         $rules->add($rules->existsIn(['member_id'], 'Members'), ['errorField' => 'member_id']);
+        $rules->add($rules->existsIn(['email_group_id'], 'EmailGroups'), ['errorField' => 'email_group_id']);
 
         return $rules;
     }

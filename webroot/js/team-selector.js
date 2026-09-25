@@ -15,13 +15,16 @@
             const data = JSON.parse(dataElement.textContent);
             const selectedTeamId = selector.dataset.selectedTeamId || team.value;
             const initialTeam = data.teams.find(item => item.id === selectedTeamId);
+            const selectedGroupId = initialTeam ? initialTeam.groupId : (selector.dataset.selectedGroupId || '');
+            const selectedSectionId = initialTeam ? initialTeam.sectionId : (selector.dataset.selectedSectionId || '');
+            const teamEmpty = selector.dataset.teamEmpty || 'Choose a team';
 
             function notify() {
                 selector.dispatchEvent(new CustomEvent('teamselector:changed', { detail: { teamId: team.value } }));
             }
             function updateTeams(selectedId = '') {
                 const teams = data.teams.filter(item => item.groupId === group.value && (section.value === '' || item.sectionId === section.value));
-                replaceOptions(team, 'Choose a team', teams, selectedId);
+                replaceOptions(team, teamEmpty, teams, selectedId);
                 team.disabled = teams.length === 0;
                 notify();
             }
@@ -36,8 +39,8 @@
             section.addEventListener('change', () => updateTeams());
             team.addEventListener('change', notify);
 
-            replaceOptions(group, 'Choose a group', data.groups, initialTeam ? initialTeam.groupId : '');
-            updateSections(initialTeam ? initialTeam.sectionId : '', initialTeam ? initialTeam.id : '');
+            replaceOptions(group, 'Choose a group', data.groups, selectedGroupId);
+            updateSections(selectedSectionId, selectedTeamId);
         });
     });
 })();

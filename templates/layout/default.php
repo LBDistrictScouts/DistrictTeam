@@ -41,6 +41,7 @@ $cakeDescription = 'District Team';
         <div class="top-nav-links">
             <?= $this->Html->link(__('Teams'), ['controller' => 'Teams', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Groups'), ['controller' => 'Groups', 'action' => 'index']) ?>
+            <?= $this->Html->link(__('Email Groups'), ['controller' => 'EmailGroups', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Sections'), ['controller' => 'Sections', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Members'), ['controller' => 'Members', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Roles'), ['controller' => 'Roles', 'action' => 'index']) ?>

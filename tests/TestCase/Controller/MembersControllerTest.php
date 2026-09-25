@@ -364,6 +364,17 @@ class MembersControllerTest extends TestCase
         $this->get('/members');
         $this->assertResponseOk();
         $this->assertResponseContains('Ada');
+        $this->assertSame(1, substr_count((string)$this->_response->getBody(), '>Non-public</span>'));
+
+        $this->get('/members?public_visibility=non-public');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Ada');
+        $this->assertResponseNotContains('Grace');
+
+        $this->get('/members?public_visibility=public');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Grace');
+        $this->assertResponseNotContains('Ada');
     }
 
     /**
@@ -377,6 +388,7 @@ class MembersControllerTest extends TestCase
         $this->get('/members/view/33333333-3333-4333-8333-333333333331');
         $this->assertResponseOk();
         $this->assertResponseContains('Ada Lovelace');
+        $this->assertResponseContains('member-non-public-indicator');
         $this->assertResponseContains('ada@example.com');
         $this->assertResponseContains('Non-group email');
         $this->assertResponseContains('class="member-contact-non-group-email"');

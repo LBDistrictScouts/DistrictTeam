@@ -28,6 +28,8 @@ class MemberContactMethodsTableTest extends TestCase
         'app.Members',
         'app.MemberContactMethods',
         'app.Groups',
+        'app.Teams',
+        'app.EmailGroups',
     ];
 
     /**
@@ -102,6 +104,19 @@ class MemberContactMethodsTableTest extends TestCase
         ]);
         $this->assertFalse($this->MemberContactMethods->save($missingMember));
         $this->assertArrayHasKey('member_id', $missingMember->getErrors());
+    }
+
+    public function testEmailGroupMustExistWhenProvided(): void
+    {
+        $contact = $this->MemberContactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'group@example.com',
+            'contact_method_type' => ContactMethodType::EmailGroup->value,
+            'email_group_id' => '99999999-9999-4999-8999-999999999999',
+        ]);
+
+        $this->assertFalse($this->MemberContactMethods->save($contact));
+        $this->assertArrayHasKey('email_group_id', $contact->getErrors());
     }
 
     public function testPhoneNumbersAreNormalizedAndInvalidFormatsAreRejected(): void

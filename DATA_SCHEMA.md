@@ -10,10 +10,13 @@ The default database driver is PostgreSQL. All domain records use UUID primary k
 erDiagram
     GROUPS ||--o{ SECTIONS : contains
     GROUPS o|--o{ TEAMS : scopes
+    GROUPS ||--o{ EMAIL_GROUPS : owns
     SECTIONS o|--o{ TEAMS : scopes
     TEAMS o|--o{ TEAMS : "parent of"
+    TEAMS o|--o{ EMAIL_GROUPS : scopes
     TEAMS ||--o{ ROLES : contains
     MEMBERS ||--o{ MEMBER_CONTACT_METHODS : has
+    EMAIL_GROUPS o|--o{ MEMBER_CONTACT_METHODS : classifies
     ROLES ||--o{ APPOINTMENTS : receives
     MEMBERS ||--o{ APPOINTMENTS : holds
     MEMBER_CONTACT_METHODS ||--o{ APPOINTMENTS : uses
@@ -140,6 +143,7 @@ Stores a member's email addresses, email aliases or groups, and phone numbers.
 | `member_id` | `uuid` | No | — | Member who owns the contact method. |
 | `contact_method` | `varchar(255)` | No | — | Address, group, alias, or phone number. |
 | `contact_method_type` | `integer` | No | `1` | Enum discriminator described below. |
+| `email_group_id` | `uuid` | Yes | `NULL` | Optional email group associated with this contact method. |
 | `is_non_group_email` | `boolean` | No | `false` | Whether an email contact method's domain is absent from every group's configured domains. Calculated on save. |
 
 `contact_method_type` values:
@@ -155,8 +159,24 @@ Constraints:
 
 - Primary key: `id`.
 - Foreign key: `member_id → members.id`, with `ON UPDATE CASCADE` and `ON DELETE CASCADE`.
+- Foreign key: `email_group_id → email_groups.id`, with `ON UPDATE CASCADE` and `ON DELETE SET NULL`.
 - Unique index: (`contact_method`, `member_id`), preventing the same contact value from being stored twice for one member. The value may be reused by different members.
 - Enum membership is enforced by CakePHP validation, not by a database check constraint.
+
+## `email_groups`
+
+Stores named email groups at group scope, optionally narrowed to a team.
+
+| Column | Database type | Null | Default | Purpose |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | No | — | Primary key. |
+| `group_id` | `uuid` | No | — | Required owning group. |
+| `team_id` | `uuid` | Yes | `NULL` | Optional team scope within the group. |
+| `section_id` | `uuid` | Yes | `NULL` | Optional section scope within the group. |
+| `email_group_name` | `varchar(255)` | No | — | Human-readable email group name. |
+| `email_address` | `varchar(255)` | Yes | `NULL` | Unique delivery address for the email group. Required for new email groups. |
+
+`group_id` references `groups.id`, `team_id` references `teams.id`, and `section_id` references `sections.id`; all cascade updates and restrict deletion. The ORM requires an optional team or section to belong to the selected group. Email group names are unique within a group. Email addresses are validated, lowercased, and unique. A member contact method can reference an email group; deleting that email group clears the nullable reference.
 
 ## `appointments`
 

@@ -4,14 +4,25 @@
  * @var string $teamField
  * @var string $fieldPrefix
  * @var string $selectedTeamId
+ * @var string $selectedGroupId
+ * @var string $selectedSectionId
+ * @var bool $teamRequired
+ * @var string $teamEmpty
  * @var array<string, mixed> $teamSelectorData
  */
 $teamField ??= 'team_id';
 $fieldPrefix ??= 'team_';
 $selectedTeamId ??= '';
+$selectedGroupId ??= '';
+$selectedSectionId ??= '';
+$teamRequired ??= true;
+$teamEmpty ??= __('Choose a team');
 ?>
 <div class="team-selector" data-team-selector data-team-field="<?= h($teamField) ?>"
-    data-selected-team-id="<?= h($selectedTeamId) ?>">
+    data-selected-team-id="<?= h($selectedTeamId) ?>"
+    data-selected-group-id="<?= h($selectedGroupId) ?>"
+    data-selected-section-id="<?= h($selectedSectionId) ?>"
+    data-team-empty="<?= h($teamEmpty) ?>">
     <?= $this->Form->control($fieldPrefix . 'group_id', [
         'type' => 'select', 'label' => __('Group'), 'empty' => __('Choose a group'), 'required' => true,
     ]) ?>
@@ -19,8 +30,8 @@ $selectedTeamId ??= '';
         'type' => 'select', 'label' => __('Section'), 'empty' => __('Any section'), 'disabled' => true,
     ]) ?>
     <?= $this->Form->control($teamField, [
-        'type' => 'select', 'label' => __('Team'), 'empty' => __('Choose a team'),
-        'disabled' => true, 'required' => true,
+        'type' => 'select', 'label' => __('Team'), 'empty' => $teamEmpty,
+        'disabled' => true, 'required' => $teamRequired,
     ]) ?>
     <script type="application/json" data-team-selector-data><?=
         json_encode($teamSelectorData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)

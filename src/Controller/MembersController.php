@@ -305,6 +305,7 @@ class MembersController extends AppController
         $filters = [
             'q' => $this->indexFilter('q'),
             'status' => $this->indexChoice('status', ['active', 'inactive']),
+            'public_visibility' => $this->indexChoice('public_visibility', ['public', 'non-public']),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . strtolower($filters['q']) . '%';
@@ -329,12 +330,21 @@ class MembersController extends AppController
                 'Members.leave_date <' => $today,
             ]]);
         }
+        if ($filters['public_visibility'] === 'public') {
+            $query->where(['Members.public_opt_out' => false]);
+        } elseif ($filters['public_visibility'] === 'non-public') {
+            $query->where(['Members.public_opt_out' => true]);
+        }
         $members = $this->paginate($query);
 
         $filterControls = [[
             'name' => 'status', 'label' => __('Status'),
             'options' => ['active' => __('Active'), 'inactive' => __('Inactive')],
             'empty' => __('All members'),
+        ], [
+            'name' => 'public_visibility', 'label' => __('Public visibility'),
+            'options' => ['public' => __('Public'), 'non-public' => __('Non-public')],
+            'empty' => __('All visibility'),
         ]];
         $this->set(compact('members', 'filters', 'filterControls'));
     }

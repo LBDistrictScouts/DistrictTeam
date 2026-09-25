@@ -29,6 +29,7 @@ class SectionsTable extends Table
             'joinType' => 'INNER',
         ]);
         $this->hasMany('Teams', ['foreignKey' => 'section_id']);
+        $this->hasMany('EmailGroups', ['foreignKey' => 'section_id']);
         $this->addBehavior('CounterCache', ['Groups' => ['sections_count']]);
     }
 

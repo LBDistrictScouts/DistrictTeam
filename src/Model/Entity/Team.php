@@ -27,6 +27,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Team $parent_team
  * @property array<\App\Model\Entity\Team> $sub_teams
  * @property array<\App\Model\Entity\Role> $roles
+ * @property array<\App\Model\Entity\EmailGroup> $email_groups
  * @property \App\Model\Entity\Role|null $team_lead
  */
 class Team extends Entity
@@ -51,6 +52,7 @@ class Team extends Entity
         'slug' => false,
         'team_parent_id' => true,
         'team_parent' => true,
+        'email_groups' => false,
     ];
 
     /**

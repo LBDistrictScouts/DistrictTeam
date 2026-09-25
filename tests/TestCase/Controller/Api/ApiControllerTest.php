@@ -18,6 +18,7 @@ class ApiControllerTest extends TestCase
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
+        'app.EmailGroups',
         'app.Appointments',
     ];
 
@@ -61,6 +62,8 @@ class ApiControllerTest extends TestCase
             '/api/members/33333333-3333-4333-8333-333333333331.json' => 'member_record',
             '/api/member-contact-methods.json' => 'member_contact_methods_collection',
             '/api/member-contact-methods/44444444-4444-4444-8444-444444444441.json' => 'member_contact_method_record',
+            '/api/email-groups.json' => 'email_groups_collection',
+            '/api/email-groups/66666666-6666-4666-8666-666666666661.json' => 'email_group_record',
             '/api/appointments.json' => 'appointments_collection',
             '/api/appointments/55555555-5555-4555-8555-555555555551.json' => 'appointment_record',
             '/api/member-search?q=ada' => 'member_search',
@@ -90,7 +93,8 @@ class ApiControllerTest extends TestCase
             '/api/teams', '/api/teams/{id}', '/api/group-teams/{groupUUID}',
             '/api/roles', '/api/roles/{id}', '/api/group-roles/{groupUUID}',
             '/api/members', '/api/members/{id}', '/api/member-contact-methods',
-            '/api/member-contact-methods/{id}', '/api/appointments', '/api/appointments/{id}',
+            '/api/member-contact-methods/{id}', '/api/email-groups', '/api/email-groups/{id}',
+            '/api/appointments', '/api/appointments/{id}',
             '/api/member-search', '/api/appointment-contact-methods',
         ];
 
@@ -101,6 +105,24 @@ class ApiControllerTest extends TestCase
             $definition = basename($reference);
             $this->assertArrayHasKey($definition, $responseSchemas['definitions']);
         }
+    }
+
+    public function testEmailGroupsEndpointsExposeTheirScope(): void
+    {
+        $this->get('/api/email-groups.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame('Digital Team Leaders', $payload['data'][0]['email_group_name']);
+        $this->assertSame('District', $payload['data'][0]['group']['group_name']);
+        $this->assertSame('Digital Team', $payload['data'][0]['team']['team_name']);
+        $this->assertNull($payload['data'][0]['section']);
+
+        $this->get('/api/email-groups/66666666-6666-4666-8666-666666666661.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame('digital-leaders@district.example.org', $payload['data']['email_address']);
     }
 
     public function testMemberSearchReturnsSelect2Results(): void
