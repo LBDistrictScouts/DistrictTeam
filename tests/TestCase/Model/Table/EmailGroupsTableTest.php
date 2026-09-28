@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\EmailGroup;
+use App\Model\Enum\ContactMethodType;
 use Cake\TestSuite\TestCase;
 
 class EmailGroupsTableTest extends TestCase
@@ -138,5 +140,33 @@ class EmailGroupsTableTest extends TestCase
 
         $this->assertFalse($this->fetchTable('EmailGroups')->save($emailGroup));
         $this->assertArrayHasKey('email_address', $emailGroup->getErrors());
+    }
+
+    public function testLegacyNullEmailAddressCanBeHydrated(): void
+    {
+        $emailGroup = new EmailGroup(['email_address' => null]);
+
+        $this->assertNull($emailGroup->email_address);
+    }
+
+    public function testChangingEmailGroupAddressSynchronizesLinkedContactMethods(): void
+    {
+        $emailGroups = $this->fetchTable('EmailGroups');
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+        $contactMethods->saveOrFail($contactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'digital-leaders@district.example.org',
+            'contact_method_type' => ContactMethodType::EmailGroup->value,
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+        ]));
+
+        $emailGroup = $emailGroups->get('66666666-6666-4666-8666-666666666661');
+        $emailGroups->patchEntity($emailGroup, ['email_address' => 'digital-team@district.example.org']);
+        $this->assertNotFalse($emailGroups->save($emailGroup));
+
+        $linkedContact = $contactMethods->find()
+            ->where(['email_group_id' => $emailGroup->id])
+            ->firstOrFail();
+        $this->assertSame('digital-team@district.example.org', $linkedContact->contact_method);
     }
 }

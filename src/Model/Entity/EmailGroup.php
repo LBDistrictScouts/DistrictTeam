@@ -42,11 +42,11 @@ class EmailGroup extends Entity
     /**
      * Store email addresses in a consistent form.
      *
-     * @param string $emailAddress Email address.
-     * @return string
+     * @param string|null $emailAddress Email address.
+     * @return string|null
      */
-    protected function _setEmailAddress(string $emailAddress): string
+    protected function _setEmailAddress(?string $emailAddress): ?string
     {
-        return strtolower($emailAddress);
+        return $emailAddress === null ? null : strtolower($emailAddress);
     }
 }

@@ -141,6 +141,19 @@ class MemberContactMethodsTableTest extends TestCase
         $this->assertNotFalse($this->MemberContactMethods->save($emailGroup));
     }
 
+    public function testEmailGroupContactMethodMustUseTheGroupsAddress(): void
+    {
+        $emailGroup = $this->MemberContactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'different-address@district.example.org',
+            'contact_method_type' => ContactMethodType::EmailGroup->value,
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+        ]);
+
+        $this->assertFalse($this->MemberContactMethods->save($emailGroup));
+        $this->assertArrayHasKey('contact_method', $emailGroup->getErrors());
+    }
+
     public function testPhoneNumbersAreNormalizedAndInvalidFormatsAreRejected(): void
     {
         foreach (

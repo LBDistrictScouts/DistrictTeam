@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -145,5 +147,27 @@ class EmailGroupsTable extends Table
         );
 
         return $rules;
+    }
+
+    /**
+     * Keep the stored address for all members of an email group synchronized.
+     *
+     * The parent save and this update run in Cake's atomic save transaction.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Event.
+     * @param \Cake\Datasource\EntityInterface $emailGroup Saved email group.
+     * @param \ArrayObject<string, mixed> $options Save options.
+     * @return void
+     */
+    public function afterSave(EventInterface $event, EntityInterface $emailGroup, ArrayObject $options): void
+    {
+        if (!$emailGroup->isDirty('email_address')) {
+            return;
+        }
+
+        $this->MemberContactMethods->updateAll(
+            ['contact_method' => $emailGroup->get('email_address')],
+            ['email_group_id' => $emailGroup->get('id')],
+        );
     }
 }

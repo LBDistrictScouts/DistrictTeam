@@ -318,6 +318,29 @@ class MemberContactMethodsTable extends Table
                 'message' => __('Only email group contact methods can reference an email group.'),
             ],
         );
+        $rules->add(
+            function (EntityInterface $contactMethod): bool {
+                $emailGroupId = $contactMethod->get('email_group_id');
+                if (in_array($emailGroupId, [null, ''], true)) {
+                    return true;
+                }
+
+                $emailGroup = $this->EmailGroups->find()
+                    ->select(['email_address'])
+                    ->where(['EmailGroups.id' => $emailGroupId])
+                    ->first();
+                if (!$emailGroup instanceof EntityInterface) {
+                    return true;
+                }
+
+                return $contactMethod->get('contact_method') === $emailGroup->get('email_address');
+            },
+            'emailGroupReferenceUsesGroupAddress',
+            [
+                'errorField' => 'contact_method',
+                'message' => __('Use the email address configured for the selected email group.'),
+            ],
+        );
 
         return $rules;
     }
