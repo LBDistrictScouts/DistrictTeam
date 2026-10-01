@@ -19,7 +19,9 @@
         <fieldset>
             <legend><?= __('Role details') ?></legend>
             <?php
-                echo $this->element('Teams/selector', compact('teamSelectorData'));
+                echo $this->element('Teams/selector', compact('teamSelectorData') + [
+                    'selectedTeamId' => $role->team_id,
+                ]);
                 echo $this->Form->control('name');
                 echo $this->Form->control('description');
                 echo $this->Form->control('is_lead', [

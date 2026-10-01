@@ -13,7 +13,7 @@ class CoreDataControllerTest extends TestCase
     /**
      * @var array<string>
      */
-    protected array $fixtures = ['app.Groups', 'app.Sections'];
+    protected array $fixtures = ['app.Groups', 'app.Sections', 'app.Teams', 'app.EmailGroups'];
 
     /**
      * @return void
@@ -48,6 +48,9 @@ class CoreDataControllerTest extends TestCase
         $this->assertResponseContains('First Cubs');
         $this->assertResponseContains('Monday · 18:00 – 19:30');
         $this->assertResponseContains('No teams have been added');
+        $this->assertResponseContains('Email Groups');
+        $this->assertResponseContains('Group Trustees');
+        $this->assertResponseContains('trustees@group.example.org');
     }
 
     /**

@@ -147,8 +147,11 @@ class AppointmentsController extends AppController
                 ];
             }
         }
-        $contactMethodTypes = $this->contactMethodTypes();
         $appointmentContactMethodTypes = $this->appointmentContactMethodTypes();
+        $emailGroups = $this->emailGroupOptions();
+        if ($emailGroups === []) {
+            unset($appointmentContactMethodTypes[ContactMethodType::EmailGroup->value]);
+        }
         $this->set(compact(
             'appointment',
             'roles',
@@ -156,8 +159,8 @@ class AppointmentsController extends AppController
             'teamSelectorData',
             'members',
             'memberContactMethods',
-            'contactMethodTypes',
             'appointmentContactMethodTypes',
+            'emailGroups',
         ));
     }
 
@@ -170,15 +173,38 @@ class AppointmentsController extends AppController
     {
         $this->request->allowMethod(['post']);
 
+        $contactMethodData = [
+            'contact_method_type' => $this->request->getData('contact_method_type'),
+            'contact_method' => $this->request->getData('contact_method'),
+        ];
+        if ((int)$contactMethodData['contact_method_type'] === ContactMethodType::EmailGroup->value) {
+            $emailGroupId = $this->request->getData('email_group_id');
+            $emailGroup = is_string($emailGroupId)
+                ? $this->fetchTable('EmailGroups')->find()
+                    ->select(['id', 'email_address'])
+                    ->where(['id' => $emailGroupId])
+                    ->first()
+                : null;
+            if (!$emailGroup instanceof EntityInterface || !is_string($emailGroup->get('email_address'))) {
+                return $this->response
+                    ->withStatus(422)
+                    ->withType('application/json')
+                    ->withStringBody((string)json_encode([
+                        'success' => false,
+                        'errors' => ['email_group_id' => [__('Choose an email group.')]],
+                    ]));
+            }
+            $contactMethodData['contact_method_type'] = ContactMethodType::EmailGroup->value;
+            $contactMethodData['email_group_id'] = $emailGroup->get('id');
+            $contactMethodData['contact_method'] = $emailGroup->get('email_address');
+        }
+
         $data = [
             'first_name' => $this->request->getData('first_name'),
             'last_name' => $this->request->getData('last_name'),
             'membership_number' => $this->request->getData('membership_number'),
             'join_date' => $this->request->getData('join_date'),
-            'member_contact_methods' => [[
-                'contact_method_type' => $this->request->getData('contact_method_type'),
-                'contact_method' => $this->request->getData('contact_method'),
-            ]],
+            'member_contact_methods' => [$contactMethodData],
         ];
         $member = $this->Appointments->Members->newEntity(
             $data,
@@ -275,6 +301,7 @@ class AppointmentsController extends AppController
             ];
         }
         $appointmentContactMethodTypes = $this->appointmentContactMethodTypes();
+        $emailGroups = $this->emailGroupOptions();
         $this->set(compact(
             'appointment',
             'roles',
@@ -283,6 +310,7 @@ class AppointmentsController extends AppController
             'members',
             'memberContactMethods',
             'appointmentContactMethodTypes',
+            'emailGroups',
         ));
     }
 
@@ -329,6 +357,25 @@ class AppointmentsController extends AppController
             ContactMethodType::EmailAlias->value,
             ContactMethodType::EmailGroup->value,
         ]));
+    }
+
+    /** @return array<string, string> */
+    private function emailGroupOptions(): array
+    {
+        $options = [];
+        foreach ($this->fetchTable('EmailGroups')->find()->orderByAsc('email_group_name') as $emailGroup) {
+            if (!$emailGroup instanceof EntityInterface) {
+                continue;
+            }
+            $id = $emailGroup->get('id');
+            $name = $emailGroup->get('email_group_name');
+            $address = $emailGroup->get('email_address');
+            if (is_string($id) && is_string($name) && is_string($address)) {
+                $options[$id] = $name . ' (' . $address . ')';
+            }
+        }
+
+        return $options;
     }
 
     /** @return array<string, string> */

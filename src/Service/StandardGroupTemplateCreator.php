@@ -143,7 +143,7 @@ class StandardGroupTemplateCreator
      */
     public function create(array $teamSelections, array $roleSelections, bool $reviewOverrides = false): array
     {
-        [, , $existingTeams, $existingRoles] = $this->sourceData();
+        [$groups, $mappedSections, $existingTeams, $existingRoles] = $this->sourceData();
         $plan = $this->plan($reviewOverrides);
         if (count($teamSelections) !== count($plan['teams']) || count($roleSelections) !== count($plan['roles'])) {
             throw new InvalidArgumentException('The proposed template has changed. Reload the page and try again.');
@@ -160,17 +160,20 @@ class StandardGroupTemplateCreator
                 $teamIds[$teamKey] = (string)$team['id'];
             }
         }
-        foreach ($plan['roles'] as $role) {
-            if (isset($teamIds[$role['team_key']])) {
-                continue;
-            }
-            $teamId = $this->teamIdByName(
-                $existingTeams,
-                (string)$role['group_id'],
-                (string)$role['team_name'],
-            );
-            if ($teamId !== null) {
-                $teamIds[$role['team_key']] = $teamId;
+        foreach ($groups as $group) {
+            foreach ($this->definitions($group, $mappedSections[(string)$group['id']] ?? []) as $definition) {
+                $teamKey = $this->key((string)$group['id'], $definition['template']);
+                if (isset($teamIds[$teamKey])) {
+                    continue;
+                }
+                $teamId = $this->teamIdByName(
+                    $existingTeams,
+                    (string)$group['id'],
+                    $definition['team_name'],
+                );
+                if ($teamId !== null) {
+                    $teamIds[$teamKey] = $teamId;
+                }
             }
         }
         $result = ['teams' => 0, 'roles' => 0];

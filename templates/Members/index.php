@@ -39,7 +39,14 @@
                     <td><?= h($member->first_name) ?></td>
                     <td><?= h($member->last_name) ?></td>
                     <td><?= h($member->membership_number) ?></td>
-                    <td><span class="workspace-status <?= $member->active ? 'workspace-status-positive' : 'workspace-status-muted' ?>"><?= $member->active ? __('Active') : __('Inactive') ?></span></td>
+                    <td>
+                        <span class="workspace-status <?= $member->active ? 'workspace-status-positive' : 'workspace-status-muted' ?>">
+                            <?= $member->active ? __('Active') : __('Inactive') ?>
+                        </span>
+                        <?php if ($member->public_opt_out) : ?>
+                        <span class="workspace-status workspace-status-warning"><?= __('Non-public') ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td class="actions">
                         <?= $this->Html->link(__('View'), ['action' => 'view', $member->id]) ?>
                         <?= $this->Html->link(__('Edit'), ['action' => 'edit', $member->id]) ?>

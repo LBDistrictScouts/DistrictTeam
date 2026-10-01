@@ -22,10 +22,12 @@ use Cake\ORM\Entity;
  * @property int|null $tree_left
  * @property int|null $tree_right
  * @property int|null $tree_level
+ * @property int|null $TeamDepth
  *
  * @property \App\Model\Entity\Team $parent_team
  * @property array<\App\Model\Entity\Team> $sub_teams
  * @property array<\App\Model\Entity\Role> $roles
+ * @property array<\App\Model\Entity\EmailGroup> $email_groups
  * @property \App\Model\Entity\Role|null $team_lead
  */
 class Team extends Entity
@@ -50,6 +52,7 @@ class Team extends Entity
         'slug' => false,
         'team_parent_id' => true,
         'team_parent' => true,
+        'email_groups' => false,
     ];
 
     /**
@@ -58,6 +61,23 @@ class Team extends Entity
      * @var list<string>
      */
     protected array $_hidden = ['tree_left', 'tree_right', 'tree_level'];
+
+    /**
+     * Public API representation of the team's position in the hierarchy.
+     *
+     * @var list<string>
+     */
+    protected array $_virtual = ['TeamDepth'];
+
+    /**
+     * Return the public tree depth while keeping the underlying tree coordinate hidden.
+     *
+     * @return int|null
+     */
+    protected function _getTeamDepth(): ?int
+    {
+        return $this->tree_level;
+    }
 
     /**
      * Set the team name and generate its URL-encoded slug.

@@ -2,6 +2,7 @@
 /**
  * @var \App\View\AppView $this
  * @var array<int, string> $contactMethodTypes
+ * @var array<string, string> $emailGroups
  * @var string $modalId
  * @var string $formId
  * @var array<string, mixed>|string|null $url
@@ -11,20 +12,31 @@
  * @var string|null $contactMethodListId
  * @var string|null $contactMethodEmptyId
  * @var string $statusId
+ * @var bool $appointmentEmailOnly
  */
 $urlBase ??= null;
 $memberSelectId ??= null;
 $contactMethodSelectId ??= null;
 $contactMethodListId ??= null;
 $contactMethodEmptyId ??= null;
+$appointmentEmailOnly ??= false;
+$emailGroups ??= [];
 ?>
 <dialog id="<?= h($modalId) ?>" class="contact-method-modal" data-contact-method-modal
     data-member-select-id="<?= h($memberSelectId) ?>">
     <h2><?= __('New contact method') ?></h2>
     <?= $this->element('Members/contact_method_form', compact(
-        'formId', 'url', 'urlBase', 'memberSelectId', 'contactMethodSelectId',
-        'contactMethodListId', 'contactMethodEmptyId', 'contactMethodTypes', 'statusId',
-    ) + ['showSubmit' => false]) ?>
+        'formId',
+        'url',
+        'urlBase',
+        'memberSelectId',
+        'contactMethodSelectId',
+        'contactMethodListId',
+        'contactMethodEmptyId',
+        'contactMethodTypes',
+        'emailGroups',
+        'statusId',
+    ) + ['showSubmit' => false, 'appointmentEmailOnly' => $appointmentEmailOnly]) ?>
     <div class="contact-method-modal-actions">
         <?= $this->Form->button(__('Add contact method'), ['form' => $formId]) ?>
         <?= $this->Form->button(__('Cancel'), [

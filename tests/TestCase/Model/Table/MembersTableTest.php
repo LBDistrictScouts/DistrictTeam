@@ -26,6 +26,10 @@ class MembersTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Members',
+        'app.MemberContactMethods',
+        'app.Groups',
+        'app.Teams',
+        'app.EmailGroups',
     ];
 
     /**
@@ -134,5 +138,29 @@ class MembersTableTest extends TestCase
         $this->assertSame('member_id', $association->getForeignKey());
         $this->assertSame('select', $association->getStrategy());
         $this->assertTrue($association->getDependent());
+    }
+
+    public function testEmailGroupsAssociationUsesMemberContactMethods(): void
+    {
+        $association = $this->Members->getAssociation('EmailGroups');
+
+        $this->assertSame('member_id', $association->getForeignKey());
+        $this->assertSame('email_group_id', $association->getTargetForeignKey());
+        $this->assertSame('MemberContactMethods', $association->getThrough());
+
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+        $contactMethods->saveOrFail($contactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'digital-leaders@district.example.org',
+            'contact_method_type' => 3,
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+        ]));
+        $member = $this->Members->find()
+            ->contain(['EmailGroups'])
+            ->where(['Members.id' => '33333333-3333-4333-8333-333333333331'])
+            ->firstOrFail();
+
+        $this->assertCount(1, $member->email_groups);
+        $this->assertSame('66666666-6666-4666-8666-666666666661', $member->email_groups[0]->id);
     }
 }

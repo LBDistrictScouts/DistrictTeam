@@ -166,10 +166,14 @@ class RolesControllerTest extends TestCase
     public function testAddValidationFailure(): void
     {
         $this->enableCsrfToken();
-        $this->post('/roles/add', []);
+        $this->post('/roles/add', [
+            'team_id' => '11111111-1111-4111-8111-111111111111',
+            'name' => 'Digital Lead',
+        ]);
 
         $this->assertResponseOk();
         $this->assertResponseContains('The role could not be saved');
+        $this->assertResponseContains('data-selected-team-id="11111111-1111-4111-8111-111111111111"');
     }
 
     public function testAddDisplaysLeadCheckbox(): void

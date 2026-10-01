@@ -17,6 +17,7 @@ use Cake\ORM\Entity;
  * @property string|null $meeting_day
  * @property \App\Model\Entity\Team[] $teams
  * @property \App\Model\Entity\Group $group
+ * @property array<\App\Model\Entity\EmailGroup> $email_groups
  */
 class Section extends Entity
 {
@@ -28,6 +29,7 @@ class Section extends Entity
         'meeting_start_time' => true,
         'meeting_end_time' => true,
         'meeting_day' => true,
+        'email_groups' => false,
         'group' => false,
     ];
 }

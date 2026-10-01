@@ -74,6 +74,21 @@
         "member": {"$ref": "#/definitions/member"}
       }
     },
+    "email_group": {
+      "type": "object",
+      "required": ["id", "group_id", "team_id", "section_id", "email_group_name", "email_address", "group", "team", "section"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "group_id": {"$ref": "#/definitions/uuid"},
+        "team_id": {"type": ["string", "null"], "format": "uuid"},
+        "section_id": {"type": ["string", "null"], "format": "uuid"},
+        "email_group_name": {"type": "string"},
+        "email_address": {"type": ["string", "null"], "format": "email"},
+        "group": {"$ref": "#/definitions/group"},
+        "team": {"anyOf": [{"$ref": "#/definitions/team"}, {"type": "null"}]},
+        "section": {"anyOf": [{"$ref": "#/definitions/section"}, {"type": "null"}]}
+      }
+    },
     "appointment": {
       "type": "object",
       "required": ["id", "role_id", "member_id", "public_opt_out", "active"],
@@ -112,7 +127,7 @@
     },
     "team": {
       "type": "object",
-      "required": ["id", "group_id", "section_id", "team_name", "sort_order"],
+      "required": ["id", "group_id", "section_id", "team_name", "sort_order", "TeamDepth"],
       "properties": {
         "id": {"$ref": "#/definitions/uuid"},
         "group_id": {"$ref": "#/definitions/uuid"},
@@ -122,6 +137,7 @@
         "slug": {"type": ["string", "null"]},
         "team_parent_id": {"type": ["string", "null"], "format": "uuid"},
         "sort_order": {"type": "integer"},
+        "TeamDepth": {"type": ["integer", "null"]},
         "group": {"$ref": "#/definitions/group"},
         "section": {"anyOf": [{"$ref": "#/definitions/section"}, {"type": "null"}]},
         "parent_team": {"anyOf": [{"$ref": "#/definitions/team"}, {"type": "null"}]},
@@ -181,6 +197,12 @@
         {"properties": {"data": {"items": {"$ref": "#/definitions/member_contact_method"}}}}
       ]
     },
+    "email_groups_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/email_group"}}}}
+      ]
+    },
     "record": {
       "type": "object",
       "required": ["data"],
@@ -191,6 +213,7 @@
     "member_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member"}}}]},
     "appointment_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/appointment"}}}]},
     "member_contact_method_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member_contact_method"}}}]},
+    "email_group_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/email_group"}}}]},
     "member_search": {
       "type": "object",
       "required": ["results", "pagination"],

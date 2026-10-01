@@ -2,6 +2,7 @@
 /** @var \App\View\AppView $this */
 /** @var \App\Model\Entity\Member $member */
 /** @var array<int, string> $contactMethodTypes */
+/** @var array<string, string> $emailGroups */
 $this->assign('title', $member->full_name);
 $this->Html->css('member-view', ['block' => true]);
 $this->Html->css('contact-method-modal', ['block' => true]);
@@ -19,7 +20,16 @@ $deleteContactMethodIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
         <span aria-current="page"><?= h($member->full_name) ?></span>
     </nav>
     <header class="member-hero">
-        <div><p class="member-eyebrow"><?= __('Member profile') ?></p><h1><?= h($member->full_name) ?></h1><p class="member-hero-context"><?= __('Member #{0}', $member->membership_number) ?></p></div>
+        <div>
+            <p class="member-eyebrow"><?= __('Member profile') ?></p>
+            <h1><?= h($member->full_name) ?></h1>
+            <p class="member-hero-context">
+                <?= __('Member #{0}', $member->membership_number) ?>
+                <?php if ($member->public_opt_out) : ?>
+                <span class="member-non-public-indicator"><?= __('Non-public') ?></span>
+                <?php endif; ?>
+            </p>
+        </div>
         <?= $this->Html->link(__('Edit member'), ['action' => 'edit', $member->id], ['class' => 'member-primary-link']) ?>
     </header>
     <div class="member-stats" aria-label="<?= __('Member at a glance') ?>">
@@ -55,6 +65,7 @@ $deleteContactMethodIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
     'formId' => 'add-contact-method',
     'url' => ['controller' => 'MemberContactMethods', 'action' => 'addForMember', $member->id],
     'contactMethodTypes' => $contactMethodTypes,
+    'emailGroups' => $emailGroups,
     'statusId' => 'contact-method-status',
     'contactMethodListId' => 'contact-methods',
     'contactMethodEmptyId' => 'contact-methods-empty',

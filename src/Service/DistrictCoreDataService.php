@@ -6,8 +6,10 @@ namespace App\Service;
 use App\Model\Enum\GroupType;
 use App\Model\Table\MemberContactMethodsTable;
 use Cake\Core\Configure;
+use Cake\Datasource\EntityInterface;
 use Cake\Http\Client;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use Cake\ORM\Table;
 use Cake\Validation\Validation;
 use RuntimeException;
 
@@ -65,15 +67,25 @@ class DistrictCoreDataService
         $this->validateDatasets($groupData, $sectionData);
         $groups = $this->fetchTable('Groups');
         $sections = $this->fetchTable('Sections');
+        $emailGroups = $this->fetchTable('EmailGroups');
 
         return $groups->getConnection()->transactional(function () use (
             $groups,
             $sections,
+            $emailGroups,
             $groupData,
             $sectionData,
         ): array {
             foreach ($groupData as $record) {
                 $group = $groups->find()->where(['id' => $record['id']])->first() ?? $groups->newEmptyEntity();
+                if ($group instanceof EntityInterface && !$group->isNew()) {
+                    $this->assertEmailGroupsUseConfiguredDomains(
+                        $emailGroups,
+                        $record['id'],
+                        $group->get('domains'),
+                        $record['domains'],
+                    );
+                }
                 $group->set('id', $record['id']);
                 $fields = [
                     'group_name' => $record['group_name'],
@@ -205,6 +217,58 @@ class DistrictCoreDataService
                 throw new RuntimeException('DistrictCoreData section record is invalid.');
             }
             $sectionIds[$section['id']] = true;
+        }
+    }
+
+    /**
+     * Reject a domain synchronization that would invalidate a configured email group address.
+     *
+     * @param \Cake\ORM\Table $emailGroups Email groups table.
+     * @param string $groupId Group UUID.
+     * @param mixed $currentDomains Domains currently stored for the group.
+     * @param list<string> $newDomains Domains from core data.
+     * @return void
+     */
+    private function assertEmailGroupsUseConfiguredDomains(
+        Table $emailGroups,
+        string $groupId,
+        mixed $currentDomains,
+        array $newDomains,
+    ): void {
+        $normalize = static function (mixed $domains): array {
+            if (!is_array($domains)) {
+                return [];
+            }
+            $normalized = array_map(
+                static fn(mixed $domain): string => strtolower((string)$domain),
+                $domains,
+            );
+            sort($normalized);
+
+            return $normalized;
+        };
+        if ($normalize($currentDomains) === $normalize($newDomains)) {
+            return;
+        }
+
+        foreach ($emailGroups->find()->select(['email_address'])->where(['group_id' => $groupId]) as $emailGroup) {
+            $emailAddress = $emailGroup->get('email_address');
+            if (!is_string($emailAddress)) {
+                continue;
+            }
+            $emailAddress = strtolower($emailAddress);
+            $isConfigured = false;
+            foreach ($newDomains as $domain) {
+                if (is_string($domain) && str_ends_with($emailAddress, '@' . strtolower($domain))) {
+                    $isConfigured = true;
+                    break;
+                }
+            }
+            if (!$isConfigured) {
+                throw new RuntimeException(
+                    'Group domains cannot be changed while an email group uses a domain being removed.',
+                );
+            }
         }
     }
 }

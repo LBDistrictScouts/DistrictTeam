@@ -23,6 +23,7 @@ class AppointmentsControllerTest extends TestCase
     protected array $fixtures = [
         'app.Groups', 'app.Teams',
         'app.Sections',
+        'app.EmailGroups',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
