@@ -1,14 +1,17 @@
 <?php
 /** @var \App\View\AppView $this */
 /** @var \App\Model\Entity\ImportFile $import */
-/** @var array{members: iterable, appointments: iterable, roles: iterable} $missing */
+/**
+ * @var array<string, array{
+ *     count: int,
+ *     items: \Cake\Datasource\ResultSetInterface<int, \Cake\Datasource\EntityInterface>,
+ *     truncated: bool
+ * }> $missing
+ */
 /** @var iterable<\App\Model\Entity\ImportRecord> $records */
 /** @var string $search */
 $this->assign('title', $import->filename);
 $this->Html->css('import-audit', ['block' => true]);
-$members = iterator_to_array($missing['members']);
-$appointments = iterator_to_array($missing['appointments']);
-$roles = iterator_to_array($missing['roles']);
 ?>
 <div class="import-audit">
     <nav class="import-audit-breadcrumb" aria-label="<?= __('Breadcrumb') ?>">
@@ -21,9 +24,11 @@ $roles = iterator_to_array($missing['roles']);
     <section class="import-audit-panel" aria-labelledby="coverage-heading">
         <div class="import-audit-panel-heading"><div><p class="import-audit-eyebrow"><?= __('Coverage check') ?></p><h2 id="coverage-heading"><?= __('Not represented by this import') ?></h2></div><p><?= __('Compare the current directory with the rows selected from this CSV.') ?></p></div>
         <div class="import-coverage-grid">
-            <?php foreach ([['Members', $members, 'member'], ['Appointments', $appointments, 'appointment'], ['Roles without an imported appointment', $roles, 'role']] as [$label, $entities, $type]) : ?>
-            <details class="import-coverage-card"><summary><span><?= __('{0}', $label) ?></span><strong><?= $this->Number->format(count($entities)) ?></strong></summary>
-                <?php if (!$entities) : ?><p><?= __('All current records are represented.') ?></p><?php else : ?><ul><?php foreach ($entities as $entity) : ?><li><?= match ($type) {
+            <?php foreach ([['Members', $missing['members'], 'member'], ['Appointments', $missing['appointments'], 'appointment'], ['Roles without an imported appointment', $missing['roles'], 'role']] as [$label, $coverage, $type]) : ?>
+            <details class="import-coverage-card"><summary><span><?= __('{0}', $label) ?></span><strong><?= $this->Number->format($coverage['count']) ?></strong></summary>
+                <?php if ($coverage['count'] === 0) : ?><p><?= __('All current records are represented.') ?></p><?php else : ?>
+                    <?php if ($coverage['truncated']) : ?><p><?= __('Showing the first {0} records.', count($coverage['items'])) ?></p><?php endif; ?>
+                    <ul><?php foreach ($coverage['items'] as $entity) : ?><li><?= match ($type) {
                     'member' => h($entity->full_name), 'appointment' => h($entity->member->full_name . ' — ' . $entity->role->name), default => h($entity->team->team_name . ' / ' . $entity->name),
                 } ?></li><?php endforeach; ?></ul><?php endif; ?>
             </details>
