@@ -14,7 +14,11 @@ class AddSectionToEmailGroups extends BaseMigration
             ->addColumn('section_id', 'uuid', ['null' => true])
             ->addIndex(['section_id'])
             ->addForeignKey(['section_id', 'group_id'], 'sections', ['id', 'group_id'], [
-                'update' => 'CASCADE',
+                'update' => 'RESTRICT',
+                'delete' => 'RESTRICT',
+            ])
+            ->addForeignKey(['team_id', 'section_id'], 'teams', ['id', 'section_id'], [
+                'update' => 'RESTRICT',
                 'delete' => 'RESTRICT',
             ])
             ->update();

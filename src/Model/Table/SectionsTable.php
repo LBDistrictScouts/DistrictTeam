@@ -5,6 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Enum\SectionType;
 use Cake\Database\Type\EnumType;
+use Cake\Datasource\EntityInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -88,6 +89,27 @@ class SectionsTable extends Table
         $rules->add($rules->existsIn(['group_id'], 'Groups'), ['errorField' => 'group_id']);
         $rules->add($rules->isUnique(['section_osm_id']), ['errorField' => 'section_osm_id']);
         $rules->add($rules->isUnique(['section_name']), ['errorField' => 'section_name']);
+        $rules->add(
+            function (EntityInterface $section): bool {
+                if (
+                    $section->isNew()
+                    || !$section->isDirty('group_id')
+                    || !is_string($section->get('id'))
+                ) {
+                    return true;
+                }
+
+                return !$this->EmailGroups->exists([
+                    'section_id' => $section->get('id'),
+                    'group_id !=' => $section->get('group_id'),
+                ]);
+            },
+            'emailGroupScopeAllowsSectionMove',
+            [
+                'errorField' => 'group_id',
+                'message' => __('Update or remove email group scopes before changing this section’s group.'),
+            ],
+        );
 
         return $rules;
     }

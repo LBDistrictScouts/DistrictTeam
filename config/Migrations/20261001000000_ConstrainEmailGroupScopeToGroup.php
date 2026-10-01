@@ -22,12 +22,12 @@ class ConstrainEmailGroupScopeToGroup extends BaseMigration
         $this->execute(
             'ALTER TABLE email_groups ADD CONSTRAINT email_groups_team_id_group_id_fkey '
             . 'FOREIGN KEY (team_id, group_id) REFERENCES teams (id, group_id) '
-            . 'ON UPDATE CASCADE ON DELETE RESTRICT',
+            . 'ON UPDATE RESTRICT ON DELETE RESTRICT',
         );
         $this->execute(
             'ALTER TABLE email_groups ADD CONSTRAINT email_groups_section_id_group_id_fkey '
             . 'FOREIGN KEY (section_id, group_id) REFERENCES sections (id, group_id) '
-            . 'ON UPDATE CASCADE ON DELETE RESTRICT',
+            . 'ON UPDATE RESTRICT ON DELETE RESTRICT',
         );
     }
 

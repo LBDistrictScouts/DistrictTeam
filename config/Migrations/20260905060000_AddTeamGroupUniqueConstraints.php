@@ -13,6 +13,10 @@ class AddTeamGroupUniqueConstraints extends BaseMigration
     public function change(): void
     {
         $this->table('teams')
+            ->addIndex(['id', 'section_id'], [
+                'name' => 'teams_id_section_id_unique',
+                'unique' => true,
+            ])
             ->addIndex(['group_id', 'team_name'], [
                 'name' => 'teams_group_team_name_unique',
                 'unique' => true,

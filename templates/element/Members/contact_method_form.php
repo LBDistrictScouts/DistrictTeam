@@ -22,6 +22,9 @@ $contactMethodEmptyId ??= null;
 $showSubmit ??= true;
 $appointmentEmailOnly ??= false;
 $emailGroups ??= [];
+if (!$emailGroups) {
+    unset($contactMethodTypes[\App\Model\Enum\ContactMethodType::EmailGroup->value]);
+}
 ?>
 <?= $this->Form->create(null, [
     'id' => $formId,

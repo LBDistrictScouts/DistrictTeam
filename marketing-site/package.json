@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-content.mjs && vite build",
-    "dev": "vite"
+    "dev": "node scripts/build-content.mjs && vite"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

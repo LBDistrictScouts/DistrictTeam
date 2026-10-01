@@ -301,6 +301,25 @@ class MemberContactMethodsTable extends Table
         $rules->add($rules->existsIn(['email_group_id'], 'EmailGroups'), ['errorField' => 'email_group_id']);
         $rules->add(
             function (EntityInterface $contactMethod): bool {
+                $contactMethodType = $contactMethod->get('contact_method_type');
+                if ($contactMethodType instanceof ContactMethodType) {
+                    $isEmailGroup = $contactMethodType === ContactMethodType::EmailGroup;
+                } else {
+                    $isEmailGroup = (int)$contactMethodType === ContactMethodType::EmailGroup->value;
+                }
+
+                return !$contactMethod->isNew()
+                    || !$isEmailGroup
+                    || !in_array($contactMethod->get('email_group_id'), [null, ''], true);
+            },
+            'newEmailGroupContactsRequireReference',
+            [
+                'errorField' => 'email_group_id',
+                'message' => __('Choose an email group for this contact method.'),
+            ],
+        );
+        $rules->add(
+            function (EntityInterface $contactMethod): bool {
                 $emailGroupId = $contactMethod->get('email_group_id');
                 if (in_array($emailGroupId, [null, ''], true)) {
                     return true;

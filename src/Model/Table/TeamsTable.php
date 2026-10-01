@@ -255,6 +255,43 @@ class TeamsTable extends Table
             'sectionBelongsToGroup',
             ['errorField' => 'section_id', 'message' => 'Choose a section belonging to the selected group.'],
         );
+        $rules->add(
+            function (EntityInterface $team): bool {
+                if ($team->isNew() || !is_string($team->get('id'))) {
+                    return true;
+                }
+
+                return !$team->isDirty('group_id')
+                    || !$this->EmailGroups->exists(['team_id' => $team->get('id')]);
+            },
+            'emailGroupScopeAllowsTeamGroupMove',
+            [
+                'errorField' => 'group_id',
+                'message' => __('Update or remove email group scopes before changing this team’s group.'),
+            ],
+        );
+        $rules->add(
+            function (EntityInterface $team): bool {
+                if ($team->isNew() || !is_string($team->get('id')) || !$team->isDirty('section_id')) {
+                    return true;
+                }
+
+                $conditions = [
+                    'team_id' => $team->get('id'),
+                    'section_id IS NOT' => null,
+                ];
+                if ($team->get('section_id') !== null) {
+                    $conditions['section_id !='] = $team->get('section_id');
+                }
+
+                return !$this->EmailGroups->exists($conditions);
+            },
+            'emailGroupScopeAllowsTeamSectionMove',
+            [
+                'errorField' => 'section_id',
+                'message' => __('Update or remove section-specific email group scopes before changing this team’s section.'),
+            ],
+        );
 
         return $rules;
     }

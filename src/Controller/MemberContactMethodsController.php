@@ -37,9 +37,27 @@ class MemberContactMethodsController extends AppController
             if (!$emailGroup instanceof EntityInterface || !is_string($emailGroup->get('email_address'))) {
                 return $this->invalidEmailGroupResponse();
             }
+            $data['contact_method_type'] = ContactMethodType::EmailGroup->value;
+            $data['email_group_id'] = $emailGroup->get('id');
             $data['contact_method'] = $emailGroup->get('email_address');
         }
-        $memberContactMethod = $this->MemberContactMethods->newEntity($data);
+        $memberContactMethod = null;
+        if (
+            (int)($data['contact_method_type'] ?? 0) === ContactMethodType::EmailGroup->value
+            && is_string($data['contact_method'] ?? null)
+        ) {
+            $memberContactMethod = $this->MemberContactMethods->find()
+                ->where([
+                    'member_id' => $memberId,
+                    'contact_method' => $data['contact_method'],
+                ])
+                ->first();
+        }
+        if ($memberContactMethod instanceof EntityInterface) {
+            $this->MemberContactMethods->patchEntity($memberContactMethod, $data);
+        } else {
+            $memberContactMethod = $this->MemberContactMethods->newEntity($data);
+        }
 
         if ($this->MemberContactMethods->save($memberContactMethod)) {
             $payload = [
