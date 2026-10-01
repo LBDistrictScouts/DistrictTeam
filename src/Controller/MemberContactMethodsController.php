@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\MemberContactMethod;
 use App\Model\Enum\ContactMethodType;
 use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
@@ -53,7 +54,7 @@ class MemberContactMethodsController extends AppController
                 ])
                 ->first();
         }
-        if ($memberContactMethod instanceof EntityInterface) {
+        if ($memberContactMethod instanceof MemberContactMethod) {
             $this->MemberContactMethods->patchEntity($memberContactMethod, $data);
         } else {
             $memberContactMethod = $this->MemberContactMethods->newEntity($data);

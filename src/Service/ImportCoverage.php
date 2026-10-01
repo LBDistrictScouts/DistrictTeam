@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use Cake\ORM\Locator\LocatorAwareTrait;
-use Cake\ORM\Query;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
 
 /** Compares the current directory with the entities represented by an import file. */
@@ -46,11 +46,12 @@ class ImportCoverage
 
     /**
      * @param \Cake\ORM\Table $table Current entity table.
-     * @param \Cake\ORM\Query\SelectQuery $representedIds Entity IDs represented by the source.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface|array<string, mixed>> $representedIds
+     *     Entity IDs represented by the source.
      * @param list<string> $contain Associations needed by the report.
      * @return iterable<\Cake\Datasource\EntityInterface>
      */
-    private function missing(Table $table, Query $representedIds, array $contain = []): iterable
+    private function missing(Table $table, SelectQuery $representedIds, array $contain = []): iterable
     {
         $query = $table->find()->contain($contain)->orderBy([$table->getAlias() . '.id' => 'ASC']);
         $query->where([$table->getAlias() . '.id NOT IN' => $representedIds]);

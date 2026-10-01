@@ -436,6 +436,7 @@ class ApiControllerTest extends TestCase
         $districtId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
         $parentId = '11111111-1111-4111-8111-111111111111';
         $otherId = '11111111-1111-4111-8111-111111111112';
+        $this->fetchTable('EmailGroups')->updateAll(['team_id' => null], ['team_id' => $otherId]);
         $teams->updateAll(['group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'], ['id' => $otherId]);
         $otherGroupTeam = $teams->saveOrFail($teams->newEntity([
             'team_name' => 'Other Group', 'group_id' => 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
@@ -492,6 +493,7 @@ class ApiControllerTest extends TestCase
         $teams = $this->fetchTable('Teams');
         $parentId = '11111111-1111-4111-8111-111111111111';
         $childId = '11111111-1111-4111-8111-111111111112';
+        $this->fetchTable('EmailGroups')->updateAll(['team_id' => null], ['team_id' => $childId]);
         $teams->updateAll(['group_id' => $groupId], ['id' => $childId]);
         $child = $teams->get($childId);
         $teams->patchEntity($child, ['section_id' => 'cccccccc-cccc-4ccc-8ccc-cccccccccccc']);
@@ -561,6 +563,7 @@ class ApiControllerTest extends TestCase
         $groupId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
         $teams = $this->fetchTable('Teams');
         $roles = $this->fetchTable('Roles');
+        $this->fetchTable('EmailGroups')->updateAll(['team_id' => null], ['team_id IS NOT' => null]);
         $teams->updateAll(['group_id' => $groupId], []);
         $roles->updateAll(['group_id' => $groupId], []);
 

@@ -10,6 +10,13 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
+/**
+ * Sections Model
+ *
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\TeamsTable> $Teams
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
+ */
 class SectionsTable extends Table
 {
     /**
@@ -99,10 +106,14 @@ class SectionsTable extends Table
                     return true;
                 }
 
-                return !$this->EmailGroups->exists([
-                    'section_id' => $section->get('id'),
-                    'group_id !=' => $section->get('group_id'),
-                ]);
+                $teamIds = $this->Teams->find()
+                    ->select(['id'])
+                    ->where(['section_id' => $section->get('id')]);
+
+                return !$this->EmailGroups->exists(['OR' => [
+                    'EmailGroups.section_id' => $section->get('id'),
+                    'EmailGroups.team_id IN' => $teamIds,
+                ]]);
             },
             'emailGroupScopeAllowsSectionMove',
             [

@@ -9,6 +9,7 @@ use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
 use Cake\Http\Client;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use Cake\ORM\Table;
 use Cake\Validation\Validation;
 use RuntimeException;
 
@@ -229,7 +230,7 @@ class DistrictCoreDataService
      * @return void
      */
     private function assertEmailGroupsUseConfiguredDomains(
-        \Cake\ORM\Table $emailGroups,
+        Table $emailGroups,
         string $groupId,
         mixed $currentDomains,
         array $newDomains,

@@ -257,12 +257,15 @@ class TeamsTable extends Table
         );
         $rules->add(
             function (EntityInterface $team): bool {
-                if ($team->isNew() || !is_string($team->get('id'))) {
+                if (
+                    $team->isNew()
+                    || !$team->isDirty('group_id')
+                    || !is_string($team->get('id'))
+                ) {
                     return true;
                 }
 
-                return !$team->isDirty('group_id')
-                    || !$this->EmailGroups->exists(['team_id' => $team->get('id')]);
+                return !$this->EmailGroups->exists(['team_id' => $team->get('id')]);
             },
             'emailGroupScopeAllowsTeamGroupMove',
             [
@@ -289,7 +292,7 @@ class TeamsTable extends Table
             'emailGroupScopeAllowsTeamSectionMove',
             [
                 'errorField' => 'section_id',
-                'message' => __('Update or remove section-specific email group scopes before changing this team’s section.'),
+                'message' => __('Clear section-specific scopes before changing this team’s section.'),
             ],
         );
 

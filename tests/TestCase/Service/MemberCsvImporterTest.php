@@ -13,7 +13,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 class MemberCsvImporterTest extends TestCase
 {
     protected array $fixtures = [
-        'app.Groups', 'app.Sections', 'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
+        'app.Groups', 'app.Sections', 'app.Teams', 'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.EmailGroups', 'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
     ];
 
     protected function setUp(): void
@@ -318,8 +318,9 @@ class MemberCsvImporterTest extends TestCase
         ]));
         $contacts->saveOrFail($contacts->newEntity([
             'member_id' => $memberId,
-            'contact_method' => 'other-group.list@group.example.org',
+            'contact_method' => 'trustees@group.example.org',
             'contact_method_type' => ContactMethodType::EmailGroup->value,
+            'email_group_id' => '66666666-6666-4666-8666-666666666662',
         ]));
 
         $importer = new MemberCsvImporter();
@@ -347,8 +348,9 @@ class MemberCsvImporterTest extends TestCase
         ]));
         $otherGroupEmail = $contacts->saveOrFail($contacts->newEntity([
             'member_id' => $memberId,
-            'contact_method' => 'group.list@group.example.org',
+            'contact_method' => 'trustees@group.example.org',
             'contact_method_type' => ContactMethodType::EmailGroup->value,
+            'email_group_id' => '66666666-6666-4666-8666-666666666662',
         ]));
 
         $importer = new MemberCsvImporter();
