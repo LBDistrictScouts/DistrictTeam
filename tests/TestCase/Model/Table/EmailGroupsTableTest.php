@@ -169,4 +169,31 @@ class EmailGroupsTableTest extends TestCase
             ->firstOrFail();
         $this->assertSame('digital-team@district.example.org', $linkedContact->contact_method);
     }
+
+    public function testChangingEmailGroupAddressRejectsAContactMethodCollision(): void
+    {
+        $emailGroups = $this->fetchTable('EmailGroups');
+        $contactMethods = $this->fetchTable('MemberContactMethods');
+        $linkedContact = $contactMethods->saveOrFail($contactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'digital-leaders@district.example.org',
+            'contact_method_type' => ContactMethodType::EmailGroup->value,
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+        ]));
+        $contactMethods->saveOrFail($contactMethods->newEntity([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'contact_method' => 'digital-team@district.example.org',
+            'contact_method_type' => ContactMethodType::Email->value,
+        ]));
+
+        $emailGroup = $emailGroups->get('66666666-6666-4666-8666-666666666661');
+        $emailGroups->patchEntity($emailGroup, ['email_address' => 'digital-team@district.example.org']);
+
+        $this->assertFalse($emailGroups->save($emailGroup));
+        $this->assertArrayHasKey('email_address', $emailGroup->getErrors());
+        $this->assertSame(
+            'digital-leaders@district.example.org',
+            $contactMethods->get($linkedContact->id)->contact_method,
+        );
+    }
 }

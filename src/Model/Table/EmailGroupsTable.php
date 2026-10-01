@@ -145,6 +145,54 @@ class EmailGroupsTable extends Table
             'teamMatchesSection',
             ['errorField' => 'team_id', 'message' => 'Choose a team belonging to the selected section.'],
         );
+        $rules->add(
+            function (EntityInterface $emailGroup): bool {
+                if ($emailGroup->isNew() || !$emailGroup->isDirty('email_address')) {
+                    return true;
+                }
+                $emailAddress = $emailGroup->get('email_address');
+                if (!is_string($emailAddress)) {
+                    return true;
+                }
+
+                $linkedContactMethods = $this->MemberContactMethods->find()
+                    ->select(['id', 'member_id'])
+                    ->where(['email_group_id' => $emailGroup->get('id')])
+                    ->all()
+                    ->toList();
+                $linkedContactMethodIds = [];
+                $memberIds = [];
+                foreach ($linkedContactMethods as $contactMethod) {
+                    if (!$contactMethod instanceof EntityInterface) {
+                        continue;
+                    }
+                    $id = $contactMethod->get('id');
+                    $memberId = $contactMethod->get('member_id');
+                    if (!is_string($id) || !is_string($memberId)) {
+                        continue;
+                    }
+                    if (in_array($memberId, $memberIds, true)) {
+                        return false;
+                    }
+                    $linkedContactMethodIds[] = $id;
+                    $memberIds[] = $memberId;
+                }
+                if ($memberIds === []) {
+                    return true;
+                }
+
+                return !$this->MemberContactMethods->exists([
+                    'contact_method' => $emailAddress,
+                    'member_id IN' => $memberIds,
+                    'id NOT IN' => $linkedContactMethodIds,
+                ]);
+            },
+            'emailAddressDoesNotCollideWithLinkedContacts',
+            [
+                'errorField' => 'email_address',
+                'message' => __('A linked member already has this email address as another contact method.'),
+            ],
+        );
 
         return $rules;
     }
