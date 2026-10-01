@@ -26,6 +26,26 @@
             const status = document.getElementById(form.dataset.contactMethodStatusId);
             const memberSelect = form.dataset.memberSelectId ? document.getElementById(form.dataset.memberSelectId) : null;
             const contactSelect = form.dataset.contactMethodSelectId ? document.getElementById(form.dataset.contactMethodSelectId) : null;
+            const type = form.querySelector('[name="contact_method_type"]');
+            const contactMethodValue = form.querySelector('[data-contact-method-value]');
+            const emailGroupControl = form.querySelector('[data-email-group-control]');
+            const emailGroup = emailGroupControl ? emailGroupControl.querySelector('[name="email_group_id"]') : null;
+            function toggleEmailGroup() {
+                const isEmailGroup = type && type.value === '3';
+                if (contactMethodValue) contactMethodValue.hidden = isEmailGroup;
+                if (emailGroupControl) emailGroupControl.hidden = !isEmailGroup;
+                const contactMethod = contactMethodValue ? contactMethodValue.querySelector('[name="contact_method"]') : null;
+                if (contactMethod) {
+                    contactMethod.disabled = isEmailGroup;
+                    contactMethod.required = !isEmailGroup;
+                }
+                if (emailGroup) {
+                    emailGroup.disabled = !isEmailGroup;
+                    emailGroup.required = isEmailGroup;
+                }
+            }
+            if (type) type.addEventListener('change', toggleEmailGroup);
+            toggleEmailGroup();
             form.addEventListener('submit', async event => {
                 event.preventDefault();
                 const memberId = memberSelect ? memberSelect.value : '';
@@ -87,6 +107,7 @@
                         list.append(row);
                     }
                     form.reset();
+                    toggleEmailGroup();
                     status.textContent = 'Contact method added.';
                     form.dispatchEvent(new CustomEvent('contactmethod:created', {detail: result.contactMethod}));
                 } catch (error) {

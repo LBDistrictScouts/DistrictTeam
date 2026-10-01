@@ -2,6 +2,7 @@
 /** @var \App\View\AppView $this */
 /** @var \App\Model\Entity\Member $member */
 /** @var array<int, string> $contactMethodTypes */
+/** @var array<string, string> $emailGroups */
 $this->assign('title', $member->full_name);
 $this->Html->css('member-view', ['block' => true]);
 $this->Html->css('contact-method-modal', ['block' => true]);
@@ -64,6 +65,7 @@ $deleteContactMethodIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
     'formId' => 'add-contact-method',
     'url' => ['controller' => 'MemberContactMethods', 'action' => 'addForMember', $member->id],
     'contactMethodTypes' => $contactMethodTypes,
+    'emailGroups' => $emailGroups,
     'statusId' => 'contact-method-status',
     'contactMethodListId' => 'contact-methods',
     'contactMethodEmptyId' => 'contact-methods-empty',

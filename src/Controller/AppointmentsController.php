@@ -149,6 +149,7 @@ class AppointmentsController extends AppController
         }
         $contactMethodTypes = $this->contactMethodTypes();
         $appointmentContactMethodTypes = $this->appointmentContactMethodTypes();
+        $emailGroups = $this->emailGroupOptions();
         $this->set(compact(
             'appointment',
             'roles',
@@ -158,6 +159,7 @@ class AppointmentsController extends AppController
             'memberContactMethods',
             'contactMethodTypes',
             'appointmentContactMethodTypes',
+            'emailGroups',
         ));
     }
 
@@ -275,6 +277,7 @@ class AppointmentsController extends AppController
             ];
         }
         $appointmentContactMethodTypes = $this->appointmentContactMethodTypes();
+        $emailGroups = $this->emailGroupOptions();
         $this->set(compact(
             'appointment',
             'roles',
@@ -283,6 +286,7 @@ class AppointmentsController extends AppController
             'members',
             'memberContactMethods',
             'appointmentContactMethodTypes',
+            'emailGroups',
         ));
     }
 
@@ -329,6 +333,25 @@ class AppointmentsController extends AppController
             ContactMethodType::EmailAlias->value,
             ContactMethodType::EmailGroup->value,
         ]));
+    }
+
+    /** @return array<string, string> */
+    private function emailGroupOptions(): array
+    {
+        $options = [];
+        foreach ($this->fetchTable('EmailGroups')->find()->orderByAsc('email_group_name') as $emailGroup) {
+            if (!$emailGroup instanceof EntityInterface) {
+                continue;
+            }
+            $id = $emailGroup->get('id');
+            $name = $emailGroup->get('email_group_name');
+            $address = $emailGroup->get('email_address');
+            if (is_string($id) && is_string($name) && is_string($address)) {
+                $options[$id] = $name . ' (' . $address . ')';
+            }
+        }
+
+        return $options;
     }
 
     /** @return array<string, string> */

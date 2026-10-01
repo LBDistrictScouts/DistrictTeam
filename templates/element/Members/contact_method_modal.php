@@ -2,6 +2,7 @@
 /**
  * @var \App\View\AppView $this
  * @var array<int, string> $contactMethodTypes
+ * @var array<string, string> $emailGroups
  * @var string $modalId
  * @var string $formId
  * @var array<string, mixed>|string|null $url
@@ -19,6 +20,7 @@ $contactMethodSelectId ??= null;
 $contactMethodListId ??= null;
 $contactMethodEmptyId ??= null;
 $appointmentEmailOnly ??= false;
+$emailGroups ??= [];
 ?>
 <dialog id="<?= h($modalId) ?>" class="contact-method-modal" data-contact-method-modal
     data-member-select-id="<?= h($memberSelectId) ?>">
@@ -32,6 +34,7 @@ $appointmentEmailOnly ??= false;
         'contactMethodListId',
         'contactMethodEmptyId',
         'contactMethodTypes',
+        'emailGroups',
         'statusId',
     ) + ['showSubmit' => false, 'appointmentEmailOnly' => $appointmentEmailOnly]) ?>
     <div class="contact-method-modal-actions">

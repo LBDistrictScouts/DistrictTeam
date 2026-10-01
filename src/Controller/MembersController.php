@@ -7,6 +7,7 @@ use App\Model\Entity\Group;
 use App\Model\Entity\Section;
 use App\Model\Enum\ContactMethodType;
 use App\Service\MemberCsvImporter;
+use Cake\Datasource\EntityInterface;
 use Cake\I18n\Date;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
@@ -374,13 +375,30 @@ class MembersController extends AppController
         ]);
         $contactMethodTypes = [];
         foreach (ContactMethodType::cases() as $contactMethodType) {
-            if ($contactMethodType === ContactMethodType::EmailGroup) {
-                continue;
-            }
             $contactMethodTypes[$contactMethodType->value] = $contactMethodType->label();
         }
+        $emailGroups = $this->emailGroupOptions();
 
-        $this->set(compact('member', 'contactMethodTypes'));
+        $this->set(compact('member', 'contactMethodTypes', 'emailGroups'));
+    }
+
+    /** @return array<string, string> */
+    private function emailGroupOptions(): array
+    {
+        $options = [];
+        foreach ($this->fetchTable('EmailGroups')->find()->orderByAsc('email_group_name') as $emailGroup) {
+            if (!$emailGroup instanceof EntityInterface) {
+                continue;
+            }
+            $id = $emailGroup->get('id');
+            $name = $emailGroup->get('email_group_name');
+            $address = $emailGroup->get('email_address');
+            if (is_string($id) && is_string($name) && is_string($address)) {
+                $options[$id] = $name . ' (' . $address . ')';
+            }
+        }
+
+        return $options;
     }
 
     /**

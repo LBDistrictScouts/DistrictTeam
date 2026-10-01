@@ -2,6 +2,7 @@
 /**
  * @var \App\View\AppView $this
  * @var array<int, string> $contactMethodTypes
+ * @var array<string, string> $emailGroups
  * @var string $formId
  * @var array<string, mixed>|string|null $url
  * @var string|null $urlBase
@@ -20,6 +21,7 @@ $contactMethodListId ??= null;
 $contactMethodEmptyId ??= null;
 $showSubmit ??= true;
 $appointmentEmailOnly ??= false;
+$emailGroups ??= [];
 ?>
 <?= $this->Form->create(null, [
     'id' => $formId,
@@ -35,7 +37,13 @@ $appointmentEmailOnly ??= false;
 ]) ?>
 <fieldset>
     <?= $this->Form->control('contact_method_type', ['options' => $contactMethodTypes]) ?>
-    <?= $this->Form->control('contact_method') ?>
+    <div data-contact-method-value><?= $this->Form->control('contact_method') ?></div>
+    <?php if ($emailGroups) : ?>
+    <div data-email-group-control><?= $this->Form->control('email_group_id', [
+        'options' => $emailGroups,
+        'empty' => __('Choose an email group'),
+    ]) ?></div>
+    <?php endif; ?>
 </fieldset>
 <?php if ($showSubmit) : ?>
     <?= $this->Form->button(__('Add contact method')) ?>

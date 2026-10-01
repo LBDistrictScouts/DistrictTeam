@@ -23,6 +23,7 @@ class MemberContactMethodsControllerTest extends TestCase
     protected array $fixtures = [
         'app.Groups',
         'app.Teams',
+        'app.EmailGroups',
         'app.Roles',
         'app.Members',
         'app.MemberContactMethods',
@@ -86,21 +87,27 @@ class MemberContactMethodsControllerTest extends TestCase
         $this->assertResponseCode(422);
     }
 
-    public function testAddForMemberDoesNotAllowEmailGroupContactMethods(): void
+    public function testAddForMemberLinksAnEmailGroupContactMethod(): void
     {
         $this->enableCsrfToken();
         $this->configRequest(['headers' => ['Accept' => 'application/json']]);
         $this->post(
             '/member-contact-methods/add-for-member/33333333-3333-4333-8333-333333333331',
-            ['contact_method' => 'digital-leaders@district.example.org', 'contact_method_type' => 3],
+            [
+                'contact_method_type' => 3,
+                'email_group_id' => '66666666-6666-4666-8666-666666666661',
+            ],
         );
 
-        $this->assertResponseCode(422);
+        $this->assertResponseOk();
         $payload = json_decode((string)$this->_response->getBody(), true);
-        $this->assertSame(
-            'Email group contact methods are managed from email groups.',
-            $payload['errors']['contact_method_type']['emailGroupManagedByEmailGroups'],
-        );
+        $this->assertTrue($payload['success']);
+        $this->assertSame('digital-leaders@district.example.org', $payload['contactMethod']['contact_method']);
+        $this->assertSame('Email Group', $payload['contactMethod']['contact_method_type']);
+        $this->assertTrue($this->fetchTable('MemberContactMethods')->exists([
+            'member_id' => '33333333-3333-4333-8333-333333333331',
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+        ]));
     }
 
     public function testDeleteForMemberDeletesUnusedContactMethod(): void

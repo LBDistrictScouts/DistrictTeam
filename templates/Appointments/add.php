@@ -7,6 +7,7 @@
  * @var array<array<string, string>> $memberContactMethods
  * @var array<int, string> $contactMethodTypes
  * @var array<int, string> $appointmentContactMethodTypes
+ * @var array<string, string> $emailGroups
  * @var array<string, mixed> $roleSelectorData
  */
 ?>
@@ -79,6 +80,7 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
             'memberSelectId' => 'member-id',
             'contactMethodSelectId' => 'member-contact-method-id',
             'contactMethodTypes' => $appointmentContactMethodTypes,
+            'emailGroups' => $emailGroups,
             'statusId' => 'appointment-contact-method-status',
             'appointmentEmailOnly' => true,
         ]) ?>

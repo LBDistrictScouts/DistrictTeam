@@ -26,6 +26,7 @@ class MembersControllerTest extends TestCase
         'app.Groups', 'app.Teams',
         'app.Roles',
         'app.Members',
+        'app.EmailGroups',
         'app.MemberContactMethods',
         'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
     ];
@@ -394,7 +395,8 @@ class MembersControllerTest extends TestCase
         $this->assertResponseContains('class="member-contact-non-group-email"');
         $this->assertResponseContains('/member-contact-methods/delete-for-member/33333333-3333-4333-8333-333333333331/44444444-4444-4444-8444-444444444441');
         $this->assertResponseContains('Are you sure you want to delete this contact method?');
-        $this->assertResponseNotContains('<option value="3">Email Group</option>');
+        $this->assertResponseContains('<option value="3">Email Group</option>');
+        $this->assertResponseContains('Digital Team Leaders (digital-leaders@district.example.org)');
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Enum\ContactMethodType;
+use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
@@ -26,21 +27,17 @@ class MemberContactMethodsController extends AppController
 
         $data = ['member_id' => $memberId] + $this->request->getData();
         if ((int)($data['contact_method_type'] ?? 0) === ContactMethodType::EmailGroup->value) {
-            $payload = [
-                'success' => false,
-                'errors' => [
-                    'contact_method_type' => [
-                        'emailGroupManagedByEmailGroups' => __(
-                            'Email group contact methods are managed from email groups.',
-                        ),
-                    ],
-                ],
-            ];
-
-            return $this->response
-                ->withStatus(422)
-                ->withType('application/json')
-                ->withStringBody((string)json_encode($payload));
+            $emailGroupId = $data['email_group_id'] ?? null;
+            $emailGroup = is_string($emailGroupId)
+                ? $this->fetchTable('EmailGroups')->find()
+                    ->select(['id', 'email_address'])
+                    ->where(['id' => $emailGroupId])
+                    ->first()
+                : null;
+            if (!$emailGroup instanceof EntityInterface || !is_string($emailGroup->get('email_address'))) {
+                return $this->invalidEmailGroupResponse();
+            }
+            $data['contact_method'] = $emailGroup->get('email_address');
         }
         $memberContactMethod = $this->MemberContactMethods->newEntity($data);
 
@@ -115,5 +112,19 @@ class MemberContactMethodsController extends AppController
             ContactMethodType::EmailAlias,
             ContactMethodType::EmailGroup,
         ], true);
+    }
+
+    /**
+     * @return \Cake\Http\Response
+     */
+    private function invalidEmailGroupResponse(): Response
+    {
+        return $this->response
+            ->withStatus(422)
+            ->withType('application/json')
+            ->withStringBody((string)json_encode([
+                'success' => false,
+                'errors' => ['email_group_id' => ['validEmailGroup' => __('Choose an email group.')]],
+            ]));
     }
 }
