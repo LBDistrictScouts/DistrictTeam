@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
  *
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\TeamsTable> $Teams
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\SectionsTable> $Sections
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
  * @method \App\Model\Entity\Group newEmptyEntity()
  * @method \App\Model\Entity\Group newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Group> newEntities(array $data, array $options = [])
@@ -51,6 +52,7 @@ class GroupsTable extends Table
         $this->hasMany('Sections', [
             'foreignKey' => 'group_id',
         ]);
+        $this->hasMany('EmailGroups', ['foreignKey' => 'group_id']);
     }
 
     /**

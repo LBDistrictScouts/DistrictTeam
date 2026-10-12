@@ -11,6 +11,7 @@ use Cake\Validation\Validator;
  * Members Model
  *
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\MemberContactMethodsTable> $MemberContactMethods
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
  * @method \App\Model\Entity\Member newEmptyEntity()
  * @method \App\Model\Entity\Member newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Member> newEntities(array $data, array $options = [])
@@ -44,6 +45,12 @@ class MembersTable extends Table
         $this->hasMany('MemberContactMethods', [
             'foreignKey' => 'member_id',
             'dependent' => true,
+            'strategy' => 'select',
+        ]);
+        $this->belongsToMany('EmailGroups', [
+            'through' => 'MemberContactMethods',
+            'foreignKey' => 'member_id',
+            'targetForeignKey' => 'email_group_id',
             'strategy' => 'select',
         ]);
         $this->hasMany('Appointments', [

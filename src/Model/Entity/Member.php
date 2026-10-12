@@ -20,6 +20,7 @@ use Cake\ORM\Entity;
  * @property-read string $full_name
  * @property array<\App\Model\Entity\Appointment> $appointments
  * @property array<\App\Model\Entity\MemberContactMethod> $member_contact_methods
+ * @property array<\App\Model\Entity\EmailGroup> $email_groups
  */
 class Member extends Entity
 {
@@ -59,6 +60,7 @@ class Member extends Entity
         'leave_date' => true,
         'public_opt_out' => true,
         'member_contact_methods' => true,
+        'email_groups' => true,
     ];
 
     /**

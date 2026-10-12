@@ -133,6 +133,38 @@ $typeLabel = $group->type?->label() ?? __('Unclassified');
                 <p class="group-empty"><?= __('No teams have been added to this group yet.') ?></p>
                 <?php endif; ?>
             </section>
+
+            <section class="group-panel" aria-labelledby="group-email-groups-heading">
+                <div class="group-panel-heading">
+                    <h2 id="group-email-groups-heading"><?= __('Email Groups') ?></h2>
+                    <?= $this->Html->link(
+                        __('All email groups') . ' →',
+                        ['controller' => 'EmailGroups', 'action' => 'index', '?' => ['group_id' => $group->id]],
+                    ) ?>
+                </div>
+                <?php if ($group->email_groups) : ?>
+                <ul class="group-team-list">
+                    <?php foreach ($group->email_groups as $emailGroup) : ?>
+                    <li>
+                        <div>
+                            <?= $this->Html->link(
+                                $emailGroup->email_group_name,
+                                ['controller' => 'EmailGroups', 'action' => 'edit', $emailGroup->id],
+                                ['class' => 'group-team-name'],
+                            ) ?>
+                            <p><?= h(implode(' · ', array_filter([
+                                $emailGroup->section?->section_name,
+                                $emailGroup->team?->team_name,
+                            ]))) ?></p>
+                        </div>
+                        <span class="group-role-status"><?= h($emailGroup->email_address) ?></span>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php else : ?>
+                <p class="group-empty"><?= __('No email groups have been created for this group yet.') ?></p>
+                <?php endif; ?>
+            </section>
         </div>
 
         <aside class="group-context-panels">

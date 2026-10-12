@@ -20,6 +20,7 @@ use Cake\ORM\Entity;
  *
  * @property \App\Model\Entity\Section[] $sections
  * @property \App\Model\Entity\Team[] $teams
+ * @property \App\Model\Entity\EmailGroup[] $email_groups
  */
 class Group extends Entity
 {
@@ -39,5 +40,6 @@ class Group extends Entity
         'group_osm_id' => true,
         'sort_order' => true,
         'sections' => false,
+        'email_groups' => false,
     ];
 }

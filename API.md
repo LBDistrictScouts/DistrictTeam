@@ -41,6 +41,7 @@ The embedded `group.id` and `section.id` repeat those same shared UUIDs, and
   "section_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
   "team_name": "Section Leadership Team",
   "sort_order": 2,
+  "TeamDepth": 1,
   "group": {
     "id": "48d34b95-7058-5bbf-a3ec-a543309f6c52",
     "group_name": "Letchworth, Baldock & Ashwell",
@@ -168,6 +169,8 @@ These values come from **Teams → Reorder teams**. Ordering is saved among
 siblings; the collection is a flat list sorted numerically, while `sub_teams`
 provides the parent/child grouping. Sort values need not be consecutive or unique.
 
-Internal tree coordinates (`tree_left`, `tree_right`, `tree_level`) are omitted
-from every serialized team, including nested teams. Use `team_parent_id`,
-`parent_team`, `sub_teams`, and `sort_order` for structure and display ordering.
+Every serialized team, including nested teams and teams embedded in role responses,
+includes `TeamDepth`, the integer hierarchy depth maintained from `tree_level`.
+Internal tree coordinates (`tree_left`, `tree_right`, `tree_level`) remain omitted.
+Use `team_parent_id`, `parent_team`, `sub_teams`, and `sort_order` for structure
+and display ordering.

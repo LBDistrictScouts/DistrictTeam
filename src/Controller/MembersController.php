@@ -7,6 +7,7 @@ use App\Model\Entity\Group;
 use App\Model\Entity\Section;
 use App\Model\Enum\ContactMethodType;
 use App\Service\MemberCsvImporter;
+use Cake\Datasource\EntityInterface;
 use Cake\I18n\Date;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
@@ -34,7 +35,11 @@ class MembersController extends AppController
                 if (!$file instanceof UploadedFileInterface) {
                     throw new InvalidArgumentException('Please select a CSV file.');
                 }
-                $pending = ['token' => bin2hex(random_bytes(24)), 'rows' => $importer->read($file)];
+                $pending = [
+                    'token' => bin2hex(random_bytes(24)),
+                    'filename' => $file->getClientFilename() ?: 'CSV import',
+                    'rows' => $importer->read($file),
+                ];
                 $session->write('MemberCsvUpload', $pending);
 
                 $this->redirect(['action' => 'mapUnits']);
@@ -120,7 +125,13 @@ class MembersController extends AppController
                 $rows = $this->selectedRows($pending['rows'], $selectedUnits);
                 $importer->saveRoleMappings($pending['rows'], $mapping);
                 $roleResults = $importer->roleImportResults($rows, $mapping);
-                $result = $importer->import($rows, $mapping);
+                $result = $importer->import(
+                    $rows,
+                    $mapping,
+                    is_string($pending['filename'] ?? null) ? $pending['filename'] : 'CSV import',
+                    count($pending['rows']),
+                    array_diff_key($pending['rows'], $rows),
+                );
                 $session->delete('MemberCsvUpload');
                 $this->set(compact('result', 'roleResults'));
                 $this->Flash->success(__('CSV imported successfully.'));
@@ -305,6 +316,7 @@ class MembersController extends AppController
         $filters = [
             'q' => $this->indexFilter('q'),
             'status' => $this->indexChoice('status', ['active', 'inactive']),
+            'public_visibility' => $this->indexChoice('public_visibility', ['public', 'non-public']),
         ];
         if ($filters['q'] !== '') {
             $term = '%' . strtolower($filters['q']) . '%';
@@ -329,12 +341,21 @@ class MembersController extends AppController
                 'Members.leave_date <' => $today,
             ]]);
         }
+        if ($filters['public_visibility'] === 'public') {
+            $query->where(['Members.public_opt_out' => false]);
+        } elseif ($filters['public_visibility'] === 'non-public') {
+            $query->where(['Members.public_opt_out' => true]);
+        }
         $members = $this->paginate($query);
 
         $filterControls = [[
             'name' => 'status', 'label' => __('Status'),
             'options' => ['active' => __('Active'), 'inactive' => __('Inactive')],
             'empty' => __('All members'),
+        ], [
+            'name' => 'public_visibility', 'label' => __('Public visibility'),
+            'options' => ['public' => __('Public'), 'non-public' => __('Non-public')],
+            'empty' => __('All visibility'),
         ]];
         $this->set(compact('members', 'filters', 'filterControls'));
     }
@@ -356,8 +377,28 @@ class MembersController extends AppController
         foreach (ContactMethodType::cases() as $contactMethodType) {
             $contactMethodTypes[$contactMethodType->value] = $contactMethodType->label();
         }
+        $emailGroups = $this->emailGroupOptions();
 
-        $this->set(compact('member', 'contactMethodTypes'));
+        $this->set(compact('member', 'contactMethodTypes', 'emailGroups'));
+    }
+
+    /** @return array<string, string> */
+    private function emailGroupOptions(): array
+    {
+        $options = [];
+        foreach ($this->fetchTable('EmailGroups')->find()->orderByAsc('email_group_name') as $emailGroup) {
+            if (!$emailGroup instanceof EntityInterface) {
+                continue;
+            }
+            $id = $emailGroup->get('id');
+            $name = $emailGroup->get('email_group_name');
+            $address = $emailGroup->get('email_address');
+            if (is_string($id) && is_string($name) && is_string($address)) {
+                $options[$id] = $name . ' (' . $address . ')';
+            }
+        }
+
+        return $options;
     }
 
     /**

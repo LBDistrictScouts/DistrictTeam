@@ -5,10 +5,18 @@ namespace App\Model\Table;
 
 use App\Model\Enum\SectionType;
 use Cake\Database\Type\EnumType;
+use Cake\Datasource\EntityInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
+/**
+ * Sections Model
+ *
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\TeamsTable> $Teams
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
+ */
 class SectionsTable extends Table
 {
     /**
@@ -29,6 +37,7 @@ class SectionsTable extends Table
             'joinType' => 'INNER',
         ]);
         $this->hasMany('Teams', ['foreignKey' => 'section_id']);
+        $this->hasMany('EmailGroups', ['foreignKey' => 'section_id']);
         $this->addBehavior('CounterCache', ['Groups' => ['sections_count']]);
     }
 
@@ -87,6 +96,31 @@ class SectionsTable extends Table
         $rules->add($rules->existsIn(['group_id'], 'Groups'), ['errorField' => 'group_id']);
         $rules->add($rules->isUnique(['section_osm_id']), ['errorField' => 'section_osm_id']);
         $rules->add($rules->isUnique(['section_name']), ['errorField' => 'section_name']);
+        $rules->add(
+            function (EntityInterface $section): bool {
+                if (
+                    $section->isNew()
+                    || !$section->isDirty('group_id')
+                    || !is_string($section->get('id'))
+                ) {
+                    return true;
+                }
+
+                $teamIds = $this->Teams->find()
+                    ->select(['id'])
+                    ->where(['section_id' => $section->get('id')]);
+
+                return !$this->EmailGroups->exists(['OR' => [
+                    'EmailGroups.section_id' => $section->get('id'),
+                    'EmailGroups.team_id IN' => $teamIds,
+                ]]);
+            },
+            'emailGroupScopeAllowsSectionMove',
+            [
+                'errorField' => 'group_id',
+                'message' => __('Update or remove email group scopes before changing this section’s group.'),
+            ],
+        );
 
         return $rules;
     }

@@ -3,7 +3,7 @@
   "info": {
     "title": "District Team API",
     "version": "1.0.0",
-    "description": "Read-only API for district teams, roles, members, contact methods, and appointments.",
+    "description": "Read-only API for district teams, roles, members, contact methods, email groups, and appointments.",
     "license": {"name": "MIT", "identifier": "MIT"}
   },
   "servers": [{"url": "/", "description": "The current District Team deployment."}],
@@ -19,6 +19,8 @@
     "/api/members/{id}": {"get": {"operationId": "getMember", "summary": "Get a member", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/MemberRecord"}, "404": {"description": "Member not found."}}}},
     "/api/member-contact-methods": {"get": {"operationId": "listMemberContactMethods", "summary": "List member contact methods", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/MemberContactMethodsCollection"}, "400": {"description": "Invalid pagination parameters."}}}},
     "/api/member-contact-methods/{id}": {"get": {"operationId": "getMemberContactMethod", "summary": "Get a member contact method", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/MemberContactMethodRecord"}, "404": {"description": "Contact method not found."}}}},
+    "/api/email-groups": {"get": {"operationId": "listEmailGroups", "summary": "List email groups", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/EmailGroupsCollection"}, "400": {"description": "Invalid pagination parameters."}}}},
+    "/api/email-groups/{id}": {"get": {"operationId": "getEmailGroup", "summary": "Get an email group", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/EmailGroupRecord"}, "404": {"description": "Email group not found."}}}},
     "/api/appointments": {"get": {"operationId": "listAppointments", "summary": "List appointments", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"$ref": "#/components/responses/AppointmentsCollection"}, "400": {"description": "Invalid pagination parameters."}}}},
     "/api/appointments/{id}": {"get": {"operationId": "getAppointment", "summary": "Get an appointment", "parameters": [{"$ref": "#/components/parameters/Id"}], "responses": {"200": {"$ref": "#/components/responses/AppointmentRecord"}, "404": {"description": "Appointment not found."}}}},
     "/api/member-search": {"get": {"operationId": "searchMembers", "summary": "Search members for appointment selection", "parameters": [{"name": "q", "in": "query", "required": false, "schema": {"type": "string"}}, {"name": "page", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 1}}], "responses": {"200": {"$ref": "#/components/responses/MemberSearch"}, "400": {"description": "Invalid search parameters."}}}},
@@ -40,6 +42,8 @@
       "MemberRecord": {"description": "A member record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_record"}}}},
       "MemberContactMethodsCollection": {"description": "A paginated contact-method collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_contact_methods_collection"}}}},
       "MemberContactMethodRecord": {"description": "A member contact-method record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_contact_method_record"}}}},
+      "EmailGroupsCollection": {"description": "A paginated email-group collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/email_groups_collection"}}}},
+      "EmailGroupRecord": {"description": "An email-group record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/email_group_record"}}}},
       "AppointmentsCollection": {"description": "A paginated appointment collection.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/appointments_collection"}}}},
       "AppointmentRecord": {"description": "An appointment record.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/appointment_record"}}}},
       "MemberSearch": {"description": "Select2-compatible member search results.", "content": {"application/json": {"schema": {"$ref": "./api-responses.schema.json#/definitions/member_search"}}}},

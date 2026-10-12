@@ -224,6 +224,13 @@ class GroupsController extends AppController
             $teams,
             static fn(mixed $team): bool => $team instanceof Team,
         ));
+        $emailGroups = $this->fetchTable('EmailGroups')->find()
+            ->where(['EmailGroups.group_id' => $group->get('id')])
+            ->contain(['Sections', 'Teams'])
+            ->orderByAsc('EmailGroups.email_group_name')
+            ->all()
+            ->toList();
+        $group->set('email_groups', $emailGroups);
         $this->set(compact('group'));
     }
 }

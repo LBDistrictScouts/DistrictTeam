@@ -155,4 +155,53 @@ class StandardGroupTemplateCreatorTest extends TestCase
             'template' => 'trustee-board-member',
         ]));
     }
+
+    public function testCreateRolesUsesNameMatchedLeadershipTeamAsParent(): void
+    {
+        $teams = $this->fetchTable('Teams');
+        $leadership = $teams->saveOrFail($teams->newEntity([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_name' => 'District Leadership Team',
+        ]));
+        $roles = $this->fetchTable('Roles');
+        foreach (
+            [
+                ['District Lead Volunteer', 'lead-volunteer', true, false, true],
+                ['District Leadership Team Member', 'leadership-team-member', false, true, false],
+            ] as [$name, $template, $isLead, $multiMemberRole, $isTrusteeRole]
+        ) {
+            $role = $roles->newEntity([
+                'team_id' => $leadership->id,
+                'name' => $name,
+                'is_lead' => $isLead,
+                'multi_member_role' => $multiMemberRole,
+                'is_trustee_role' => $isTrusteeRole,
+            ]);
+            $role->template = $template;
+            $roles->saveOrFail($role);
+        }
+
+        $creator = new StandardGroupTemplateCreator();
+        $rolePlan = $creator->rolePlan();
+        $districtRolePlan = array_values(array_filter(
+            $rolePlan,
+            static fn(array $role): bool => $role['group_id'] === 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        ));
+        $this->assertSame([
+            'Trustee Board Chair',
+            'District Treasurer',
+            'Trustee Board Member',
+        ], array_column($districtRolePlan, 'role_name'));
+
+        $creator->createRoles(array_map(
+            static fn(array $role): array => ['role_name' => $role['role_name']],
+            $rolePlan,
+        ));
+
+        $trusteeBoard = $teams->find()->where([
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_name' => 'Trustee Board',
+        ])->firstOrFail();
+        $this->assertSame($leadership->id, $trusteeBoard->team_parent_id);
+    }
 }

@@ -272,10 +272,16 @@ class MemberCsvImporter
      *
      * @param array<int, array<string, string>> $rows Parsed CSV rows.
      * @param array<string, string> $mapping Source keys to existing role IDs or "skip".
+     * @param array<int, array<string, string>> $unimportedRows Source rows excluded before import.
      * @return array<string, mixed>
      */
-    public function import(array $rows, array $mapping): array
-    {
+    public function import(
+        array $rows,
+        array $mapping,
+        string $filename = 'CSV import',
+        ?int $sourceRecordCount = null,
+        array $unimportedRows = [],
+    ): array {
         foreach ($this->sources($rows) as $key => $source) {
             $roleId = $mapping[$key] ?? '';
             if ($roleId === '') {
@@ -289,11 +295,36 @@ class MemberCsvImporter
             }
         }
 
-        $transaction = function () use ($rows, $mapping): array {
+        $filename = trim($filename) ?: 'CSV import';
+        $sourceRecordCount ??= count($rows);
+        $transaction = function () use ($rows, $mapping, $filename, $sourceRecordCount, $unimportedRows): array {
             $result = ['members' => 0, 'contacts' => 0, 'appointments' => 0, 'warnings' => []];
+            $importFiles = $this->fetchTable('ImportFiles');
+            $importRecords = $this->fetchTable('ImportRecords');
+            $importFile = $this->save($importFiles, [
+                'filename' => $filename,
+                'imported_at' => new DateTimeImmutable(),
+                'source_record_count' => $sourceRecordCount,
+                'record_count' => count($rows),
+                'member_count' => 0,
+                'contact_count' => 0,
+                'appointment_count' => 0,
+                'warning_count' => 0,
+            ]);
+            foreach ($unimportedRows as $line => $sourceRow) {
+                $this->saveNotImportedRecord(
+                    $importRecords,
+                    $importFile->get('id'),
+                    $line,
+                    'source',
+                    $sourceRow,
+                    'Unit was not selected for import.',
+                );
+            }
             $newMembers = [];
             foreach ($rows as $line => $row) {
                 try {
+                    $sourceRow = $row;
                     $preferredName = trim($row['Preferred name'] ?? '');
                     if ($preferredName !== '') {
                         $row['First name'] = $preferredName;
@@ -312,15 +343,21 @@ class MemberCsvImporter
                     }
                     $members = $this->fetchTable('Members');
                     $member = $members->find()->where(['membership_number' => $number])->first();
+                    $memberAction = 'unchanged';
+                    $memberChangedFields = [];
+                    $memberOriginalValues = null;
                     if (!$member) {
-                        $member = $this->save($members, [
+                        $memberData = [
                             'membership_number' => $number,
                             'first_name' => $row['First name'],
                             'last_name' => $row['Last name'],
                             'join_date' => $start,
-                        ]);
+                        ];
+                        $member = $this->save($members, $memberData);
                         $newMembers[$number] = true;
                         $result['members']++;
+                        $memberAction = 'created';
+                        $memberChangedFields = array_keys($memberData);
                     } else {
                         $changes = [];
                         if ($member->first_name !== $row['First name'] || $member->last_name !== $row['Last name']) {
@@ -331,7 +368,10 @@ class MemberCsvImporter
                             $changes['join_date'] = $start;
                         }
                         if ($changes) {
+                            $memberOriginalValues = $this->originalValues($this->memberSnapshot($member), $changes);
+                            $memberChangedFields = array_keys($changes);
                             $this->save($members, $changes, $member);
+                            $memberAction = 'updated';
                         }
                     }
                     foreach (
@@ -377,13 +417,40 @@ class MemberCsvImporter
                             $result['contacts']++;
                         }
                     }
+                    $this->save($importRecords, [
+                        'import_file_id' => $importFile->get('id'),
+                        'source_line' => $line,
+                        'entity_type' => 'member',
+                        'action' => $memberAction,
+                        'member_id' => $member->get('id'),
+                        'source_data' => $sourceRow,
+                        'entity_data' => $this->auditSnapshot(
+                            $this->memberSnapshot($member),
+                            $memberChangedFields,
+                            $memberOriginalValues,
+                        ),
+                    ]);
                     $roleId = $mapping[$this->sourceKey($row)] ?? '';
                     if ($roleId === 'skip' || $roleId === '') {
+                        $this->saveNotImportedRecord(
+                            $importRecords,
+                            $importFile->get('id'),
+                            $line,
+                            'appointment',
+                            $sourceRow,
+                            $roleId === 'skip'
+                                ? 'Appointment skipped by mapping choice.'
+                                : 'No role mapping was selected.',
+                            $member->get('id'),
+                        );
                         continue;
                     }
                     $appointments = $this->fetchTable('Appointments');
                     $key = ['member_id' => $member->id, 'role_id' => $roleId, 'effective_start_date' => $start];
                     $appointment = $appointments->find()->where($key)->first();
+                    $appointmentAction = 'unchanged';
+                    $appointmentChangedFields = [];
+                    $appointmentOriginalValues = null;
                     if ($appointment) {
                         $data = $key;
                     } else {
@@ -391,19 +458,61 @@ class MemberCsvImporter
                         if (!$contactId) {
                             $result['warnings'][] = "Row {$line}: appointment skipped"
                                 . ' (no usable email contact method).';
+                            $this->saveNotImportedRecord(
+                                $importRecords,
+                                $importFile->get('id'),
+                                $line,
+                                'appointment',
+                                $sourceRow,
+                                'No usable email contact method was available for the appointment.',
+                                $member->get('id'),
+                            );
                             continue;
                         }
                         $data = $key + ['member_contact_method_id' => $contactId];
                         $result['appointments']++;
+                        $appointmentAction = 'created';
+                        $appointmentChangedFields = array_keys($data);
                     }
                     if (!$appointment || ($appointment->get('effective_end_date') === null && $end !== null)) {
                         $data['effective_end_date'] = $end;
+                        if ($appointment) {
+                            $appointmentAction = 'updated';
+                            $appointmentChangedFields = ['effective_end_date'];
+                            $appointmentOriginalValues = $this->originalValues(
+                                $this->appointmentSnapshot($appointment),
+                                $appointmentChangedFields,
+                            );
+                        } else {
+                            $appointmentChangedFields[] = 'effective_end_date';
+                        }
                     }
-                    $this->save($appointments, $data, $appointment);
+                    $appointment = $this->save($appointments, $data, $appointment);
+                    $this->save($importRecords, [
+                        'import_file_id' => $importFile->get('id'),
+                        'source_line' => $line,
+                        'entity_type' => 'appointment',
+                        'action' => $appointmentAction,
+                        'member_id' => $member->get('id'),
+                        'appointment_id' => $appointment->get('id'),
+                        'source_data' => $sourceRow,
+                        'entity_data' => $this->auditSnapshot(
+                            $this->appointmentSnapshot($appointment),
+                            $appointmentChangedFields,
+                            $appointmentOriginalValues,
+                        ),
+                    ]);
                 } catch (InvalidArgumentException $exception) {
                     throw new InvalidArgumentException("Row {$line}: " . $exception->getMessage(), 0, $exception);
                 }
             }
+
+            $this->save($importFiles, [
+                'member_count' => $result['members'],
+                'contact_count' => $result['contacts'],
+                'appointment_count' => $result['appointments'],
+                'warning_count' => count($result['warnings']),
+            ], $importFile);
 
             return $result;
         };
@@ -607,5 +716,97 @@ class MemberCsvImporter
         }
 
         return $entity;
+    }
+
+    /** @return array<string, mixed> */
+    private function memberSnapshot(EntityInterface $member): array
+    {
+        return [
+            'id' => $member->get('id'),
+            'membership_number' => $member->get('membership_number'),
+            'first_name' => $member->get('first_name'),
+            'last_name' => $member->get('last_name'),
+            'join_date' => $member->get('join_date')?->format('Y-m-d'),
+            'leave_date' => $member->get('leave_date')?->format('Y-m-d'),
+            'public_opt_out' => $member->get('public_opt_out'),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function appointmentSnapshot(EntityInterface $appointment): array
+    {
+        return [
+            'id' => $appointment->get('id'),
+            'role_id' => $appointment->get('role_id'),
+            'member_id' => $appointment->get('member_id'),
+            'member_contact_method_id' => $appointment->get('member_contact_method_id'),
+            'effective_start_date' => $appointment->get('effective_start_date')?->format('Y-m-d'),
+            'effective_end_date' => $appointment->get('effective_end_date')?->format('Y-m-d'),
+        ];
+    }
+
+    /**
+     * @param \Cake\ORM\Table $records Audit record table.
+     * @param string $importFileId Import file ID.
+     * @param int $line Source line number.
+     * @param string $entityType Source entity type.
+     * @param array<string, string> $sourceData Original source data.
+     * @param string $reason Reason the source data was not imported.
+     * @param string|null $memberId Associated member, if one was imported.
+     * @return void
+     */
+    private function saveNotImportedRecord(
+        Table $records,
+        string $importFileId,
+        int $line,
+        string $entityType,
+        array $sourceData,
+        string $reason,
+        ?string $memberId = null,
+    ): void {
+        $this->save($records, [
+            'import_file_id' => $importFileId,
+            'source_line' => $line,
+            'entity_type' => $entityType,
+            'action' => 'not_imported',
+            'reason' => $reason,
+            'member_id' => $memberId,
+            'source_data' => $sourceData,
+            'entity_data' => [],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $before Entity values before saving.
+     * @param list<string>|array<string, mixed> $changes Changed field names or values.
+     * @return array<string, mixed>
+     */
+    private function originalValues(array $before, array $changes): array
+    {
+        $original = [];
+        $fields = array_is_list($changes) ? $changes : array_keys($changes);
+        foreach ($fields as $field) {
+            if (is_string($field) && array_key_exists($field, $before)) {
+                $original[$field] = $before[$field];
+            }
+        }
+
+        return $original;
+    }
+
+    /**
+     * @param array<string, mixed> $entityData Entity state after import.
+     * @param list<string> $changedFields Fields modified by the import.
+     * @param array<string, mixed>|null $originalValues Values before modification.
+     * @return array<string, mixed>
+     */
+    private function auditSnapshot(array $entityData, array $changedFields, ?array $originalValues): array
+    {
+        $entityData['_audit'] = [
+            'dirty_fields' => $changedFields,
+            'original_values' => $originalValues ?? [],
+        ];
+
+        return $entityData;
     }
 }

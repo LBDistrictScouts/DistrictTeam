@@ -24,6 +24,7 @@ use InvalidArgumentException;
  * @property \Cake\ORM\Association\HasOne<\App\Model\Table\RolesTable> $TeamLead
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\SectionsTable> $Sections
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Team> newEntities(array $data, array $options = [])
@@ -84,6 +85,7 @@ class TeamsTable extends Table
             'foreignKey' => 'team_id',
             'strategy' => 'select',
         ]);
+        $this->hasMany('EmailGroups', ['foreignKey' => 'team_id']);
 
         $this->hasOne('TeamLead', [
             'className' => 'Roles',
@@ -252,6 +254,46 @@ class TeamsTable extends Table
                 ])),
             'sectionBelongsToGroup',
             ['errorField' => 'section_id', 'message' => 'Choose a section belonging to the selected group.'],
+        );
+        $rules->add(
+            function (EntityInterface $team): bool {
+                if (
+                    $team->isNew()
+                    || !$team->isDirty('group_id')
+                    || !is_string($team->get('id'))
+                ) {
+                    return true;
+                }
+
+                return !$this->EmailGroups->exists(['team_id' => $team->get('id')]);
+            },
+            'emailGroupScopeAllowsTeamGroupMove',
+            [
+                'errorField' => 'group_id',
+                'message' => __('Update or remove email group scopes before changing this team’s group.'),
+            ],
+        );
+        $rules->add(
+            function (EntityInterface $team): bool {
+                if ($team->isNew() || !is_string($team->get('id')) || !$team->isDirty('section_id')) {
+                    return true;
+                }
+
+                $conditions = [
+                    'team_id' => $team->get('id'),
+                    'section_id IS NOT' => null,
+                ];
+                if ($team->get('section_id') !== null) {
+                    $conditions['section_id !='] = $team->get('section_id');
+                }
+
+                return !$this->EmailGroups->exists($conditions);
+            },
+            'emailGroupScopeAllowsTeamSectionMove',
+            [
+                'errorField' => 'section_id',
+                'message' => __('Clear section-specific scopes before changing this team’s section.'),
+            ],
         );
 
         return $rules;

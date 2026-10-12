@@ -7,6 +7,7 @@
  * @var array<array<string, string>> $memberContactMethods
  * @var array<int, string> $contactMethodTypes
  * @var array<int, string> $appointmentContactMethodTypes
+ * @var array<string, string> $emailGroups
  * @var array<string, mixed> $roleSelectorData
  */
 ?>
@@ -79,7 +80,9 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
             'memberSelectId' => 'member-id',
             'contactMethodSelectId' => 'member-contact-method-id',
             'contactMethodTypes' => $appointmentContactMethodTypes,
+            'emailGroups' => $emailGroups,
             'statusId' => 'appointment-contact-method-status',
+            'appointmentEmailOnly' => true,
         ]) ?>
         <dialog id="member-modal">
             <?= $this->Form->create(null, [
@@ -96,9 +99,16 @@ $this->Html->script('appointment-role-selector', ['block' => true]);
                     'value' => date('Y-m-d'),
                 ]) ?>
                 <?= $this->Form->control('contact_method_type', [
-                    'options' => $contactMethodTypes,
+                    'options' => $appointmentContactMethodTypes,
                 ]) ?>
-                <?= $this->Form->control('contact_method') ?>
+                <div data-member-contact-value><?= $this->Form->control('contact_method') ?></div>
+                <?php if ($emailGroups) : ?>
+                <div data-member-email-group hidden><?= $this->Form->control('email_group_id', [
+                    'options' => $emailGroups,
+                    'empty' => __('Choose an email group'),
+                    'disabled' => true,
+                ]) ?></div>
+                <?php endif; ?>
             </fieldset>
             <p id="member-modal-status" role="status" aria-live="polite"></p>
             <?= $this->Form->button(__('Create and Select')) ?>
@@ -119,7 +129,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('member-modal-status');
     const memberSelect = document.getElementById('member-id');
     const contactMethodSelect = document.getElementById('member-contact-method-id');
+    const typeSelect = form.querySelector('[name="contact_method_type"]');
+    const contactValue = form.querySelector('[data-member-contact-value]');
+    const emailGroupControl = form.querySelector('[data-member-email-group]');
+    const emailGroupSelect = emailGroupControl?.querySelector('[name="email_group_id"]');
     const contactMethods = Array.from(contactMethodSelect.options);
+
+    const updateNewContactFields = function () {
+        const isEmailGroup = typeSelect.value === '3' && Boolean(emailGroupSelect);
+        if (contactValue) contactValue.hidden = isEmailGroup;
+        if (emailGroupControl) emailGroupControl.hidden = !isEmailGroup;
+        const contactValueInput = contactValue?.querySelector('[name="contact_method"]');
+        if (contactValueInput) {
+            contactValueInput.disabled = isEmailGroup;
+            contactValueInput.required = !isEmailGroup;
+        }
+        if (emailGroupSelect) {
+            emailGroupSelect.disabled = !isEmailGroup;
+            emailGroupSelect.required = isEmailGroup;
+        }
+    };
+    typeSelect.addEventListener('change', updateNewContactFields);
+    updateNewContactFields();
 
     const updateContactMethods = function () {
         const selectedId = contactMethodSelect.value;
@@ -201,6 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
             contactMethodSelect.value = result.contactMethod.id;
 
             form.reset();
+            updateNewContactFields();
             dialog.close();
         } catch (error) {
             status.textContent = error.message;
