@@ -10,6 +10,12 @@ class AddSectionToEmailGroups extends BaseMigration
      */
     public function change(): void
     {
+        // Ensure the referenced key exists even if the earlier teams index
+        // migration was recorded without leaving the index in place.
+        $this->execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS teams_id_section_id_unique ON teams (id, section_id)',
+        );
+
         $this->table('email_groups')
             ->addColumn('section_id', 'uuid', ['null' => true])
             ->addIndex(['section_id'])
