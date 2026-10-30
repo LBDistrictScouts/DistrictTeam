@@ -65,7 +65,7 @@ class TagsController extends AppController
      */
     protected function collectionQuery(): SelectQuery
     {
-        return $this->tagTable()->find();
+        return $this->tagTable()->find()->orderBy($this->order);
     }
 
     /**

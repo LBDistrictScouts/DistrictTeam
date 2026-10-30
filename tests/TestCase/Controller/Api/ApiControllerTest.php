@@ -369,6 +369,42 @@ class ApiControllerTest extends TestCase
         }
     }
 
+    public function testTagsApiUsesStableOrderingAcrossPages(): void
+    {
+        $tags = $this->fetchTable('Tags');
+        foreach (
+            [
+                ['tag_label' => 'Zulu', 'tag_code' => 'zulu'],
+                ['tag_label' => 'Alpha', 'tag_code' => 'alpha'],
+                ['tag_label' => 'Beta', 'tag_code' => 'beta'],
+            ] as $tagData
+        ) {
+            $tags->saveOrFail($tags->newEntity($tagData));
+        }
+
+        $expectedIds = array_map(
+            static fn($tag): string => $tag->id,
+            $tags->find()->orderByAsc('tag_label')->orderByAsc('id')->all()->toList(),
+        );
+
+        $this->get('/api/tags?limit=2&page=1');
+        $this->assertResponseOk();
+        $firstPage = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+        $this->get('/api/tags?limit=2&page=2');
+        $this->assertResponseOk();
+        $secondPage = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+        $actualIds = array_merge(
+            array_column($firstPage['data'], 'id'),
+            array_column($secondPage['data'], 'id'),
+        );
+        $this->assertSame($expectedIds, $actualIds);
+        $this->assertCount(count($expectedIds), array_unique($actualIds));
+        $this->assertSame(2, $firstPage['pagination']['page_count']);
+        $this->assertSame(2, $secondPage['pagination']['page_count']);
+    }
+
     public function testContactMethodViewUsesEnumLabelAndHidesMemberNumber(): void
     {
         $this->get('/api/member-contact-methods/44444444-4444-4444-8444-444444444441.json');
