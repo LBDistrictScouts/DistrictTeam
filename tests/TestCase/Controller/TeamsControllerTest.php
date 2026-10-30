@@ -28,6 +28,10 @@ class TeamsControllerTest extends TestCase
         'app.Members',
         'app.MemberContactMethods',
         'app.Appointments',
+        'app.Tags',
+        'app.TeamTags',
+        'app.RoleTags',
+        'app.AppointmentTags',
         'app.CsvUnitMappings',
     ];
 

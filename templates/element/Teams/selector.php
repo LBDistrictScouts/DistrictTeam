@@ -9,6 +9,7 @@
  * @var bool $deriveSectionFromTeam
  * @var bool $disableEmptyControls
  * @var bool $teamRequired
+ * @var bool $groupRequired
  * @var string $teamEmpty
  * @var array<string, mixed> $teamSelectorData
  */
@@ -20,6 +21,7 @@ $selectedSectionId ??= '';
 $deriveSectionFromTeam ??= true;
 $disableEmptyControls ??= true;
 $teamRequired ??= true;
+$groupRequired ??= true;
 $teamEmpty ??= __('Choose a team');
 ?>
 <div class="team-selector" data-team-selector data-team-field="<?= h($teamField) ?>"
@@ -30,7 +32,7 @@ $teamEmpty ??= __('Choose a team');
     data-disable-empty-controls="<?= $disableEmptyControls ? 'true' : 'false' ?>"
     data-team-empty="<?= h($teamEmpty) ?>">
     <?= $this->Form->control($fieldPrefix . 'group_id', [
-        'type' => 'select', 'label' => __('Group'), 'empty' => __('Choose a group'), 'required' => true,
+        'type' => 'select', 'label' => __('Group'), 'empty' => __('Choose a group'), 'required' => $groupRequired,
     ]) ?>
     <?= $this->Form->control($fieldPrefix . 'section_id', [
         'type' => 'select', 'label' => __('Section'), 'empty' => __('Any section'), 'disabled' => true,

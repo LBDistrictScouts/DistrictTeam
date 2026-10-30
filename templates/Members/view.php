@@ -43,7 +43,13 @@ $deleteContactMethodIcon = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
                 <div class="member-panel-heading"><h2 id="member-appointments-heading"><?= __('Appointments') ?></h2><?= $this->Html->link(__('New appointment') . ' →', ['controller' => 'Appointments', 'action' => 'add', '?' => ['member_id' => $member->id]]) ?></div>
                 <?php if ($appointments) : ?><ul class="member-appointment-list">
                     <?php foreach ($appointments as $appointment) : ?><li>
-                        <div><strong><?= $appointment->role ? $this->Html->link($appointment->role->name, ['controller' => 'Roles', 'action' => 'view', $appointment->role->id]) : __('Role unavailable') ?></strong><p><?= __('From {0}', $this->Time->format($appointment->effective_start_date, 'd MMM yyyy')) ?><?= $appointment->effective_end_date ? __(' to {0}', $this->Time->format($appointment->effective_end_date, 'd MMM yyyy')) : '' ?></p></div>
+                        <div><strong><?= $appointment->role ? $this->Html->link($appointment->role->name, ['controller' => 'Roles', 'action' => 'view', $appointment->role->id]) : __('Role unavailable') ?></strong><p><?= __('From {0}', $this->Time->format($appointment->effective_start_date, 'd MMM yyyy')) ?><?= $appointment->effective_end_date ? __(' to {0}', $this->Time->format($appointment->effective_end_date, 'd MMM yyyy')) : '' ?></p>
+                            <?= $this->element('Tags/contexts', [
+                                'team' => $appointment->role?->team,
+                                'role' => $appointment->role,
+                                'appointment' => $appointment,
+                            ]) ?>
+                        </div>
                         <span class="member-appointment-status <?= $appointment->active ? 'member-appointment-current' : 'member-appointment-ended' ?>"><?= $appointment->active ? __('Current') : __('Ended') ?></span>
                         <?= $this->Html->link(__('View') . ' →', ['controller' => 'Appointments', 'action' => 'view', $appointment->id]) ?>
                     </li><?php endforeach; ?>

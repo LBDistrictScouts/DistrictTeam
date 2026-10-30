@@ -100,6 +100,7 @@ class TeamsController extends AppController
             'Groups',
             'Sections',
             'ParentTeam',
+            'Tags',
             'TeamLead.CurrentAppointments.Members',
             'Roles' => ['sort' => ['Roles.is_lead' => 'DESC', 'Roles.name' => 'ASC']],
             'Roles.CurrentAppointments.Members',

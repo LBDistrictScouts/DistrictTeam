@@ -89,6 +89,35 @@
         "section": {"anyOf": [{"$ref": "#/definitions/section"}, {"type": "null"}]}
       }
     },
+    "tag": {
+      "type": "object",
+      "required": ["id", "tag_label", "tag_code", "is_cognito_permissions_group", "email_group_id", "current_appointments"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "tag_label": {"type": "string"},
+        "tag_code": {"type": "string", "pattern": "^[A-Za-z0-9-]+$"},
+        "is_cognito_permissions_group": {"type": "boolean"},
+        "email_group_id": {"type": ["string", "null"], "format": "uuid"},
+        "current_appointments": {
+          "type": "array",
+          "description": "Current matching appointments with valid group email contact methods only.",
+          "items": {"$ref": "#/definitions/tag_current_appointment"}
+        }
+      }
+    },
+    "tag_current_appointment": {
+      "type": "object",
+      "required": ["id", "member_id", "member_contact_method_id", "member_first_name", "member_last_name", "role_name", "contact_method"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "member_id": {"$ref": "#/definitions/uuid"},
+        "member_contact_method_id": {"$ref": "#/definitions/uuid"},
+        "member_first_name": {"type": "string"},
+        "member_last_name": {"type": "string"},
+        "role_name": {"type": "string"},
+        "contact_method": {"type": "string"}
+      }
+    },
     "appointment": {
       "type": "object",
       "required": ["id", "role_id", "member_id", "public_opt_out", "active"],
@@ -203,6 +232,12 @@
         {"properties": {"data": {"items": {"$ref": "#/definitions/email_group"}}}}
       ]
     },
+    "tags_collection": {
+      "allOf": [
+        {"$ref": "#/definitions/collection"},
+        {"properties": {"data": {"items": {"$ref": "#/definitions/tag"}}}}
+      ]
+    },
     "record": {
       "type": "object",
       "required": ["data"],
@@ -214,6 +249,7 @@
     "appointment_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/appointment"}}}]},
     "member_contact_method_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member_contact_method"}}}]},
     "email_group_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/email_group"}}}]},
+    "tag_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/tag"}}}]},
     "member_search": {
       "type": "object",
       "required": ["results", "pagination"],

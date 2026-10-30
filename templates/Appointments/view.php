@@ -30,6 +30,14 @@ $team = $appointment->role?->team;
         <div><strong><?= h($startDate) ?></strong><span><?= __('Started') ?></span></div>
         <div><strong><?= $endDate ? h($endDate) : __('Open-ended') ?></strong><span><?= __('Ends') ?></span></div>
     </div>
+    <section class="appointment-panel appointment-tags-panel" aria-labelledby="appointment-tags-heading">
+        <h2 id="appointment-tags-heading"><?= __('Tags') ?></h2>
+        <?= $this->element('Tags/contexts', [
+            'team' => $team,
+            'role' => $appointment->role,
+            'appointment' => $appointment,
+        ]) ?>
+    </section>
     <div class="appointment-detail-grid">
         <section class="appointment-panel appointment-person-panel" aria-labelledby="appointment-member-heading">
             <p class="appointment-eyebrow"><?= __('Member') ?></p>

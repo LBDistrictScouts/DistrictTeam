@@ -27,7 +27,7 @@ $cakeDescription = 'District Team';
     </title>
     <?= $this->Html->meta('icon') ?>
 
-    <?= $this->Html->css(['normalize.min', 'milligram.min', 'fonts', 'cake']) ?>
+    <?= $this->Html->css(['normalize.min', 'milligram.min', 'fonts', 'cake', 'user-tags']) ?>
 
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
@@ -46,6 +46,7 @@ $cakeDescription = 'District Team';
             <?= $this->Html->link(__('Members'), ['controller' => 'Members', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Roles'), ['controller' => 'Roles', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Appointments'), ['controller' => 'Appointments', 'action' => 'index']) ?>
+            <?= $this->Html->link(__('Tags'), ['controller' => 'Tags', 'action' => 'index']) ?>
             <?= $this->Html->link(__('Imports'), ['controller' => 'Imports', 'action' => 'index']) ?>
         </div>
     </nav>

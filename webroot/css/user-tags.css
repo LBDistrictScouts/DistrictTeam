@@ -1,0 +1,201 @@
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    list-style: none;
+    margin: 0.5rem 0;
+    padding: 0;
+}
+
+.tag-list li {
+    margin: 0;
+}
+
+.user-tag {
+    background: #e7f1ed;
+    border: 1px solid #c5ddd3;
+    border-radius: 999px;
+    color: #155740;
+    display: inline-block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.5;
+    padding: 0.1rem 0.8rem;
+    text-decoration: none;
+}
+
+.user-tag:hover,
+.user-tag:focus {
+    background: #d9ebe3;
+    color: #0b3e2c;
+}
+
+.tag-empty {
+    color: #68756f;
+}
+
+.tag-assignments {
+    margin-top: 2rem;
+}
+
+.tag-assignment-add-row {
+    align-items: end;
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: minmax(18rem, 1fr) auto;
+    margin: 1.5rem 0;
+    max-width: 48rem;
+}
+
+.tag-assignment-add-row label {
+    grid-column: 1 / -1;
+    margin-bottom: -0.8rem;
+}
+
+.tag-assignment-add-row select {
+    margin-bottom: 0;
+}
+
+.tag-assignment-table td:last-child {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.tag-assignment-modal {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 28%);
+    max-height: min(80vh, 70rem);
+    max-width: min(64rem, calc(100vw - 3rem));
+    overflow-y: auto;
+    padding: 2.4rem;
+    width: 100%;
+}
+
+.tag-assignment-modal::backdrop {
+    background: rgb(12 27 20 / 55%);
+}
+
+.tag-assignment-modal h2 {
+    margin-bottom: 1.5rem;
+}
+
+.tag-assignment-results {
+    border: 1px solid #d9e0dc;
+    border-radius: 0.6rem;
+    list-style: none;
+    margin: 0 0 1.5rem;
+    max-height: 30rem;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.tag-assignment-results li {
+    border-bottom: 1px solid #e6ebe8;
+    margin: 0;
+}
+
+.tag-assignment-results li:last-child {
+    border-bottom: 0;
+}
+
+.tag-assignment-result {
+    background: transparent;
+    border: 0;
+    color: #183c2d;
+    cursor: pointer;
+    font-size: 1.45rem;
+    font-weight: 500;
+    padding: 1rem 1.2rem;
+    text-align: left;
+    width: 100%;
+}
+
+.tag-assignment-result:hover,
+.tag-assignment-result:focus {
+    background: #edf5f1;
+}
+
+.tag-assignment-modal-actions {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.tag-contexts {
+    margin-top: 0.5rem;
+}
+
+.tag-context {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.8rem;
+}
+
+.tag-context > span {
+    color: #68756f;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.tag-context .tag-list {
+    margin: 0.15rem 0;
+}
+
+.tag-usage-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+    margin-top: 2rem;
+}
+
+.tag-usage-grid .workspace-form-panel {
+    margin: 0;
+}
+
+.tag-current-members {
+    margin-top: 2rem;
+}
+
+.tag-member-filter {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 0 2.6rem 1.6rem;
+}
+
+.tag-member-filter label {
+    align-items: center;
+    color: #365347;
+    display: flex;
+    font-size: 1.3rem;
+    font-weight: 600;
+    gap: 0.8rem;
+    margin: 0;
+}
+
+.tag-member-filter input[type="checkbox"] {
+    accent-color: #006b54;
+    height: 1.8rem;
+    margin: 0;
+    width: 1.8rem;
+}
+
+.tag-member-filter button {
+    margin: 0;
+}
+
+.tag-current-members td small {
+    color: #68756f;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.team-tags-panel,
+.role-tags-panel,
+.appointment-tags-panel {
+    margin: 1.5rem 0;
+}

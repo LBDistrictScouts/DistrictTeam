@@ -20,6 +20,10 @@ class ApiControllerTest extends TestCase
         'app.MemberContactMethods',
         'app.EmailGroups',
         'app.Appointments',
+        'app.Tags',
+        'app.TeamTags',
+        'app.RoleTags',
+        'app.AppointmentTags',
     ];
 
     /**
@@ -66,6 +70,9 @@ class ApiControllerTest extends TestCase
             '/api/email-groups/66666666-6666-4666-8666-666666666661.json' => 'email_group_record',
             '/api/appointments.json' => 'appointments_collection',
             '/api/appointments/55555555-5555-4555-8555-555555555551.json' => 'appointment_record',
+            '/api/tags.json' => 'tags_collection',
+            '/api/tags/aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa.json' => 'tag_record',
+            '/api/tag/aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa.json' => 'tag_record',
             '/api/member-search?q=ada' => 'member_search',
             '/api/appointment-contact-methods?member_id=33333333-3333-4333-8333-333333333331' => 'appointment_contact_methods',
         ];
@@ -95,6 +102,7 @@ class ApiControllerTest extends TestCase
             '/api/members', '/api/members/{id}', '/api/member-contact-methods',
             '/api/member-contact-methods/{id}', '/api/email-groups', '/api/email-groups/{id}',
             '/api/appointments', '/api/appointments/{id}',
+            '/api/tags', '/api/tags/{id}', '/api/tag/{id}',
             '/api/member-search', '/api/appointment-contact-methods',
         ];
 
@@ -263,6 +271,140 @@ class ApiControllerTest extends TestCase
         );
     }
 
+    public function testTagsApiReturnsCurrentAppointmentsWithMemberAndContactDetails(): void
+    {
+        $tags = $this->fetchTable('Tags');
+        $tag = $tags->saveOrFail($tags->newEntity([
+            'tag_label' => 'Workflow members',
+            'tag_code' => 'workflow-members',
+            'is_cognito_permissions_group' => true,
+            'email_group_id' => '66666666-6666-4666-8666-666666666661',
+            'teams' => ['_ids' => ['11111111-1111-4111-8111-111111111112']],
+            'roles' => ['_ids' => ['22222222-2222-4222-8222-222222222221']],
+            'appointments' => ['_ids' => ['55555555-5555-4555-8555-555555555551']],
+        ], ['associated' => ['Teams', 'Roles', 'Appointments']]));
+        $groupEmail = $this->fetchTable('MemberContactMethods')->saveOrFail(
+            $this->fetchTable('MemberContactMethods')->newEntity([
+                'member_id' => '33333333-3333-4333-8333-333333333331',
+                'contact_method' => 'ada@group.example.org',
+                'contact_method_type' => 1,
+            ]),
+        );
+        $groupAppointment = $this->fetchTable('Appointments')->saveOrFail(
+            $this->fetchTable('Appointments')->newEntity([
+                'role_id' => '22222222-2222-4222-8222-222222222221',
+                'member_id' => '33333333-3333-4333-8333-333333333331',
+                'member_contact_method_id' => $groupEmail->id,
+                'effective_start_date' => '2025-01-01',
+            ]),
+        );
+        $emptyTag = $tags->saveOrFail($tags->newEntity([
+            'tag_label' => 'Empty tag',
+            'tag_code' => 'empty-tag',
+        ]));
+
+        $this->get('/api/tags');
+
+        $this->assertResponseOk();
+        $this->assertContentType('application/json');
+        $payload = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $tagRecords = array_column($payload['data'], null, 'id');
+        $this->assertSame(3, $payload['pagination']['total']);
+        $this->assertSame([
+            'id',
+            'tag_label',
+            'tag_code',
+            'is_cognito_permissions_group',
+            'email_group_id',
+            'current_appointments',
+        ], array_keys($tagRecords[$tag->id]));
+        $this->assertSame('Workflow members', $tagRecords[$tag->id]['tag_label']);
+        $this->assertSame('66666666-6666-4666-8666-666666666661', $tagRecords[$tag->id]['email_group_id']);
+        $this->assertTrue($tagRecords[$tag->id]['is_cognito_permissions_group']);
+        $this->assertCount(1, $tagRecords[$tag->id]['current_appointments']);
+        $this->assertSame([], $tagRecords[$emptyTag->id]['current_appointments']);
+        $appointment = $tagRecords[$tag->id]['current_appointments'][0];
+        $this->assertSame($groupAppointment->id, $appointment['id']);
+        $this->assertSame('33333333-3333-4333-8333-333333333331', $appointment['member_id']);
+        $this->assertSame('Ada', $appointment['member_first_name']);
+        $this->assertSame('Lovelace', $appointment['member_last_name']);
+        $this->assertSame('Digital Lead', $appointment['role_name']);
+        $this->assertSame('ada@group.example.org', $appointment['contact_method']);
+
+        foreach (
+            [
+            '/api/tag/' . $tag->id,
+            '/api/tags/' . $tag->id . '.json',
+            ] as $url
+        ) {
+            $this->get($url);
+            $this->assertResponseOk();
+            $detail = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+            $this->assertSame($tag->id, $detail['data']['id']);
+            $this->assertTrue($detail['data']['is_cognito_permissions_group']);
+            $this->assertSame('66666666-6666-4666-8666-666666666661', $detail['data']['email_group_id']);
+            $this->assertCount(1, $detail['data']['current_appointments']);
+            $appointment = $detail['data']['current_appointments'][0];
+            $this->assertSame([
+                'id',
+                'member_id',
+                'member_contact_method_id',
+                'member_first_name',
+                'member_last_name',
+                'role_name',
+                'contact_method',
+            ], array_keys($appointment));
+            $this->assertSame('33333333-3333-4333-8333-333333333331', $appointment['member_id']);
+            $this->assertSame($groupAppointment->id, $appointment['id']);
+            $this->assertSame('Ada', $appointment['member_first_name']);
+            $this->assertSame('Lovelace', $appointment['member_last_name']);
+            $this->assertSame('Digital Lead', $appointment['role_name']);
+            $this->assertArrayNotHasKey('member', $appointment);
+            $this->assertArrayNotHasKey('member_contact_method', $appointment);
+            $this->assertArrayNotHasKey('role', $appointment);
+            $this->assertSame(
+                'ada@group.example.org',
+                $appointment['contact_method'],
+            );
+        }
+    }
+
+    public function testTagsApiUsesStableOrderingAcrossPages(): void
+    {
+        $tags = $this->fetchTable('Tags');
+        foreach (
+            [
+                ['tag_label' => 'Zulu', 'tag_code' => 'zulu'],
+                ['tag_label' => 'Alpha', 'tag_code' => 'alpha'],
+                ['tag_label' => 'Beta', 'tag_code' => 'beta'],
+            ] as $tagData
+        ) {
+            $tags->saveOrFail($tags->newEntity($tagData));
+        }
+
+        $expectedIds = array_map(
+            static fn($tag): string => $tag->id,
+            $tags->find()->orderByAsc('tag_label')->orderByAsc('id')->all()->toList(),
+        );
+
+        $this->get('/api/tags?limit=2&page=1');
+        $this->assertResponseOk();
+        $firstPage = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+        $this->get('/api/tags?limit=2&page=2');
+        $this->assertResponseOk();
+        $secondPage = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+        $actualIds = array_merge(
+            array_column($firstPage['data'], 'id'),
+            array_column($secondPage['data'], 'id'),
+        );
+        $this->assertSame($expectedIds, $actualIds);
+        $this->assertCount(count($expectedIds), array_unique($actualIds));
+        $this->assertSame(2, $firstPage['pagination']['page_count']);
+        $this->assertSame(2, $secondPage['pagination']['page_count']);
+    }
+
     public function testContactMethodViewUsesEnumLabelAndHidesMemberNumber(): void
     {
         $this->get('/api/member-contact-methods/44444444-4444-4444-8444-444444444441.json');
@@ -314,6 +456,9 @@ class ApiControllerTest extends TestCase
         $this->enableCsrfToken();
         $this->post('/api/members', []);
 
+        $this->assertResponseCode(404);
+
+        $this->post('/api/tags', []);
         $this->assertResponseCode(404);
     }
 

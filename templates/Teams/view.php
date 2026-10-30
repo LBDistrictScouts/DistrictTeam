@@ -47,6 +47,10 @@ $leader = $leadAppointments[0]?->member ?? null;
         <div><strong><?= $this->Number->format($value) ?></strong><span><?= $label ?></span></div>
         <?php endforeach; ?>
     </div>
+    <section class="team-panel team-tags-panel" aria-labelledby="team-tags-heading">
+        <h2 id="team-tags-heading"><?= __('Tags') ?></h2>
+        <?= $this->element('Tags/list', ['tags' => $team->tags]) ?>
+    </section>
 
     <div class="team-detail-grid">
         <div class="team-main-panels">

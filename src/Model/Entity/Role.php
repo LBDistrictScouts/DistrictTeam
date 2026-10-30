@@ -27,6 +27,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Group $group
  * @property array<\App\Model\Entity\Appointment> $appointments
  * @property array<\App\Model\Entity\Appointment> $current_appointments
+ * @property array<\App\Model\Entity\Tag> $tags
  */
 class Role extends Entity
 {

@@ -161,4 +161,58 @@ class AppController extends Controller
 
         return $data;
     }
+
+    /**
+     * Return the role relationships used by the reusable team-to-role selector.
+     *
+     * @return array{roles: list<array{id: string, teamId: string, text: string}>}
+     */
+    protected function roleSelectorData(): array
+    {
+        $teamsById = [];
+        foreach (
+            $this->fetchTable('Teams')->find()->select([
+            'id',
+            'team_parent_id',
+            'team_name',
+            ]) as $team
+        ) {
+            $teamsById[(string)$team->get('id')] = [
+                'parentId' => $team->get('team_parent_id'),
+                'name' => (string)$team->get('team_name'),
+            ];
+        }
+
+        $roleList = $this->fetchTable('Roles')->find()
+            ->select(['id', 'team_id', 'name', 'is_lead'])
+            ->orderByAsc('name');
+
+        $data = ['roles' => []];
+        foreach ($roleList->all() as $role) {
+            if ($role instanceof EntityInterface) {
+                $data['roles'][] = [
+                    'id' => (string)$role->get('id'),
+                    'teamId' => (string)$role->get('team_id'),
+                    'text' => (string)$role->get('name'),
+                ];
+
+                if (!$role->get('is_lead')) {
+                    continue;
+                }
+                $owningTeamId = (string)$role->get('team_id');
+                $owningTeam = $teamsById[$owningTeamId] ?? null;
+                $ownerTeamName = $owningTeam['name'] ?? '';
+                $parentId = $owningTeam['parentId'] ?? null;
+                if (is_string($parentId) && isset($teamsById[$parentId])) {
+                    $data['roles'][] = [
+                        'id' => (string)$role->get('id'),
+                        'teamId' => $parentId,
+                        'text' => (string)$role->get('name') . ' · ' . $ownerTeamName,
+                    ];
+                }
+            }
+        }
+
+        return $data;
+    }
 }

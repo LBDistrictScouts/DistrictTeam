@@ -18,6 +18,7 @@ use Cake\Validation\Validator;
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MembersTable> $Members
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MemberContactMethodsTable> $MemberContactMethods
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\TagsTable> $Tags
  * @method \App\Model\Entity\Appointment newEmptyEntity()
  * @method \App\Model\Entity\Appointment newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Appointment> newEntities(array $data, array $options = [])
@@ -31,6 +32,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Appointment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Appointment> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Appointment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Appointment>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Appointment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Appointment> deleteManyOrFail(iterable $entities, array $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Appointment>
  */
 class AppointmentsTable extends Table
 {
@@ -59,6 +61,12 @@ class AppointmentsTable extends Table
         $this->belongsTo('MemberContactMethods', [
             'foreignKey' => 'member_contact_method_id',
             'joinType' => 'INNER',
+        ]);
+        $this->belongsToMany('Tags', [
+            'through' => 'AppointmentTags',
+            'foreignKey' => 'appointment_id',
+            'targetForeignKey' => 'tag_id',
+            'sort' => ['Tags.tag_label' => 'ASC'],
         ]);
     }
 
