@@ -25,6 +25,7 @@ use InvalidArgumentException;
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\SectionsTable> $Sections
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\TagsTable> $Tags
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Team> newEntities(array $data, array $options = [])
@@ -38,6 +39,7 @@ use InvalidArgumentException;
  * @method iterable<\App\Model\Entity\Team>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Team> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Team>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Team>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Team>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Team> deleteManyOrFail(iterable $entities, array $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Team>
  */
 class TeamsTable extends Table
 {
@@ -86,6 +88,12 @@ class TeamsTable extends Table
             'strategy' => 'select',
         ]);
         $this->hasMany('EmailGroups', ['foreignKey' => 'team_id']);
+        $this->belongsToMany('Tags', [
+            'through' => 'TeamTags',
+            'foreignKey' => 'team_id',
+            'targetForeignKey' => 'tag_id',
+            'sort' => ['Tags.tag_label' => 'ASC'],
+        ]);
 
         $this->hasOne('TeamLead', [
             'className' => 'Roles',

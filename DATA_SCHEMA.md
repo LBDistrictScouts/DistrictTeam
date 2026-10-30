@@ -11,21 +11,29 @@ erDiagram
     GROUPS ||--o{ SECTIONS : contains
     GROUPS o|--o{ TEAMS : scopes
     GROUPS ||--o{ EMAIL_GROUPS : owns
+    EMAIL_GROUPS o|--o| TAGS : defines_expected_members
     SECTIONS o|--o{ TEAMS : scopes
     TEAMS o|--o{ TEAMS : "parent of"
     TEAMS o|--o{ EMAIL_GROUPS : scopes
     TEAMS ||--o{ ROLES : contains
+    TEAMS ||--o{ TEAM_TAGS : tagged
+    TAGS ||--o{ TEAM_TAGS : labels
+    ROLES ||--o{ ROLE_TAGS : tagged
+    TAGS ||--o{ ROLE_TAGS : labels
     MEMBERS ||--o{ MEMBER_CONTACT_METHODS : has
     EMAIL_GROUPS o|--o{ MEMBER_CONTACT_METHODS : classifies
     ROLES ||--o{ APPOINTMENTS : receives
     MEMBERS ||--o{ APPOINTMENTS : holds
     MEMBER_CONTACT_METHODS ||--o{ APPOINTMENTS : uses
+    APPOINTMENTS ||--o{ APPOINTMENT_TAGS : tagged
+    TAGS ||--o{ APPOINTMENT_TAGS : labels
 ```
 
 - Teams form a hierarchy through a self-referencing parent relationship.
 - A team can define many roles; every role belongs to exactly one team.
 - A member can have many contact methods.
 - An appointment associates one member and one of their contact methods with a role for an effective date range.
+- Tags have a human-readable label and a stable code. A tag can be linked to teams, roles, appointments, or any combination of those levels.
 
 ## `teams`
 
@@ -203,6 +211,24 @@ Constraints:
 - Foreign key: `member_id → members.id`, with `ON UPDATE CASCADE` and `ON DELETE CASCADE`.
 - Foreign key: `member_contact_method_id → member_contact_methods.id`, with `ON UPDATE CASCADE` and `ON DELETE CASCADE`.
 - Unique index: (`role_id`, `member_id`, `effective_start_date`). This permits multiple members in a role, and repeat appointments of the same member, provided their start dates differ.
+
+## `tags` and tag assignments
+
+`tags` stores reusable workflow labels.
+
+| Column | Database type | Null | Default | Purpose |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | No | — | Primary key. |
+| `tag_label` | `varchar(255)` | No | — | Visual label shown in the directory. |
+| `tag_code` | `varchar(100)` | No | — | Unique workflow code; application validation permits letters, numbers, and hyphens. |
+| `is_cognito_permissions_group` | `boolean` | No | `false` | Marks a tag as a Cognito permissions group. |
+| `email_group_id` | `uuid` | Yes | `NULL` | Optional one-to-one link to the email group whose desired membership is determined by this tag. |
+
+`team_tags`, `role_tags`, and `appointment_tags` are many-to-many join tables. Each has a composite primary key of the owning entity UUID and `tag_id`; both foreign keys cascade on update and delete. The same tag may therefore appear on any combination of teams, roles, and appointments, with duplicate assignments prevented at each level.
+
+`TagsTable::findCurrentMembers($tagId)` returns a Members query for members with a currently effective appointment whose appointment, role, or directly owning team has the tag. A member is returned once even if the tag is assigned at multiple levels. `TagsTable::findCurrentAppointments($tagId)` returns one matching current appointment per member, preferring the appointment in the highest team in the hierarchy. Pass `groupEmailsOnly: true` to limit results to email, email alias, or email group contact methods not marked as personal (`is_non_group_email = false`). The tag detail page uses the default finder; both tag API endpoints use the group email option for synchronisation.
+
+`tags.email_group_id` is unique and references `email_groups.id`; updates cascade and deleting an email group clears the tag link. A tag's current members define who should be in its linked email group. The email group's synced member listing represents who is currently in it; the two lists can be compared to determine sync changes. The link is managed from tag forms.
 
 ## Integrity boundaries and caveats
 

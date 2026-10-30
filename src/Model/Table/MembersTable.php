@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
  *
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\MemberContactMethodsTable> $MemberContactMethods
  * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\EmailGroupsTable> $EmailGroups
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $Appointments
  * @method \App\Model\Entity\Member newEmptyEntity()
  * @method \App\Model\Entity\Member newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Member> newEntities(array $data, array $options = [])
@@ -25,6 +26,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Member>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Member> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Member>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Member>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Member>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Member> deleteManyOrFail(iterable $entities, array $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Member>
  */
 class MembersTable extends Table
 {

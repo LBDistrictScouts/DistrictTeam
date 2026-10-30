@@ -14,6 +14,7 @@ use Cake\ORM\Entity;
  * @property string|null $section_id
  * @property string $email_group_name
  * @property string|null $email_address
+ * @property \App\Model\Entity\Tag|null $tag
  *
  * @property \App\Model\Entity\Group $group
  * @property \App\Model\Entity\Team|null $team

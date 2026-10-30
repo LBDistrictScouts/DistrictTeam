@@ -64,6 +64,10 @@ $staffingStatusLabel = match ($staffingStatus) {
             <span><?= __n('Current appointment', 'Current appointments', count($appointments)) ?></span>
         </div>
     </div>
+    <section class="role-panel role-tags-panel" aria-labelledby="role-tags-heading">
+        <h2 id="role-tags-heading"><?= __('Tags') ?></h2>
+        <?= $this->element('Tags/list', ['tags' => $role->tags]) ?>
+    </section>
 
     <div class="role-detail-grid">
         <div class="role-main-panels">

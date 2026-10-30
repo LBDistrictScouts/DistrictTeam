@@ -94,6 +94,7 @@ class RolesController extends AppController
         $role = $this->Roles->get($id, contain: [
             'Teams.Groups',
             'Teams.Sections',
+            'Tags',
             'CurrentAppointments.Members',
         ]);
         $this->set(compact('role'));

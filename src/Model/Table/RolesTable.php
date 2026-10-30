@@ -19,6 +19,7 @@ use Cake\Validation\Validator;
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\GroupsTable> $Groups
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $Appointments
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\AppointmentsTable> $CurrentAppointments
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\TagsTable> $Tags
  * @method \App\Model\Entity\Role newEmptyEntity()
  * @method \App\Model\Entity\Role newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Role> newEntities(array $data, array $options = [])
@@ -32,6 +33,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role> deleteManyOrFail(iterable $entities, array $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Role>
  */
 class RolesTable extends Table
 {
@@ -64,6 +66,12 @@ class RolesTable extends Table
             'finder' => 'current',
             'strategy' => 'select',
             'sort' => ['CurrentAppointments.effective_start_date' => 'DESC'],
+        ]);
+        $this->belongsToMany('Tags', [
+            'through' => 'RoleTags',
+            'foreignKey' => 'role_id',
+            'targetForeignKey' => 'tag_id',
+            'sort' => ['Tags.tag_label' => 'ASC'],
         ]);
     }
 

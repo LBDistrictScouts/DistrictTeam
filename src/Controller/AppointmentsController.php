@@ -88,8 +88,11 @@ class AppointmentsController extends AppController
         $appointment = $this->Appointments->get($id, contain: [
             'Roles.Teams.Groups',
             'Roles.Teams.Sections',
+            'Roles.Tags',
+            'Roles.Teams.Tags',
             'Members',
             'MemberContactMethods',
+            'Tags',
         ]);
         $this->set(compact('appointment'));
     }
@@ -394,32 +397,6 @@ class AppointmentsController extends AppController
         }
 
         return [(string)$member->get('id') => (string)$member->get('full_name')];
-    }
-
-    /**
-     * Return the role relationships used by the cascading role selector on appointment forms.
-     *
-     * @return array{roles: list<array{id: string, teamId: string, text: string}>}
-     */
-    private function roleSelectorData(): array
-    {
-        $roles = $this->Appointments->Roles;
-        $roleList = $roles->find()
-            ->select(['id', 'team_id', 'name'])
-            ->orderByAsc('name');
-
-        $data = ['roles' => []];
-        foreach ($roleList->all() as $role) {
-            if ($role instanceof EntityInterface) {
-                $data['roles'][] = [
-                    'id' => (string)$role->get('id'),
-                    'teamId' => (string)$role->get('team_id'),
-                    'text' => (string)$role->get('name'),
-                ];
-            }
-        }
-
-        return $data;
     }
 
     /**

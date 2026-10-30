@@ -63,8 +63,13 @@ return function (RouteBuilder $routes): void {
             'controller' => 'MemberContactMethods',
             'action' => 'appointmentContactMethods',
         ])->setMethods(['GET']);
+        $builder->connect('/tag/{id}', ['controller' => 'Tags', 'action' => 'view'])
+            ->setPass(['id'])
+            ->setMethods(['GET']);
 
-        foreach (['Teams', 'Roles', 'Members', 'MemberContactMethods', 'EmailGroups', 'Appointments'] as $resource) {
+        foreach ([
+            'Teams', 'Roles', 'Members', 'MemberContactMethods', 'EmailGroups', 'Appointments', 'Tags',
+        ] as $resource) {
             $builder->resources($resource, ['only' => ['index', 'view']]);
         }
     });
@@ -94,6 +99,10 @@ return function (RouteBuilder $routes): void {
         )
             ->setPass(['memberId', 'id'])
             ->setMethods(['POST']);
+        $builder->connect(
+            '/tags/assignment-options',
+            ['controller' => 'Tags', 'action' => 'assignmentOptions'],
+        )->setMethods(['GET']);
 
         /*
          * Connect catchall routes for all controllers.

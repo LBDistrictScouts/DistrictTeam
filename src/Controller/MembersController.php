@@ -370,7 +370,10 @@ class MembersController extends AppController
     public function view(?string $id = null)
     {
         $member = $this->Members->get($id, contain: [
-            'Appointments' => ['Roles'],
+            'Appointments' => [
+                'Tags',
+                'Roles' => ['Tags', 'Teams' => ['Tags']],
+            ],
             'MemberContactMethods',
         ]);
         $contactMethodTypes = [];

@@ -21,6 +21,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Role $role
  * @property \App\Model\Entity\Member $member
  * @property \App\Model\Entity\MemberContactMethod $member_contact_method
+ * @property array<\App\Model\Entity\Tag> $tags
  */
 class Appointment extends Entity
 {

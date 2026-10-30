@@ -28,6 +28,7 @@ class AppointmentsControllerTest extends TestCase
         'app.Members',
         'app.MemberContactMethods',
         'app.Appointments',
+        'app.Tags', 'app.TeamTags', 'app.RoleTags', 'app.AppointmentTags',
     ];
 
     /**
@@ -270,6 +271,56 @@ class AppointmentsControllerTest extends TestCase
         $this->assertResponseContains('data-team-selector');
         $this->assertResponseContains('class="team-selector-flow"');
         $this->assertResponseContains('data-selected-team-id="11111111-1111-4111-8111-111111111112"');
+    }
+
+    public function testRoleSelectorShowsLeadRolesInImmediateParentTeamOnly(): void
+    {
+        $teams = $this->fetchTable('Teams');
+        $grandchildTeam = $teams->saveOrFail($teams->newEntity([
+            'team_name' => 'Digital Operations',
+            'slug' => 'digital-operations',
+            'group_id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'team_parent_id' => '11111111-1111-4111-8111-111111111112',
+        ]));
+        $roles = $this->fetchTable('Roles');
+        $grandchildLead = $roles->saveOrFail($roles->newEntity([
+            'team_id' => $grandchildTeam->id,
+            'name' => 'Digital Operations Lead',
+            'slug' => 'digital-operations-lead',
+            'currently_filled' => false,
+            'is_lead' => true,
+            'multi_member_role' => false,
+            'is_trustee_role' => false,
+        ]));
+
+        $this->get('/appointments/add');
+
+        $this->assertResponseOk();
+        $html = (string)$this->_response->getBody();
+        $this->assertMatchesRegularExpression(
+            '/<script type="application\/json" data-role-selector-data>(.*?)<\/script>/s',
+            $html,
+        );
+        preg_match('/<script type="application\/json" data-role-selector-data>(.*?)<\/script>/s', $html, $matches);
+        $selectorData = json_decode($matches[1] ?? '', true, flags: JSON_THROW_ON_ERROR);
+        $rolesForTeam = static function (array $items, string $teamId): array {
+            return array_values(array_filter(
+                $items,
+                static fn(array $item): bool => $item['teamId'] === $teamId,
+            ));
+        };
+
+        $rootRoles = $rolesForTeam($selectorData['roles'], '11111111-1111-4111-8111-111111111111');
+        $digitalTeamRoles = $rolesForTeam($selectorData['roles'], '11111111-1111-4111-8111-111111111112');
+        $grandchildRoles = $rolesForTeam($selectorData['roles'], (string)$grandchildTeam->id);
+
+        $this->assertContains('Digital Lead · Digital Team', array_column($rootRoles, 'text'));
+        $this->assertContains('Digital Operations Lead · Digital Operations', array_column($digitalTeamRoles, 'text'));
+        $this->assertSame([], array_values(array_filter(
+            $rootRoles,
+            static fn(array $role): bool => $role['id'] === (string)$grandchildLead->id,
+        )));
+        $this->assertContains((string)$grandchildLead->id, array_column($grandchildRoles, 'id'));
     }
 
     public function testAddRejectsNonGroupEmailContactMethod(): void

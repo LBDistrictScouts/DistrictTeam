@@ -28,6 +28,7 @@ use Cake\ORM\Entity;
  * @property array<\App\Model\Entity\Team> $sub_teams
  * @property array<\App\Model\Entity\Role> $roles
  * @property array<\App\Model\Entity\EmailGroup> $email_groups
+ * @property array<\App\Model\Entity\Tag> $tags
  * @property \App\Model\Entity\Role|null $team_lead
  */
 class Team extends Entity

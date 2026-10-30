@@ -23,6 +23,7 @@ class RolesControllerTest extends TestCase
     protected array $fixtures = [
         'app.Groups', 'app.Sections', 'app.Teams',
         'app.Roles', 'app.Members', 'app.MemberContactMethods', 'app.Appointments',
+        'app.Tags', 'app.TeamTags', 'app.RoleTags', 'app.AppointmentTags',
     ];
 
     /**

@@ -29,6 +29,7 @@ class MembersControllerTest extends TestCase
         'app.EmailGroups',
         'app.MemberContactMethods',
         'app.Appointments', 'app.CsvRoleMappings', 'app.CsvUnitMappings', 'app.ImportFiles', 'app.ImportRecords',
+        'app.Tags', 'app.TeamTags', 'app.RoleTags', 'app.AppointmentTags',
     ];
 
     protected function setUp(): void
