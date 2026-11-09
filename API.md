@@ -79,6 +79,7 @@ against its matching response definition.
 | Roles | `GET /api/roles` | `GET /api/roles/{uuid}` |
 | Roles for a group | `GET /api/group-roles/{groupUUID}` | — |
 | Members | `GET /api/members` | `GET /api/members/{uuid}` |
+| Member profile by membership number | — | `GET /api/member-profile/{membershipNumber}` |
 | Contact methods | `GET /api/member-contact-methods` | `GET /api/member-contact-methods/{uuid}` |
 | Appointments | `GET /api/appointments` | `GET /api/appointments/{uuid}` |
 
@@ -132,6 +133,18 @@ Individual responses contain the record in `data`:
 ```
 
 Use `?page=2&limit=10` to paginate a collection. CakePHP caps `limit` at 100 by default. Related records are embedded where useful: teams include their parent and children; roles include their team and current active appointment; members include contact methods; contact methods include their member; and appointments include their role, member, and contact method. A role's `current_appointment` also embeds its member and contact method, and is `null` when no appointment is active and effective today.
+
+`GET /api/member-profile/{membershipNumber}` returns a member profile in the
+standard `data` envelope, looked up by membership number. The response includes
+the member's UUID `id` for matching with other API responses, their contact
+methods, and a `current_appointments` array containing only appointments
+effective today. Each appointment includes its role and team, effective start
+and end dates, the assigned `member_contact_method`, and an
+`appointment_email` convenience field with that contact method's value. The
+membership number is used for lookup and remains omitted from the response.
+Invalid numbers return 400; unknown membership numbers return 404.
+
+Example: `GET /api/member-profile/1001.json`.
 
 Members expose a boolean `public_opt_out`. Appointments also expose this field,
 copied from their member, including appointments embedded in role and team responses.

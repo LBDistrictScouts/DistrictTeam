@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Controller\Api;
 
+use Cake\I18n\Date;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 use JsonSchema\Validator;
@@ -64,6 +65,7 @@ class ApiControllerTest extends TestCase
             '/api/group-roles/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.json' => 'roles_collection',
             '/api/members.json' => 'members_collection',
             '/api/members/33333333-3333-4333-8333-333333333331.json' => 'member_record',
+            '/api/member-profile/1001.json' => 'member_profile_record',
             '/api/member-contact-methods.json' => 'member_contact_methods_collection',
             '/api/member-contact-methods/44444444-4444-4444-8444-444444444441.json' => 'member_contact_method_record',
             '/api/email-groups.json' => 'email_groups_collection',
@@ -99,7 +101,8 @@ class ApiControllerTest extends TestCase
         $paths = [
             '/api/teams', '/api/teams/{id}', '/api/group-teams/{groupUUID}',
             '/api/roles', '/api/roles/{id}', '/api/group-roles/{groupUUID}',
-            '/api/members', '/api/members/{id}', '/api/member-contact-methods',
+            '/api/members', '/api/members/{id}', '/api/member-profile/{membershipNumber}',
+            '/api/member-contact-methods',
             '/api/member-contact-methods/{id}', '/api/email-groups', '/api/email-groups/{id}',
             '/api/appointments', '/api/appointments/{id}',
             '/api/tags', '/api/tags/{id}', '/api/tag/{id}',
@@ -152,6 +155,90 @@ class ApiControllerTest extends TestCase
         $this->assertResponseOk();
         $payload = json_decode((string)$this->_response->getBody(), true);
         $this->assertSame('Ada Lovelace', $payload['results'][0]['text']);
+    }
+
+    public function testMemberProfileReturnsUuidAndOnlyCurrentAppointments(): void
+    {
+        $today = Date::today();
+        $appointments = $this->fetchTable('Appointments');
+        $todayAppointmentId = null;
+        foreach ([
+            [
+                'id' => '55555555-5555-4555-8555-555555555552',
+                'effective_start_date' => $today->subDays(10)->format('Y-m-d'),
+                'effective_end_date' => $today->subDays(1)->format('Y-m-d'),
+            ],
+            [
+                'id' => '55555555-5555-4555-8555-555555555553',
+                'effective_start_date' => $today->addDays(1)->format('Y-m-d'),
+                'effective_end_date' => null,
+            ],
+            [
+                'id' => '55555555-5555-4555-8555-555555555554',
+                'effective_start_date' => $today->format('Y-m-d'),
+                'effective_end_date' => $today->format('Y-m-d'),
+            ],
+        ] as $record) {
+            $appointment = $appointments->saveOrFail($appointments->newEntity($record + [
+                'role_id' => '22222222-2222-4222-8222-222222222221',
+                'member_id' => '33333333-3333-4333-8333-333333333331',
+                'member_contact_method_id' => '44444444-4444-4444-8444-444444444441',
+            ]));
+            if ($record['effective_start_date'] === $today->format('Y-m-d')) {
+                $todayAppointmentId = $appointment->id;
+            }
+        }
+
+        $this->get('/api/member-profile/0001001.json');
+
+        $this->assertResponseOk();
+        $this->assertContentType('application/json');
+        $payload = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $member = $payload['data'];
+        $this->assertSame('33333333-3333-4333-8333-333333333331', $member['id']);
+        $this->assertArrayNotHasKey('membership_number', $member);
+        $this->assertSame('Ada Lovelace', $member['full_name']);
+        $this->assertTrue($member['public_opt_out']);
+        $this->assertCount(1, $member['member_contact_methods']);
+        $this->assertCount(2, $member['current_appointments']);
+        $this->assertSame([
+            '55555555-5555-4555-8555-555555555551',
+            $todayAppointmentId,
+        ], array_column($member['current_appointments'], 'id'));
+
+        $appointment = $member['current_appointments'][1];
+        $this->assertSame($member['id'], $appointment['member_id']);
+        $this->assertSame('Digital Lead', $appointment['role']['name']);
+        $this->assertSame('Digital Team', $appointment['role']['team']['team_name']);
+        $this->assertSame($today->format('Y-m-d'), $appointment['effective_start_date']);
+        $this->assertSame($today->format('Y-m-d'), $appointment['effective_end_date']);
+        $this->assertSame('ada@example.com', $appointment['appointment_email']);
+        $this->assertSame('ada@example.com', $appointment['member_contact_method']['contact_method']);
+        $this->assertSame('Email', $appointment['member_contact_method']['contact_method_type']);
+        $this->assertTrue($appointment['public_opt_out']);
+        $this->assertTrue($appointment['active']);
+        $this->assertArrayNotHasKey('member', $appointment);
+    }
+
+    public function testMemberProfileWithoutCurrentAppointmentsReturnsEmptyArray(): void
+    {
+        $this->get('/api/member-profile/1002.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame('33333333-3333-4333-8333-333333333332', $payload['data']['id']);
+        $this->assertSame([], $payload['data']['current_appointments']);
+    }
+
+    public function testMemberProfileRejectsInvalidAndUnknownMembershipNumbers(): void
+    {
+        foreach (['abc', '0', (string)PHP_INT_MAX . '0'] as $membershipNumber) {
+            $this->get('/api/member-profile/' . $membershipNumber . '.json');
+            $this->assertResponseCode(400);
+        }
+
+        $this->get('/api/member-profile/9999.json');
+        $this->assertResponseCode(404);
     }
 
     public function testAppointmentViewReturnsRelatedRecords(): void
@@ -459,6 +546,9 @@ class ApiControllerTest extends TestCase
         $this->assertResponseCode(404);
 
         $this->post('/api/tags', []);
+        $this->assertResponseCode(404);
+
+        $this->post('/api/member-profile/1001', []);
         $this->assertResponseCode(404);
     }
 

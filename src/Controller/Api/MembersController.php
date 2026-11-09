@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Model\Entity\Member;
+use Cake\Http\Exception\BadRequestException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\ORM\Query\SelectQuery;
 
 /** @property \App\Model\Table\MembersTable $Members */
@@ -40,6 +42,58 @@ class MembersController extends AppController
             'pagination' => ['more' => $page * $limit < $total],
         ]);
         $this->viewBuilder()->setOption('serialize', ['results', 'pagination']);
+    }
+
+    /**
+     * Return a member profile and their appointments effective today.
+     *
+     * @param string $membershipNumber Member's membership number.
+     * @return void
+     */
+    public function profile(string $membershipNumber): void
+    {
+        $this->request->allowMethod(['get']);
+
+        $number = ltrim($membershipNumber, '0');
+        $maxNumber = (string)PHP_INT_MAX;
+        if (
+            !preg_match('/^\d+$/D', $membershipNumber)
+            || $number === ''
+            || strlen($number) > strlen($maxNumber)
+            || (strlen($number) === strlen($maxNumber) && strcmp($number, $maxNumber) > 0)
+        ) {
+            throw new BadRequestException('A valid membership number is required.');
+        }
+
+        $member = $this->Members->find()
+            ->where(['Members.membership_number' => (int)$number])
+            ->contain(['MemberContactMethods'])
+            ->first();
+        if (!$member instanceof Member) {
+            throw new NotFoundException('Member not found.');
+        }
+
+        $appointments = $this->fetchTable('Appointments')->find('current')
+            ->where(['Appointments.member_id' => $member->id])
+            ->contain([
+                'Roles.Teams',
+                'MemberContactMethods',
+                'Members' => ['fields' => ['Members.id', 'Members.public_opt_out']],
+            ])
+            ->orderByAsc('Appointments.effective_start_date')
+            ->orderByAsc('Roles.name')
+            ->all();
+
+        $currentAppointments = [];
+        foreach ($appointments as $appointment) {
+            $appointment->setHidden(['member'], true);
+            $appointment->set('appointment_email', $appointment->member_contact_method->contact_method);
+            $currentAppointments[] = $appointment;
+        }
+        $member->set('current_appointments', $currentAppointments);
+
+        $this->set('data', $member);
+        $this->viewBuilder()->setOption('serialize', ['data']);
     }
 
     /** @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> */

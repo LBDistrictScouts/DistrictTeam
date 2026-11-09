@@ -246,6 +246,35 @@
     "team_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/team_response"}}}]},
     "role_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/role"}}}]},
     "member_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member"}}}]},
+    "member_profile_appointment": {
+      "type": "object",
+      "required": ["id", "role_id", "member_id", "member_contact_method_id", "effective_start_date", "effective_end_date", "public_opt_out", "active", "appointment_email", "role", "member_contact_method"],
+      "properties": {
+        "id": {"$ref": "#/definitions/uuid"},
+        "role_id": {"$ref": "#/definitions/uuid"},
+        "member_id": {"$ref": "#/definitions/uuid"},
+        "member_contact_method_id": {"$ref": "#/definitions/uuid"},
+        "effective_start_date": {"type": "string", "format": "date"},
+        "effective_end_date": {"type": ["string", "null"], "format": "date"},
+        "public_opt_out": {"type": "boolean"},
+        "active": {"type": "boolean"},
+        "appointment_email": {"type": "string"},
+        "role": {"$ref": "#/definitions/role"},
+        "member_contact_method": {"$ref": "#/definitions/member_contact_method"}
+      }
+    },
+    "member_profile": {
+      "allOf": [
+        {"$ref": "#/definitions/member"},
+        {
+          "required": ["current_appointments"],
+          "properties": {
+            "current_appointments": {"type": "array", "items": {"$ref": "#/definitions/member_profile_appointment"}}
+          }
+        }
+      ]
+    },
+    "member_profile_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member_profile"}}}]},
     "appointment_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/appointment"}}}]},
     "member_contact_method_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/member_contact_method"}}}]},
     "email_group_record": {"allOf": [{"$ref": "#/definitions/record"}, {"properties": {"data": {"$ref": "#/definitions/email_group"}}}]},

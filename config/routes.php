@@ -59,6 +59,12 @@ return function (RouteBuilder $routes): void {
             ->setMethods(['GET']);
         $builder->connect('/member-search', ['controller' => 'Members', 'action' => 'search'])
             ->setMethods(['GET']);
+        $builder->connect(
+            '/member-profile/{membershipNumber}',
+            ['controller' => 'Members', 'action' => 'profile'],
+        )
+            ->setPass(['membershipNumber'])
+            ->setMethods(['GET']);
         $builder->connect('/appointment-contact-methods', [
             'controller' => 'MemberContactMethods',
             'action' => 'appointmentContactMethods',
