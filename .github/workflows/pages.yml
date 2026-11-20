@@ -34,7 +34,7 @@ jobs:
           cache: yarn
           cache-dependency-path: marketing-site/yarn.lock
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Install dependencies
         working-directory: marketing-site
         run: corepack yarn install --immutable
