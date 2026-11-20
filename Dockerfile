@@ -11,6 +11,14 @@ ARG group=www-data
 
 ENV TAR_OPTIONS="--no-same-owner"
 
+# The PHP-FPM base image captures both worker streams in the container log.
+ENV LOG_DEBUG_URL="console:///?stream=php%3A%2F%2Fstdout" \
+    LOG_ERROR_URL="console:///?stream=php%3A%2F%2Fstderr" \
+    LOG_QUERIES_URL="console:///?stream=php%3A%2F%2Fstdout"
+
+RUN printf '%s\n' 'log_errors = On' 'error_log = /dev/stderr' \
+    > "$PHP_INI_DIR/conf.d/district-team-logging.ini"
+
 RUN apk add --no-cache bash icu-dev libpq-dev postgresql17-client \
     && docker-php-ext-configure intl \
     && docker-php-ext-configure pgsql \
@@ -32,9 +40,6 @@ COPY --chown=$user:$group . .
 RUN test ! -f config/app_local.php \
     && composer run-script post-install-cmd --no-interaction \
     && rm -f config/app_local.php \
-    && mkdir -p logs \
-    && ln -sf /dev/stdout logs/debug.log \
-    && ln -sf /dev/stderr logs/error.log \
     && test ! -f config/app_local.php
 
 CMD ["php-fpm", "-F"]

@@ -73,3 +73,15 @@ Update the ConfigMap, nginx, and Certificate patches together if either name
 changes. nginx terminates TLS directly behind a `LoadBalancer` Service. On a
 new cluster, wait for cert-manager to create the environment's TLS Secret
 before expecting the application pods to become ready.
+
+## Application logs
+
+Follow CakePHP and PHP-FPM logs from all application replicas while reproducing
+an error. Use `district-team-test` for the test environment.
+
+```bash
+kubectl logs -n district-team-prod -l app=district-team -c app --prefix --tail=100 -f
+```
+
+PHP-FPM forwards both worker output streams to the container's stderr. Each
+CakePHP log entry includes its severity.

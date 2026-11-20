@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/cakephp/app/actions/workflows/ci.yml/badge.svg?branch=5.x)
 [![Total Downloads](https://img.shields.io/packagist/dt/cakephp/app.svg?style=flat-square)](https://packagist.org/packages/cakephp/app)
-[![PHPStan](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg?style=flat-square)](https://github.com/phpstan/phpstan)
+[![PHPStan](https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg?style=flat-square)](https://github.com/phpstan/phpstan)
 
 A skeleton for creating applications with [CakePHP](https://cakephp.org) 5.x.
 
@@ -241,3 +241,12 @@ imported and backfilled data.
 The standalone `bin/cake teams:backfill_scopes --dry-run` remains available to
 preview inheritance using data already imported. It does not import core data or
 apply the migration's district fallback.
+
+## PHP static analysis
+
+Run `composer phpstan` for PHPStan level 10 with `phpstan-strict-rules`, or
+`composer check` to include tests, coding standards, static analysis, and OpenAPI linting.
+`composer static-analysis` remains an alias for `composer phpstan`.
+
+Existing findings are recorded in `phpstan-baseline.neon`; new findings fail the check.
+Fix existing findings and remove their baseline entries as the code is cleaned up.

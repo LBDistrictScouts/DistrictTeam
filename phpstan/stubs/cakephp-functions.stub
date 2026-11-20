@@ -1,0 +1,18 @@
+<?php
+
+namespace {
+    /**
+     * CakePHP's global alias delegates to Cake\Core\h(). String input always
+     * produces a string; retain mixed for other input rather than inventing a type.
+     *
+     * @return ($text is string ? string : mixed)
+     */
+    function h(mixed $text, bool $double = true, ?string $charset = null): mixed {}
+}
+
+namespace Cake\Core {
+    /**
+     * @return ($text is string ? string : mixed)
+     */
+    function h(mixed $text, bool $double = true, ?string $charset = null): mixed {}
+}
