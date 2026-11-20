@@ -162,7 +162,8 @@ class ApiControllerTest extends TestCase
         $today = Date::today();
         $appointments = $this->fetchTable('Appointments');
         $todayAppointmentId = null;
-        foreach ([
+        foreach (
+            [
             [
                 'id' => '55555555-5555-4555-8555-555555555552',
                 'effective_start_date' => $today->subDays(10)->format('Y-m-d'),
@@ -178,7 +179,8 @@ class ApiControllerTest extends TestCase
                 'effective_start_date' => $today->format('Y-m-d'),
                 'effective_end_date' => $today->format('Y-m-d'),
             ],
-        ] as $record) {
+            ] as $record
+        ) {
             $appointment = $appointments->saveOrFail($appointments->newEntity($record + [
                 'role_id' => '22222222-2222-4222-8222-222222222221',
                 'member_id' => '33333333-3333-4333-8333-333333333331',

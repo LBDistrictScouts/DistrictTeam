@@ -1,16 +1,14 @@
 includes:
+	- vendor/phpstan/phpstan-strict-rules/rules.neon
 	- phpstan-baseline.neon
 
 parameters:
-	level: 8
+	level: 10
 	treatPhpDocTypesAsCertain: false
 	bootstrapFiles:
 		- config/bootstrap.php
+	tmpDir: tmp/phpstan
+	stubFiles:
+		- phpstan/stubs/cakephp-functions.stub
 	paths:
 		- src/
-	ignoreErrors:
-		# CakePHP Bake emits table method annotations with bare array/iterable
-		# parameters. Keep this suppression limited to generated table docblocks.
-		-
-			identifier: missingType.iterableValue
-			path: src/Model/Table/*Table.php

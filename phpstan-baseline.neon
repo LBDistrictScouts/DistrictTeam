@@ -1,10 +1,106 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Parameter \#1 \$config of class Cake\\Error\\Middleware\\ErrorHandlerMiddleware constructor expects array\|Cake\\Error\\ExceptionTrap, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, bool\|string\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: src/Command/BackfillTeamScopesCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, bool\|string\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: src/Command/CreateStandardGroupRolesCommand.php
+
+		-
+			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
+			identifier: function.strict
+			count: 2
+			path: src/Console/Installer.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Console/Installer.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\<0, max\>\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Console/Installer.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 1
+			path: src/Console/Installer.php
+
+		-
 			message: '#^Method App\\Controller\\Api\\AppController\:\:collectionQuery\(\) return type with generic class Cake\\ORM\\Query\\SelectQuery does not specify its types\: TSubject$#'
 			identifier: missingType.generics
 			count: 1
 			path: src/Controller/Api/AppController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Controller/Api/MemberContactMethodsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$member_contact_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/Api/MembersController.php
+
+		-
+			message: '#^Cannot access property \$contact_method on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/Api/MembersController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Controller/Api/MembersController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Controller/Api/MembersController.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Controller/Api/MembersController.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 1
+			path: src/Controller/Api/MembersController.php
+
+		-
+			message: '#^Anonymous function should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Cannot access property \$id on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/Api/TeamsController.php
 
 		-
 			message: '#^Cannot access property \$roles on array\|Cake\\Datasource\\EntityInterface\.$#'
@@ -37,6 +133,96 @@ parameters:
 			path: src/Controller/Api/TeamsController.php
 
 		-
+			message: '#^Parameter \#1 \$array of function usort expects TArray of array\<App\\Model\\Entity\\Role\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Parameter \#1 \$roles of method App\\Controller\\Api\\TeamsController\:\:mergeRoles\(\) expects array\<App\\Model\\Entity\\Role\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Api/TeamsController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: src/Controller/AppController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 17
+			path: src/Controller/AppController.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Controller/AppController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Only booleans are allowed in &&, App\\Model\\Entity\\Appointment\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 2
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\Member\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, string\> given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Parameter \#2 \$data of method App\\Model\\Table\\AppointmentsTable\:\:patchEntity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/AppointmentsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Cake\\Datasource\\EntityInterface\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/EmailGroupsController.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Cake\\ORM\\Table\<array,Cake\\Datasource\\EntityInterface\>\:\:patchEntity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/EmailGroupsController.php
+
+		-
 			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$sections\.$#'
 			identifier: property.notFound
 			count: 1
@@ -44,6 +230,12 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$teams\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$template\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Controller/GroupsController.php
@@ -61,9 +253,99 @@ parameters:
 			path: src/Controller/GroupsController.php
 
 		-
+			message: '#^Cannot access property \$value on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot call method all\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot call method contain\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot call method find\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot call method orderByAsc\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot call method toList\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot call method where\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Controller/GroupsController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Controller/ImportsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, list\<string\> given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/ImportsController.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 4
+			path: src/Controller/ImportsController.php
+
+		-
 			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
+			path: src/Controller/MemberContactMethodsController.php
+
+		-
+			message: '#^Binary operation "\+" between array\{member_id\: string\} and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/MemberContactMethodsController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
 			path: src/Controller/MemberContactMethodsController.php
 
 		-
@@ -71,6 +353,882 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: src/Controller/MemberContactMethodsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\MemberContactMethod\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Controller/MemberContactMethodsController.php
+
+		-
+			message: '#^Foreach overwrites \$group with its value variable\.$#'
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Foreach overwrites \$section with its value variable\.$#'
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Method App\\Controller\\MembersController\:\:pendingUpload\(\) should return array\<string, mixed\>\|null but returns array\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<mixed, mixed\> given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\Member\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\Section\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Only booleans are allowed in \|\|, array\<mixed\> given on the right side\.$#'
+			identifier: booleanOr.rightNotBoolean
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_diff expects an array of values castable to string, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_diff_key expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Controller\\MembersController\:\:selectedRows\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Controller\\MembersController\:\:unitFilters\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:roleOptionsForSources\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:saveRoleMappings\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:saveUnitMappings\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:savedMappings\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:savedUnitMappings\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:sources\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Service\\MemberCsvImporter\:\:unitSources\(\) expects array\<int, array\<string, string\>\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#2 \$data of method App\\Model\\Table\\MembersTable\:\:patchEntity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#2 \$mapping of method App\\Service\\MemberCsvImporter\:\:import\(\) expects array\<string, string\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#2 \$mapping of method App\\Service\\MemberCsvImporter\:\:roleImportResults\(\) expects array\<string, string\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#2 \$mapping of method App\\Service\\MemberCsvImporter\:\:saveRoleMappings\(\) expects array\<string, string\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#2 \$unitMapping of method App\\Service\\MemberCsvImporter\:\:saveUnitMappings\(\) expects array\<string, array\{group_id\?\: string, section_id\?\: string\}\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Parameter \#5 \$unimportedRows of method App\\Service\\MemberCsvImporter\:\:import\(\) expects array\<int, array\<string, string\>\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 2
+			path: src/Controller/MembersController.php
+
+		-
+			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Controller/PagesController.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<int\<0, max\>\|string, string\> given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Controller/PagesController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Controller/PagesController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\Role\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/RolesController.php
+
+		-
+			message: '#^Parameter \#1 \$selections of method App\\Service\\StandardGroupTemplateCreator\:\:createRoles\(\) expects list\<array\{role_name\?\: mixed, skip\?\: mixed\}\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/RolesController.php
+
+		-
+			message: '#^Parameter \#2 \$data of method App\\Model\\Table\\RolesTable\:\:patchEntity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/RolesController.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, App\\Model\\Entity\\Group\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 2
+			path: src/Controller/TagsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\Tag\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/TagsController.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Cake\\ORM\\Table\<array,App\\Model\\Entity\\Tag\>\:\:patchEntity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/TagsController.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, App\\Model\\Entity\\Team\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Parameter \#1 \$selections of method App\\Service\\StandardGroupTemplateCreator\:\:createTeams\(\) expects list\<array\{team_name\?\: mixed, skip\?\: mixed\}\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Parameter \#2 \$data of method App\\Model\\Table\\TeamsTable\:\:patchEntity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/TeamsController.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: src/Middleware/HostHeaderMiddleware.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string\|false\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: src/Middleware/HostHeaderMiddleware.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Middleware/HostHeaderMiddleware.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Middleware/HostHeaderMiddleware.php
+
+		-
+			message: '#^Parameter \#1 \$url of function parse_url expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Middleware/HostHeaderMiddleware.php
+
+		-
+			message: '#^PHPDoc type list\<string\> of property App\\Model\\Entity\\Appointment\:\:\$_virtual is not the same as PHPDoc type array\<string\> of overridden property Cake\\ORM\\Entity\:\:\$_virtual\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Model/Entity/Appointment.php
+
+		-
+			message: '#^PHPDoc type list\<string\> of property App\\Model\\Entity\\Role\:\:\$_virtual is not the same as PHPDoc type array\<string\> of overridden property Cake\\ORM\\Entity\:\:\$_virtual\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Model/Entity/Role.php
+
+		-
+			message: '#^PHPDoc type list\<string\> of property App\\Model\\Entity\\Team\:\:\$_hidden is not the same as PHPDoc type array\<string\> of overridden property Cake\\ORM\\Entity\:\:\$_hidden\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Model/Entity/Team.php
+
+		-
+			message: '#^PHPDoc type list\<string\> of property App\\Model\\Entity\\Team\:\:\$_virtual is not the same as PHPDoc type array\<string\> of overridden property Cake\\ORM\\Entity\:\:\$_virtual\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Model/Entity/Team.php
+
+		-
+			message: '#^Call to function array_filter\(\) requires parameter \#2 to be passed to avoid loose comparison semantics\.$#'
+			identifier: arrayFilter.strict
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method findOrCreate\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method get\(\) parameter \#2 \$finder with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method newEntities\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method newEntities\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method newEntity\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method newEntity\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method save\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method saveMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method saveMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\AppointmentsTable has PHPDoc tag @method for method saveOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Parameter \#1 \$roleId of method App\\Model\\Table\\AppointmentsTable\:\:synchronizeRoleOccupancy\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Model/Table/AppointmentsTable.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Model/Table/EmailGroupsTable.php
+
+		-
+			message: '#^Call to function array_filter\(\) requires parameter \#2 to be passed to avoid loose comparison semantics\.$#'
+			identifier: arrayFilter.strict
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method findOrCreate\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method get\(\) parameter \#2 \$finder with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method newEntities\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method newEntities\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method newEntity\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method newEntity\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method save\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method saveMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method saveMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\GroupsTable has PHPDoc tag @method for method saveOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Model/Table/GroupsTable.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$domains\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Cannot access offset ''contact_method_type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 5
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method findOrCreate\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method get\(\) parameter \#2 \$finder with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method newEntities\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method newEntities\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method newEntity\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method newEntity\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method save\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method saveMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method saveMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MemberContactMethodsTable has PHPDoc tag @method for method saveOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Model/Table/MemberContactMethodsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method deleteMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method deleteMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method findOrCreate\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method get\(\) parameter \#2 \$finder with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method newEntities\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method newEntities\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method newEntity\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method newEntity\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method patchEntities\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method patchEntities\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method patchEntities\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method patchEntity\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method patchEntity\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method save\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method saveMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method saveMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\MembersTable has PHPDoc tag @method for method saveOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/MembersTable.php
+
+		-
+			message: '#^Call to function array_filter\(\) requires parameter \#2 to be passed to avoid loose comparison semantics\.$#'
+			identifier: arrayFilter.strict
+			count: 1
+			path: src/Model/Table/RolesTable.php
 
 		-
 			message: '#^Cannot access property \$group_id on array\|Cake\\Datasource\\EntityInterface\.$#'
@@ -85,6 +1243,156 @@ parameters:
 			path: src/Model/Table/RolesTable.php
 
 		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method deleteMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method deleteMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method findOrCreate\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method get\(\) parameter \#2 \$finder with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method newEntities\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method newEntities\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method newEntity\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method newEntity\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method patchEntities\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method patchEntities\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method patchEntities\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method patchEntity\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method patchEntity\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method save\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method saveMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method saveMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\RolesTable has PHPDoc tag @method for method saveOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Parameter \#1 \$groupIds of method App\\Model\\Table\\GroupsTable\:\:refreshRoleCounter\(\) expects list\<string\|null\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Parameter \#1 \$teamIds of method App\\Model\\Table\\RolesTable\:\:refreshGroupRoleCounters\(\) expects list\<string\|null\>, array\{mixed, mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
+			message: '#^Parameter \#1 \$teamIds of method App\\Model\\Table\\RolesTable\:\:refreshGroupRoleCounters\(\) expects list\<string\|null\>, array\{mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/RolesTable.php
+
+		-
 			message: '#^Call to an undefined method Cake\\ORM\\Behavior\:\:moveUp\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -93,6 +1401,138 @@ parameters:
 		-
 			message: '#^Call to an undefined method Cake\\ORM\\Behavior\:\:recover\(\)\.$#'
 			identifier: method.notFound
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method deleteMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method deleteManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method findOrCreate\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method get\(\) parameter \#2 \$finder with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method newEntities\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method newEntities\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method newEntity\(\) parameter \#1 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method newEntity\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method patchEntities\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#2 \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method patchEntity\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method save\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method saveMany\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method saveMany\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#1 \$entities with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method saveManyOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Class App\\Model\\Table\\TeamsTable has PHPDoc tag @method for method saveOrFail\(\) parameter \#2 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: src/Model/Table/TeamsTable.php
 
@@ -115,7 +1555,85 @@ parameters:
 			path: src/Model/Table/TeamsTable.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_diff expects an array of values castable to string, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Parameter \#1 \$groupIds of method App\\Model\\Table\\GroupsTable\:\:refreshRoleCounter\(\) expects list\<string\|null\>, array\{mixed, mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Parameter \#1 \$groupIds of method App\\Model\\Table\\GroupsTable\:\:refreshRoleCounter\(\) expects list\<string\|null\>, array\{mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_diff expects an array of values castable to string, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/Table/TeamsTable.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Service/DistrictCoreDataService.php
+
+		-
+			message: '#^Method App\\Service\\DistrictCoreDataService\:\:fetchDataset\(\) should return list\<array\<string, mixed\>\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/DistrictCoreDataService.php
+
+		-
+			message: '#^Method App\\Service\\DistrictCoreDataService\:\:sync\(\) should return array\{groups\: int, sections\: int\} but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/DistrictCoreDataService.php
+
+		-
+			message: '#^Parameter \#2 \$groupId of method App\\Service\\DistrictCoreDataService\:\:assertEmailGroupsUseConfiguredDomains\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/DistrictCoreDataService.php
+
+		-
+			message: '#^Parameter \#4 \$newDomains of method App\\Service\\DistrictCoreDataService\:\:assertEmailGroupsUseConfiguredDomains\(\) expects list\<string\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/DistrictCoreDataService.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 1
+			path: src/Service/DistrictCoreDataService.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$domains\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
 			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$group_id\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Service/MemberCsvImporter.php
@@ -145,6 +1663,18 @@ parameters:
 			path: src/Service/MemberCsvImporter.php
 
 		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$role_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$section_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
 			message: '#^Access to an undefined property Cake\\Datasource\\EntityInterface\:\:\$source_key\.$#'
 			identifier: property.notFound
 			count: 2
@@ -157,7 +1687,349 @@ parameters:
 			path: src/Service/MemberCsvImporter.php
 
 		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Binary operation "\." between mixed and '' / '' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Cannot access property \$group_id on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Cannot access property \$section_id on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Cannot access property \$team_name on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Cannot call method format\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 5
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Method App\\Service\\MemberCsvImporter\:\:import\(\) should return array\<string, mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Method App\\Service\\MemberCsvImporter\:\:roleOptionsForSources\(\) should return array\<string, array\<string, string\>\> but returns array\<string, array\<string\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Method App\\Service\\MemberCsvImporter\:\:savedMappings\(\) should return array\<string, string\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Method App\\Service\\MemberCsvImporter\:\:savedUnitMappings\(\) should return array\<string, array\{group_id\: string, section_id\: string\}\> but returns array\<array\{group_id\: mixed, section_id\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Cake\\Datasource\\EntityInterface\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Cake\\Datasource\\EntityInterface\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 3
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, DateTimeImmutable\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<int\<2, max\>, array\<string, string\>\> given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, string\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, list\<string\> given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, array\<string, mixed\> given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Cake\\Datasource\\EntityInterface\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<int, string\> given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, string\> given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''strtolower'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#1 \$memberId of method App\\Service\\MemberCsvImporter\:\:bestAppointmentContactMethod\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#2 \$importFileId of method App\\Service\\MemberCsvImporter\:\:saveNotImportedRecord\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Parameter \#7 \$memberId of method App\\Service\\MemberCsvImporter\:\:saveNotImportedRecord\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 4
+			path: src/Service/MemberCsvImporter.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Binary operation "\." between ''__template\-role\-'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Binary operation "\." between mixed and '' Leadership Team'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 34
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Cannot use array destructuring on mixed\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Method App\\Service\\StandardGroupTemplateCreator\:\:sourceData\(\) should return array\{list\<array\<string, mixed\>\>, array\<string, list\<array\{id\: string, section_type\: string, section_name\: string\}\>\>, list\<array\<string, mixed\>\>, list\<array\<string, mixed\>\>\} but returns array\{list\<array\>, array\<string, list\<array\{id\: string, section_type\: string, section_name\: string\}\>\>, list\<array\>, list\<array\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Only booleans are allowed in &&, mixed given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Parameter \#1 \$groupName of method App\\Service\\StandardGroupTemplateCreator\:\:sectionTeamName\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Parameter \#2 \$right of method App\\Service\\StandardGroupTemplateCreator\:\:key\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 5
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Parameter \#2 \$teamKey of method App\\Service\\StandardGroupTemplateCreator\:\:teamIndex\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Parameter \#3 \$name of method App\\Service\\StandardGroupTemplateCreator\:\:teamIdByName\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 6
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Property App\\Model\\Entity\\Role\:\:\$is_trustee_role \(bool\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Property App\\Model\\Entity\\Role\:\:\$template \(App\\Model\\Enum\\RoleTemplate\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Property App\\Model\\Entity\\Team\:\:\$template \(App\\Model\\Enum\\TeamTemplate\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Service/StandardGroupTemplateCreator.php
+
+		-
+			message: '#^Binary operation "\." between mixed and '' \('' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 3
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Method App\\Service\\TeamScopeBackfill\:\:plan\(\) should return list\<array\{id\: string, team_name\: string, group_id\: string, section_id\: string\|null\}\> but returns list\<array\{id\: string, team_name\: mixed, group_id\: mixed, section_id\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Method App\\Service\\TeamScopeBackfill\:\:run\(\) should return list\<array\{id\: string, team_name\: string, group_id\: string, section_id\: string\|null\}\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Parameter \#1 \$id of closure expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
 			message: '#^Parameter \#1 \$teams of method App\\Service\\TeamScopeBackfill\:\:plan\(\) expects list\<array\<string, mixed\>\>, array given\.$#'
 			identifier: argument.type
 			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Parameter \#2 \$sectionGroups of method App\\Service\\TeamScopeBackfill\:\:plan\(\) expects array\<string, string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Parameter \#3 \$groupIds of method App\\Service\\TeamScopeBackfill\:\:plan\(\) expects list\<string\>, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Service/TeamScopeBackfill.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 4
 			path: src/Service/TeamScopeBackfill.php
